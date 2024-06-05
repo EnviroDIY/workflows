@@ -18,26 +18,27 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
     workspace_dir = os.environ.get("GITHUB_WORKSPACE")
 else:
     workspace_dir = os.getcwd()
-print(f"Workspace Directory: {workspace_dir}")
+workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
+print(f"Workspace Path: {workspace_path}")
 
 # The examples directory
 examples_dir = "./examples/"
 examples_path = os.path.join(workspace_dir, examples_dir)
 examples_path = os.path.abspath(os.path.realpath(examples_path))
-print(f"Examples Directory: {examples_path}")
+print(f"Examples Path: {examples_path}")
 
 # The continuous integration directory
 ci_dir = "./continuous_integration/"
 ci_path = os.path.join(workspace_dir, ci_dir)
 ci_path = os.path.abspath(os.path.realpath(ci_path))
-print(f"Continuous Integration Directory: {ci_path}")
+print(f"Continuous Integration Path: {ci_path}")
 
 # A directory of files to save and upload as artifacts to use in future jobs
 artifact_dir = os.path.join(
     os.path.join(workspace_dir, "continuous_integration_artifacts")
 )
 artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
-print(f"Artifact Directory: {artifact_path}")
+print(f"Artifact Path: {artifact_path}")
 
 if not os.path.exists(artifact_dir):
     print(f"Creating the directory for artifacts: {artifact_path}")
@@ -74,20 +75,14 @@ else:
 # %%
 # Get the examples to build
 if "EXAMPLES_TO_BUILD" in os.environ.keys():
-    non_menu_examples = os.environ.get("EXAMPLES_TO_BUILD").split(",")
+    examples_to_build = os.environ.get("EXAMPLES_TO_BUILD").split(",")
 else:
-    # The massive "menu" example
-    menu_example_name = "menu_a_la_carte"
-    menu_file_path = os.path.join(
-        os.path.join(examples_path, menu_example_name), menu_example_name + ".ino"
-    )
-
-    # Find all of the non-menu examples
-    non_menu_examples = [
-        f
+    # Find all of the examples in the examples folder, append the path "examples" to it
+    examples_to_build = [
+        f"examples/{f}"
         for f in os.listdir(examples_path)
         if os.path.isdir(os.path.join(examples_path, f))
-        and f not in [".history", "logger_test", menu_example_name]
+        and f not in [".history", "logger_test", "menu_a_la_carte"]
     ]
 
 # %%
@@ -152,7 +147,7 @@ def create_arduino_cli_command(code_subfolder: str, pio_board: str) -> str:
         "text",
         "--fqbn",
         pio_to_acli[pio_board]["fqbn"],
-        os.path.join(examples_path, code_subfolder),
+        os.path.join(workspace_path, code_subfolder),
     ]
     return " ".join(arduino_command_arguments)
 
@@ -172,7 +167,7 @@ def create_pio_ci_command(
             pio_env_file,
             "--environment",
             pio_env,
-            os.path.join(examples_path, code_subfolder),
+            os.path.join(workspace_path, code_subfolder),
         ]
     else:
         pio_command_args = [
@@ -181,7 +176,7 @@ def create_pio_ci_command(
             # "--verbose",
             "--board",
             pio_env,
-            os.path.join(examples_path, code_subfolder),
+            os.path.join(workspace_path, code_subfolder),
         ]
     return " ".join(pio_command_args)
 
@@ -245,7 +240,7 @@ end_job_commands = "\n\nexit $status"
 # %%
 # Create job info for the basic examples
 # Use one job per board with one command per example
-for example in non_menu_examples:
+for example in examples_to_build:
     arduino_ex_commands = [
         start_job_commands,
     ]
