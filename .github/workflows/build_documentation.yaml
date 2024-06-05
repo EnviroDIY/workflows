@@ -74,6 +74,8 @@ jobs:
 
       - name: Build and install doxygen and its dependencies
         if: steps.cache_doxygen.outputs.cache-hit != 'true'
+        env:
+          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
         run: |
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
