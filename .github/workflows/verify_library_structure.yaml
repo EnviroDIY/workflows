@@ -27,7 +27,7 @@ jobs:
         id: validate_manifest
         continue-on-error: true
         run: |
-          curl https://raw.githubusercontent.com/EnviroDIY/workflows/master/scripts/validate_manifest.py
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/validate_manifest.py -o validate_manifest.py
           python validate_manifest.py 2>&1 | tee validate_manifest.log
           result_code=${PIPESTATUS[0]}
           manifest_errors=$(cat validate_manifest.log)
@@ -76,7 +76,7 @@ jobs:
       - name: beautify_lint_output
         id: beautify_output
         run: |
-          curl https://raw.githubusercontent.com/EnviroDIY/workflows/master/scripts/beautify_arduino_lint_log.py
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/beautify_arduino_lint_log.py -o beautify_arduino_lint_log.py
           python beautify_arduino_lint_log.py
           lint_errors=$(cat arduino_lint.md)
           lint_errors="${lint_errors//'%'/'%25'}"

@@ -71,7 +71,7 @@ jobs:
         if: steps.cache_doxygen.outputs.cache-hit != 'true'
         run: |
           cd ${{ github.workspace }}/code_docs/${GITHUB_REPOSITORY#*/}/
-          curl https://raw.githubusercontent.com/EnviroDIY/workflows/master/scripts/build-install-doxygen.sh
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
           chmod +x build-install-doxygen.sh
           sh build-install-doxygen.sh
 
@@ -87,7 +87,7 @@ jobs:
         continue-on-error: true
         run: |
           cd ${{ github.workspace }}/code_docs/${GITHUB_REPOSITORY#*/}/
-          curl https://raw.githubusercontent.com/EnviroDIY/workflows/master/scripts/generate-documentation.sh
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
           chmod +x generate-documentation.sh
           sh generate-documentation.sh 2>&1 | tee doxygen_run_output.log
           result_code=${PIPESTATUS[0]}
