@@ -49,6 +49,7 @@ jobs:
             echo "has_dependencies=true" >> $GITHUB_OUTPUT
             cat ./continuous_integration/dependencies.json >> consolidated_deps.txt
           fi
+          if [ -e ./examples/example_dependencies.json ]
           then
             echo "Dependency installation script fount at ./examples/example_dependencies.json"
             echo "has_dependencies=true" >> $GITHUB_OUTPUT
