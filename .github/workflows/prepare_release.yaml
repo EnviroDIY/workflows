@@ -9,11 +9,11 @@ env:
 jobs:
   verify_library_structure:
     name: Validate library structure
-    uses: EnviroDIY/workflows/.github/workflows/verify_library_structure.yml@main
+    uses: ./.github/workflows/verify_library_structure.yml@main
 
   check_for_dependencies:
     name: Check if there are any library dependencies
-    uses: EnviroDIY/workflows/.github/workflows/check_for_dependencies.yml@main
+    uses: ./.github/workflows/check_for_dependencies.yml@main
 
   check_version_number:
     name: Prepare release assets containing dependencies

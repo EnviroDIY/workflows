@@ -63,11 +63,11 @@ jobs:
 
   determine_library_source:
     name: Determine the source of the testing library
-    uses: EnviroDIY/workflows/.github/workflows/determine_library_source.yml@main
+    uses: ./.github/workflows/determine_library_source.yml@main
 
   check_for_dependencies:
     name: Check if there are any library dependencies
-    uses: EnviroDIY/workflows/.github/workflows/check_for_dependencies.yml@main
+    uses: ./.github/workflows/check_for_dependencies.yml@main
 
   build_ex_arduino:
     name: ${{ matrix.job_info.job_name }}
