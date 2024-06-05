@@ -100,6 +100,7 @@ jobs:
 
       - name: Download the Arduino scripts
         run: |
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o arduino_cli.yaml
           curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-platforms-arduino-cli.sh -o install-platforms-arduino-cli.sh
 
       - name: Restore Arduino platforms
@@ -120,6 +121,7 @@ jobs:
       - name: Restore Arduino libraries
         uses: actions/cache@v4
         id: cache_libraries
+        if: "(needs.check_for_dependencies.outputs.has_dependencies == 'true')"
         with:
           path: |
             home/arduino/user
@@ -127,7 +129,7 @@ jobs:
 
       # Install library dependencies for the Arduino CLI, iff no cache
       - name: Install the Arduino libraries
-        if: steps.cache_libraries.outputs.cache-hit != 'true'
+        if: "(needs.check_for_dependencies.outputs.has_dependencies == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true')"
         run: |
           chmod +x continuous_integration/install-libraries-arduino-cli.sh
           sh continuous_integration/install-libraries-arduino-cli.sh
@@ -211,6 +213,7 @@ jobs:
       - name: Restore PlatformIO libraries
         uses: actions/cache@v4
         id: cache_libraries
+        if: "(needs.check_for_dependencies.outputs.has_dependencies == 'true')"
         with:
           path: |
             ~/.platformio/lib
@@ -219,7 +222,7 @@ jobs:
 
       # Install any library dependencies with PlatformIO at the global level
       - name: Install PlatformIO libraries
-        if: steps.cache_libraries.outputs.cache-hit != 'true'
+        if: "(needs.check_for_dependencies.outputs.has_dependencies == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true')"
         run: |
           chmod +x continuous_integration/install-libraries-platformio.sh
           sh continuous_integration/install-libraries-platformio.sh
