@@ -55,12 +55,12 @@ have_pio_config_file = False
 if os.path.isfile(pio_config_file):
     have_pio_config_file = True
     pio_config = ProjectConfig(pio_config_file)
-    env_to_boards = {}
+    board_to_pio_env = {}
     for pio_env_name in pio_config.envs():
-        env_to_boards[pio_env_name] = pio_config.get(
-            "env:{}".format(pio_env_name), "board"
+        board_to_pio_env[pio_config.get("env:{}".format(pio_env_name), "board")] = (
+            pio_env_name
         )
-    boards = list(env_to_boards.values())
+    boards = list(board_to_pio_env.values())
 elif "BOARDS_TO_BUILD" in os.environ.keys():
     boards = os.environ.get("BOARDS_TO_BUILD").split(",")
 else:
@@ -207,19 +207,19 @@ def create_logged_command(
     compiler: str,
     group_title: str,
     code_subfolder: str,
-    pio_env: str,
+    pio_board: str,
     pio_env_file: str = pio_config_file,
 ):
     output_commands = []
     lower_compiler = compiler.lower().replace(" ", "").strip()
     if lower_compiler == "platformio":
         build_command = create_pio_ci_command(
-            code_subfolder=code_subfolder, pio_env=pio_env, pio_env_file=pio_env_file
+            code_subfolder=code_subfolder, pio_env=pio_board, pio_env_file=pio_env_file
         )
     elif lower_compiler == "arduinocli":
         build_command = create_arduino_cli_command(
             code_subfolder=code_subfolder,
-            pio_board=pio_env,
+            pio_board=pio_board,
         )
     else:
         build_command = ""
@@ -248,16 +248,16 @@ for example in non_menu_examples:
         start_job_commands,
     ]
 
-    for pio_env in pio_config.envs():
+    for pio_board in boards:
         for compiler, command_list in zip(
             compilers, [arduino_ex_commands, pio_ex_commands]
         ):
             command_list.extend(
                 create_logged_command(
                     compiler=compiler,
-                    group_title=pio_env,
+                    group_title=pio_board,
                     code_subfolder=example,
-                    pio_env=pio_env,
+                    pio_board=pio_board,
                 )
             )
 
