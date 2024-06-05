@@ -9,11 +9,11 @@ env:
 jobs:
   verify_library_structure:
     name: Validate library structure
-    uses: ./.github/workflows/verify_library_structure.yaml@main
+    uses: ./.github/workflows/verify_library_structure.yaml
 
   check_for_dependencies:
     name: Check if there are any library dependencies
-    uses: ./.github/workflows/check_for_dependencies.yaml@main
+    uses: ./.github/workflows/check_for_dependencies.yaml
 
   check_version_number:
     name: Prepare release assets containing dependencies
