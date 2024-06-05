@@ -8,14 +8,6 @@ on:
         required: false
         type: boolean
         default: false
-  # Also give a manual trigger
-  workflow_dispatch:
-    inputs:
-      publish:
-        description: 'Publish Documentation to GitHub Pages'
-        required: false
-        type: boolean
-        default: false
 
 env:
   REBUILD_CACHE_NUMBER: 2

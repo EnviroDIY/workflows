@@ -1,7 +1,6 @@
 name: Prepare a new release and add release assets
 
 on:
-  workflow_dispatch:
   workflow_call:
 
 env:
@@ -10,11 +9,11 @@ env:
 jobs:
   verify_library_structure:
     name: Validate library structure
-    uses: EnviroDIY/workflows/.github/workflows/verify_library_structure.yml
+    uses: EnviroDIY/workflows/.github/workflows/verify_library_structure.yml@main
 
   check_for_dependencies:
     name: Check if there are any library dependencies
-    uses: EnviroDIY/workflows/.github/workflows/check_for_dependencies.yml
+    uses: EnviroDIY/workflows/.github/workflows/check_for_dependencies.yml@main
 
   check_version_number:
     name: Prepare release assets containing dependencies
