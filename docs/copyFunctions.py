@@ -13,7 +13,10 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]
 else:
     workspace_dir = os.getcwd()
-    repo_name = workspace_dir.split("/")[-1]
+    if len(workspace_dir.split("/")) == 1:
+        repo_name = workspace_dir.split("\\")[-1]
+    else:
+        repo_name = workspace_dir.split("/")[-1]
 
 print(f"Workspace Directory: {workspace_dir}")
 relative_dir = f"../../{repo_name}_Doxygen/xml/"

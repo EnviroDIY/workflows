@@ -51,12 +51,12 @@ jobs:
           then
             echo "Generating job matrix from library specific generator code"
             echo "has_dependencies=true" >> $GITHUB_OUTPUT
-            python continuous_integration/generate_job_matrix.py
+            python -u continuous_integration/generate_job_matrix.py
           else
             echo "Generating job matrix from standard workflow"
             curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_job_matrix.py -o generate_job_matrix.py
             echo "has_dependencies=true" >> $GITHUB_OUTPUT
-            python generate_job_matrix.py
+            python -u generate_job_matrix.py
           fi
 
       - name: Store generated examples
