@@ -33,12 +33,14 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'ci skip')"
     name: Build documentation
+    env:
+      DOC_ROOT: code_docs/${GITHUB_REPOSITORY#*/}
 
     steps:
       # check out the library repo into a subfolder
       - uses: actions/checkout@v4
         with:
-          path: code_docs/${GITHUB_REPOSITORY#*/}
+          path: ${{ env.DOC_ROOT }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -70,7 +72,7 @@ jobs:
       - name: Build and install doxygen and its dependencies
         if: steps.cache_doxygen.outputs.cache-hit != 'true'
         run: |
-          cd ${{ github.workspace }}/code_docs/${GITHUB_REPOSITORY#*/}/
+          cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
           chmod +x build-install-doxygen.sh
           sh build-install-doxygen.sh
@@ -86,7 +88,7 @@ jobs:
       - name: Generate all the documentation
         continue-on-error: true
         run: |
-          cd ${{ github.workspace }}/code_docs/${GITHUB_REPOSITORY#*/}/
+          cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
           chmod +x generate-documentation.sh
           sh generate-documentation.sh 2>&1 | tee doxygen_run_output.log
@@ -106,4 +108,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ github.workspace }}/code_docs/${GITHUB_REPOSITORY#*/}_Doxygen/m.css
+          publish_dir: ${{ github.workspace }}/${{ env.DOC_ROOT }}_Doxygen/m.css
