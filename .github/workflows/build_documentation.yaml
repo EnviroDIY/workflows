@@ -33,10 +33,16 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'ci skip')"
     name: Build documentation
-    env:
-      DOC_ROOT: code_docs/${GITHUB_REPOSITORY#*/}
 
     steps:
+      - name: Set doc root env variable
+        run: |
+          echo "DOC_ROOT=code_docs/${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+
+      - name: Print the doc root directory environment variable
+        run: |
+          echo "${{ env.DOC_ROOT }}"
+
       # check out the library repo into a subfolder
       - uses: actions/checkout@v4
         with:

@@ -146,7 +146,7 @@ def create_arduino_cli_command(code_subfolder: str, pio_board: str) -> str:
         "--format",
         "text",
         "--fqbn",
-        pio_to_acli[pio_config.get("env:{}".format(pio_board), "board")]["fqbn"],
+        pio_to_acli[pio_board]["fqbn"],
         os.path.join(examples_path, code_subfolder),
     ]
     return " ".join(arduino_command_arguments)
