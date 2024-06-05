@@ -263,13 +263,13 @@ for example in examples_to_build:
 
     arduino_job_matrix.append(
         {
-            "job_name": "Arduino - {}".format(example),
+            "job_name": "Arduino - {}".format(example.split("/")[-1]),
             "command": "\n".join(arduino_ex_commands + [end_job_commands]),
         }
     )
     pio_job_matrix.append(
         {
-            "job_name": "Platformio - {}".format(example),
+            "job_name": "Platformio - {}".format(example.split("/")[-1]),
             "command": "\n".join(pio_ex_commands + [end_job_commands]),
         }
     )
