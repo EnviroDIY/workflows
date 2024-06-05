@@ -17,25 +17,30 @@ from pathlib import Path
 if "GITHUB_WORKSPACE" in os.environ.keys():
     workspace_dir = os.environ.get("GITHUB_WORKSPACE")
 else:
-    fileDir = os.path.dirname(os.path.realpath("__file__"))
-    workspace_dir = os.path.join(fileDir, "../")
-    workspace_dir = os.path.abspath(os.path.realpath(workspace_dir))
+    workspace_dir = os.getcwd()
+print(f"Workspace Directory: {workspace_dir}")
 
 # The examples directory
 examples_dir = "./examples/"
 examples_path = os.path.join(workspace_dir, examples_dir)
 examples_path = os.path.abspath(os.path.realpath(examples_path))
+print(f"Examples Directory: {examples_path}")
 
 # The continuous integration directory
 ci_dir = "./continuous_integration/"
 ci_path = os.path.join(workspace_dir, ci_dir)
 ci_path = os.path.abspath(os.path.realpath(ci_path))
+print(f"Continuous Integration Directory: {ci_path}")
 
 # A directory of files to save and upload as artifacts to use in future jobs
 artifact_dir = os.path.join(
     os.path.join(workspace_dir, "continuous_integration_artifacts")
 )
+artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
+print(f"Artifact Directory: {artifact_path}")
+
 if not os.path.exists(artifact_dir):
+    print(f"Creating the directory for artifacts: {artifact_path}")
     os.makedirs(artifact_dir)
 
 compilers = ["Arduino CLI", "PlatformIO"]
@@ -279,7 +284,8 @@ for example in non_menu_examples:
 # Convert commands in the matrix into bash scripts
 for matrix_job in arduino_job_matrix + pio_job_matrix:
     bash_file_name = matrix_job["job_name"].replace(" ", "") + ".sh"
-    bash_out = open(os.path.join(artifact_dir, bash_file_name), "w+")
+    print(f"Wrinting bash file to {os.path.join(artifact_path, bash_file_name)}")
+    bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
     bash_out.write("#!/bin/bash\n\n")
     bash_out.write(
         "# Makes the bash script print out every command before it is executed, except echo\n"
@@ -289,7 +295,7 @@ for matrix_job in arduino_job_matrix + pio_job_matrix:
     )
     bash_out.write(matrix_job["command"])
     bash_out.close()
-    matrix_job["script"] = os.path.join(artifact_dir, bash_file_name)
+    matrix_job["script"] = os.path.join(artifact_path, bash_file_name)
 
 # Remove the command from the dictionaries before outputting them
 for items in arduino_job_matrix + pio_job_matrix:
@@ -317,9 +323,10 @@ json_out.close()
 
 # %%
 # different attempt to save output
-with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-    print("arduino_job_matrix={}".format(json.dumps(arduino_job_matrix)), file=fh)
-    print("pio_job_matrix={}".format(json.dumps(pio_job_matrix)), file=fh)
+if "GITHUB_WORKSPACE" in os.environ.keys():
+    with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+        print("arduino_job_matrix={}".format(json.dumps(arduino_job_matrix)), file=fh)
+        print("pio_job_matrix={}".format(json.dumps(pio_job_matrix)), file=fh)
 
 
 # %%
