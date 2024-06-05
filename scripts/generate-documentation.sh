@@ -46,7 +46,7 @@ echo "\n\e[32mGenerating Doxygen code documentation...\e[0m"
 echo "::group::Doxygen Run Log"
 # Redirect both stderr and stdout to the log file AND the console.
 $GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen Doxyfile 2>&1 | tee output.log
-result_code=(${PIPESTATUS[0]})
+result_code=$(PIPESTATUS[0])
 echo "::endgroup::"
 echo "::group::Doxygen Output"
 echo "$(<output_doxygen.log )"
