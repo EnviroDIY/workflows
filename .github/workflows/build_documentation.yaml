@@ -5,17 +5,28 @@ on:
     inputs:
       publish:
         description: 'Publish Documentation to GitHub Pages'
-        required: false
+        required: true
         type: boolean
-        default: false
-
-env:
-  REBUILD_CACHE_NUMBER: 2
-  PYTHON_DEPS_ARCHIVE_NUM: 2
-  DOXYGEN_VERSION: Release_1_9_6
-  TEX_VERSION: 2019
-  # ^^ 2019 is the latest TeX live available on apt-get and that's good enough
-  GRAPHVIZ_VERSION: 2.43.0
+      rebuild_cache_number:
+        description: 'Change this number to force a cache rebuild'
+        required: true
+        type: number
+      doxygen_version:
+        description: 'The version of Doxygen to build'
+        required: false
+        type: string
+        default: 'Release_1_9_6'
+      tex_version:
+        description: 'The version of TeX live to build'
+        required: false
+        type: string
+        default: '2019'
+        # ^^ 2019 is the latest TeX live available on apt-get and that's good enough
+      graphviz_version:
+        description: 'The version of GraphViz to build'
+        required: false
+        type: string
+        default: '2.43.0'
 
 jobs:
   doc_build:
@@ -39,7 +50,7 @@ jobs:
         id: cache_python
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-python-${{ env.REBUILD_CACHE_NUMBER }}-${{ env.PYTHON_DEPS_ARCHIVE_NUM }}
+          key: ${{ runner.os }}-python-${{ inputs.rebuild_cache_number }}
 
       - name: Install Pygments and other m.css Python Requirements
         run: |
@@ -54,7 +65,7 @@ jobs:
             /usr/lib/x86_64-linux-gnu/texlive
             /usr/lib/x86_64-linux-gnu/graphviz
             doxygen-src
-          key: ${{ runner.os }}-doxygen-${{ env.REBUILD_CACHE_NUMBER }}-${{ env.DOXYGEN_VERSION }}-${{ env.TEX_VERSION }}-${{ env.GRAPHVIZ_VERSION }}
+          key: ${{ runner.os }}-doxygen-${{ inputs.rebuild_cache_number }}-${{ inputs.doxygen_version }}-${{ inputs.tex_version }}-${{ inputs.graphviz_version }}
 
       - name: Build and install doxygen and its dependencies
         if: steps.cache_doxygen.outputs.cache-hit != 'true'
