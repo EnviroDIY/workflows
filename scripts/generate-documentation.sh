@@ -11,6 +11,7 @@ trap '[[ $BASH_COMMAND != echo* ]] && echo $BASH_COMMAND' DEBUG
 # Exit with nonzero exit code if anything fails
 set -e
 
+# Update the style sheets
 cd $GITHUB_WORKSPACE/code_docs/m.css
 echo "\n\e[32mUpdate the style sheets\e[0m"
 cd $GITHUB_WORKSPACE/code_docs/m.css/css/EnviroDIY
@@ -37,7 +38,6 @@ echo "::group::Doxygen Run Log"
 # Redirect both stderr and stdout to the log file AND the console.
 $GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen Doxyfile 2>&1
 result_code=${PIPESTATUS[0]}
-if [ "$result_code" -eq "0" ] && [ "$status" -eq "0" ]; then status=0; else status=1; fi
 echo "::endgroup::"
 echo "::group::Doxygen Output"
 echo "$(<output_doxygen.log )"
@@ -65,3 +65,8 @@ echo "::endgroup::"
 echo "\n\e[32mCopying function documentation\e[0m"
 curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/copyFunctions.py -o copyFunctions.py
 python copyFunctions.py 2>&1
+
+# # Generate Arduino keywords using doxygen2keywords.xsl and Saxon
+# echo "\n\e[32mConverting the Doxygen output to an Arudino keywords file\e[0m"
+# java  -jar "C:\Users\sdamiano\Downloads\SaxonHE12-4J\saxon-he-12.4.jar" -o:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt" -s:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensorsDoxygen\xml\index.xml" -xsl:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\workflows\docs\doxygen2keywords.xsl"
+# perl -i -ne 'print if ! $x{$_}++' "C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt"
