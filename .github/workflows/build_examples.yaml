@@ -30,6 +30,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Pull the requirements file
+        run: |
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/requirements.txt -o requirements.txt
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -38,7 +42,6 @@ jobs:
 
       - name: Install python dependencies, including PlatformIO
         run: |
-          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/requirements.txt -o requirements.txt
           pip install -r requirements.txt
 
       - name: Generate Matrices
@@ -83,6 +86,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Unused Step
+        run: echo "This is needed to make the step number match with the PlatformIO jobs. =)"
 
       - name: Unused Step
         run: echo "This is needed to make the step number match with the PlatformIO jobs. =)"
@@ -168,16 +174,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Pull the requirements file
+        run: |
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/requirements.txt -o requirements.txt
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
           cache: 'pip'
 
-      # This should be pulled from cache, if there's not a new version
       - name: Install python dependencies, including PlatformIO
         run: |
-          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/requirements.py -o requirements.py
           pip install -r requirements.txt
 
       - name: Download the PlatformIO scripts

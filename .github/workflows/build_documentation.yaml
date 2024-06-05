@@ -42,22 +42,19 @@ jobs:
         with:
           path: ${{ env.DOC_ROOT }}
 
+      - name: Pull the requirements file
+        run: |
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/doxygen_mcss_requirements.txt -o requirements.txt
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+          cache: 'pip'
 
-      - name: Restore Python Dependencies
-        uses: actions/cache@v4
-        id: cache_python
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-python-${{ inputs.rebuild_cache_number }}
-
-      - name: Install Pygments and other m.css Python Requirements
+      - name: Install python dependencies, including PlatformIO
         run: |
-          python -m pip install --upgrade pip
-          pip3 install --upgrade --upgrade-strategy only-if-needed jinja2 Pygments beautifulsoup4
+          pip install --upgrade --upgrade-strategy only-if-needed -r requirements.txt
 
       - name: Restore Doxygen, Graphviz, and TeX Live
         id: cache_doxygen

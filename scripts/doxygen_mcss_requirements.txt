@@ -1,0 +1,7 @@
+# Wheel for installs
+wheel
+
+# these are needed for mcss
+jinja2
+Pygments
+beautifulsoup4
