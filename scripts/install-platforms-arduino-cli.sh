@@ -55,11 +55,6 @@ echo "\n\e[32mInstalling the Raspberry Pi Pico Arduino Core\e[0m"
 arduino-cli --config-file arduino_cli.yaml core install rp2040:rp2040
 echo "::endgroup::"
 
-echo "::group::Installing STM32 Cores"
-echo "\n\e[32mInstalling the STM32 Arduino Core\e[0m"
-arduino-cli --config-file arduino_cli.yaml core install stm32:stm32
-echo "::endgroup::"
-
 echo "\n\e[32mUpdating the core index\e[0m"
 arduino-cli --config-file arduino_cli.yaml core update-index
 

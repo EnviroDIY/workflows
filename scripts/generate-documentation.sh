@@ -66,6 +66,7 @@ echo "::group::m.css Output"
 echo "$(<output_mcss.log )"
 echo "::endgroup::"
 
+# copy functions so they look right
 echo "\n\e[32mCopying function documentation\e[0m"
 curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/copyFunctions.py -o copyFunctions.py
 python copyFunctions.py 2>&1

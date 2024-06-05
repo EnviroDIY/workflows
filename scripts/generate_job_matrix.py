@@ -156,7 +156,7 @@ def create_pio_ci_command(
     code_subfolder: str,
     pio_env: str,
     pio_env_file: str = pio_config_file,
-    have_pio_config_file: bool = True,
+    have_pio_config_file: bool = have_pio_config_file,
 ) -> str:
     if have_pio_config_file:
         pio_command_args = [
