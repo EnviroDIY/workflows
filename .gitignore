@@ -4,3 +4,4 @@ __pycache__/
 runDoxygen.bat
 home/
 .github/workflows/build_examples_matrix.yaml
+scripts/arduino_cli.log

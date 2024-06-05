@@ -1,0 +1,58 @@
+name: Build Examples with PlatformIO and Arduino CLI
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    # Map the workflow outputs to job outputs
+    outputs:
+      has_dependencies:
+        value: ${{ jobs.check_for_dependencies.outputs.has_dependencies }}
+      consolidated_deps:
+        value: ${{ jobs.check_for_dependencies.outputs.consolidated_deps }}
+      dep_hash:
+        value: ${{ jobs.check_for_dependencies.outputs.dep_hash }}
+
+jobs:
+  check_for_dependencies:
+    name: Check if there are any library dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      has_dependencies: ${{ steps.check_for_deps.outputs.has_dependencies }}
+      consolidated_deps: ${{ steps.check_for_deps.outputs.consolidated_deps }}
+      dep_hash: ${{ steps.check_for_deps.outputs.dep_hash }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install all the library dependencies!
+      - name: Install the library dependencies to zip up for the release
+        id: check_for_deps
+        run: |
+          echo "has_dependencies=false" >> $GITHUB_OUTPUT
+          cat > consolidated_deps.txt
+          if [ -e continuous_integration/install-libraries-platformio.sh ]
+          then
+            echo "Dependency installation script fount at continuous_integration/install-libraries-platformio.sh"
+            echo "has_dependencies=true" >> $GITHUB_OUTPUT
+            cat continuous_integration/install-libraries-platformio.sh >> consolidated_deps.txt
+          fi
+          if [ -e continuous_integration/install-libraries-arduino-cli.sh ]
+          then
+            echo "Dependency installation script fount at continuous_integration/install-libraries-arduino-cli.sh"
+            echo "has_dependencies=true" >> $GITHUB_OUTPUT
+            cat continuous_integration/install-libraries-arduino-cli.sh >> consolidated_deps.txt
+          fi
+          if [ -e ./continuous_integration/dependencies.json ]
+          then
+            echo "Dependency installation script fount at ./continuous_integration/dependencies.json"
+            echo "has_dependencies=true" >> $GITHUB_OUTPUT
+            cat ./continuous_integration/dependencies.json >> consolidated_deps.txt
+          fi
+          then
+            echo "Dependency installation script fount at ./examples/example_dependencies.json"
+            echo "has_dependencies=true" >> $GITHUB_OUTPUT
+            cat ./examples/example_dependencies.json >> consolidated_deps.txt
+          fi
+          echo "consolidated_deps=$(cat consolidated_deps.txt)" >> $GITHUB_OUTPUT
+          echo "dep_hash=${{ hashFiles('consolidated_deps.txt') }}" >> $GITHUB_OUTPUT

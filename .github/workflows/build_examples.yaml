@@ -1,0 +1,241 @@
+name: Build Examples with PlatformIO and Arduino CLI
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      boards_to_build:
+        description: 'A comma-separated list of PlatformIO board names to build'
+        default: ""
+        required: false
+        type: string
+      examples_to_build:
+        description: 'A comma-separated list of examples to build'
+        default: ""
+        required: false
+        type: string
+
+jobs:
+  generate_matrix:
+    name: Generate build matrices
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    outputs:
+      arduino_job_matrix: ${{ steps.py_matrix.outputs.arduino_job_matrix }}
+      pio_job_matrix: ${{ steps.py_matrix.outputs.pio_job_matrix }}
+    env:
+      BOARDS_TO_BUILD: ${{ inputs.boards_to_build }}
+      EXAMPLES_TO_BUILD: ${{ inputs.examples_to_build }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      - name: Install python dependencies, including PlatformIO
+        run: pip install -r continuous_integration/requirements.txt
+
+      - name: Generate Matrices
+        id: py_matrix
+        run: |
+          if [ -e continuous_integration/generate_job_matrix.py ]
+          then
+            echo "Generating job matrix from library specific generator code"
+            echo "has_dependencies=true" >> $GITHUB_OUTPUT
+            python continuous_integration/generate_job_matrix.py
+          else
+            echo "Generating job matrix from standard workflow"
+            curl https://raw.githubusercontent.com/EnviroDIY/workflows/master/scripts/generate_job_matrix.py
+            echo "has_dependencies=true" >> $GITHUB_OUTPUT
+            python generate_job_matrix.py
+          fi
+
+      - name: Store generated examples
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated_examples
+          path: |
+            continuous_integration_artifacts/
+
+  determine_library_source:
+    name: Determine the source of the testing library
+    uses: EnviroDIY/workflows/.github/workflows/determine_library_source.yml
+
+  check_for_dependencies:
+    name: Check if there are any library dependencies
+    uses: EnviroDIY/workflows/.github/workflows/check_for_dependencies.yml
+
+  build_ex_arduino:
+    name: ${{ matrix.job_info.job_name }}
+    runs-on: ubuntu-latest
+    needs: [generate_matrix, determine_library_source, check_for_dependencies]
+    env:
+      LIBRARY_INSTALL_ZIP: ${{ needs.determine_library_source.outputs.library_install_zip }}
+    strategy:
+      matrix:
+        job_info: ${{ fromJSON(needs.generate_matrix.outputs.arduino_job_matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unused Step
+        run: echo "This is needed to make the step number match with the PlatformIO jobs. =)"
+
+      # We use the `arduino/setup-arduino-cli` action to install and
+      # configure the Arduino CLI on the system.
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v1.1.2
+
+      - name: Download the Arduino scripts
+        run: |
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/master/scripts/install-platforms-arduino-cli.sh
+
+      - name: Restore Arduino platforms
+        uses: actions/cache@v4
+        id: cache_platforms
+        with:
+          path: |
+            home/arduino/data
+          key: ${{ hashFiles('install-platforms-arduino-cli.sh') }}
+
+      # Install cores for the Arduino CLI, iff no cache
+      - name: Install the Arduino Platforms
+        if: steps.cache_platforms.outputs.cache-hit != 'true'
+        run: |
+          chmod +x install-platforms-arduino-cli.sh
+          sh install-platforms-arduino-cli.sh
+
+      - name: Restore Arduino libraries
+        uses: actions/cache@v4
+        id: cache_libraries
+        with:
+          path: |
+            home/arduino/user
+          key: ${{ needs.check_for_dependencies.outputs.dep_hash }}
+
+      # Install library dependencies for the Arduino CLI, iff no cache
+      - name: Install the Arduino libraries
+        if: steps.cache_libraries.outputs.cache-hit != 'true'
+        run: |
+          chmod +x continuous_integration/install-libraries-arduino-cli.sh
+          sh continuous_integration/install-libraries-arduino-cli.sh
+
+      # Install the test library for the Arduino CLI
+      - name: Install the testing version of the library for the Arduino CLI
+        run: |
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/master/scripts/install-test-version-arduino-cli.sh
+          chmod +x install-test-version-arduino-cli.sh
+          sh install-test-version-arduino-cli.sh
+
+      - name: Download the prepared examples
+        uses: actions/download-artifact@v4
+        with:
+          name: generated_examples
+          path: |
+            continuous_integration_artifacts/
+
+      - name: Include problem matcher
+        uses: ammaraskar/gcc-problem-matcher@master
+
+      # Run the script to compile the examples
+      - name: Compile
+        env:
+          ACTION_RUN_ID: ${{ github.run_id }}
+        run: |
+          chmod +x ${{ matrix.job_info.script }}
+          bash ${{ matrix.job_info.script }}
+
+      - name: Uninstall testing version of the library before caching
+        run: |
+          arduino-cli --config-file continuous_integration/arduino_cli.yaml lib uninstall ${GITHUB_REPOSITORY#*/}
+
+  build_pio:
+    name: ${{ matrix.job_info.job_name }}
+    runs-on: ubuntu-latest
+    needs: [generate_matrix, determine_library_source, check_for_dependencies]
+    env:
+      LIBRARY_INSTALL_GIT: ${{ needs.determine_library_source.outputs.library_install_git }}
+    strategy:
+      matrix:
+        job_info: ${{ fromJSON(needs.generate_matrix.outputs.pio_job_matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      # This should be pulled from cache, if there's not a new version
+      - name: Install python dependencies, including PlatformIO
+        run: |
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/master/scripts/requirements.py
+          pip install -r requirements.txt
+
+      - name: Download the PlatformIO scripts
+        run: |
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/master/scripts/install-platforms-platformio.sh
+
+      - name: Restore PlatformIO platforms
+        uses: actions/cache@v4
+        id: cache_platforms
+        with:
+          path: |
+            ~/.platformio/packages
+            ~/.platformio/platforms
+          key: ${{ hashFiles('./install-platforms-platformio.sh') }}
+
+      # Install the PlatformIO platforms at global level
+      - name: Install PlatformIO platforms
+        if: steps.cache_platforms.outputs.cache-hit != 'true'
+        run: |
+          chmod +x install-platforms-platformio.sh
+          sh install-platforms-platformio.sh
+
+      - name: Restore PlatformIO libraries
+        uses: actions/cache@v4
+        id: cache_libraries
+        with:
+          path: |
+            ~/.platformio/lib
+            $GITHUB_WORKSPACE/lib
+          key: ${{ needs.check_for_dependencies.outputs.dep_hash }}
+
+      # Install any library dependencies with PlatformIO at the global level
+      - name: Install PlatformIO libraries
+        if: steps.cache_libraries.outputs.cache-hit != 'true'
+        run: |
+          chmod +x continuous_integration/install-libraries-platformio.sh
+          sh continuous_integration/install-libraries-platformio.sh
+          cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/
+
+      # Install the library at the Global level for PlatformIO
+      # Force install to get the right version
+      - name: Install the testing version of the library for PlatformIO
+        run: |
+          pio pkg install -g --library ${{ env.LIBRARY_INSTALL_GIT }}
+          pio pkg list -g --only-libraries
+
+      - name: Download the prepared examples
+        uses: actions/download-artifact@v4
+        with:
+          name: generated_examples
+          path: |
+            continuous_integration_artifacts/
+
+      - name: Include problem matcher
+        uses: ammaraskar/gcc-problem-matcher@master
+
+      # Run the script to compile the examples
+      - name: Compile
+        env:
+          ACTION_RUN_ID: ${{ github.run_id }}
+        run: |
+          chmod +x ${{ matrix.job_info.script }}
+          bash ${{ matrix.job_info.script }}
