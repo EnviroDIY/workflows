@@ -37,7 +37,9 @@ jobs:
           cache: 'pip'
 
       - name: Install python dependencies, including PlatformIO
-        run: pip install -r continuous_integration/requirements.txt
+        run: |
+          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/requirements.txt -o requirements.txt
+          pip install -r requirements.txt
 
       - name: Generate Matrices
         id: py_matrix
