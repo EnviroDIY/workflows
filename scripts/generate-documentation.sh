@@ -26,12 +26,17 @@ cd $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs
 # download the markdown pre-filter
 curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/markdown_prefilter.py -o markdown_prefilter.py
 
+echo "\n\e[32mCurrent Doxygen version...\e[0m"
+$GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen -v 2>&1
+
+echo "::group::Listing directory contents"
+ls $GITHUB_WORKSPACE/code_docs/ -R
+echo "\n\e[32mUpdate the style sheets\e[0m"
+echo "::endgroup::"
+
 # echo "\n\e[32mCreating dox files from example read-me files\e[0m"
 # curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/documentExamples.py -o documentExamples.py
 # python documentExamples.py
-
-echo "\n\e[32mCurrent Doxygen version...\e[0m"
-$GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen -v 2>&1
 
 # only continue if these steps fail
 # doing this here to print the Doxygen log if it fails
@@ -40,7 +45,7 @@ set +e
 echo "\n\e[32mGenerating Doxygen code documentation...\e[0m"
 echo "::group::Doxygen Run Log"
 # Redirect both stderr and stdout to the log file AND the console.
-$GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen Doxyfile 2>&1
+$GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen Doxyfile 2>&1 | tee output.log
 result_code=${PIPESTATUS[0]}
 echo "::endgroup::"
 echo "::group::Doxygen Output"
