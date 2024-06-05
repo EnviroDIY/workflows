@@ -115,10 +115,10 @@ pio_to_acli = {
     "adafruit_feather_m4": {"fqbn": "adafruit:samd:adafruit_feather_m4"},
     "adafruit_grandcentral_m4": {"fqbn": "adafruit:samd:adafruit_grandcentral_m4"},
     # Espressif Boards
-    "nodemcuv": {"fqbn": "esp8266:esp8266:nodemcuv"},
+    "nodemcu": {"fqbn": "esp8266:esp8266:nodemcu"},
     "nodemcuv2": {"fqbn": "esp8266:esp8266:nodemcuv2"},
     "esp32dev": {"fqbn": "esp32:esp32:esp32"},
-    "esp32-c6-devkitc-1": {"fqbn": "esp32:esp32:esp32c6"},
+    "esp32-c6-devkitm-1": {"fqbn": "esp32:esp32:esp32c6"},
     "esp32-c3-devkitm-1": {"fqbn": "esp32:esp32:esp32c3"},
     "esp32-s3-devkitm-1": {"fqbn": "esp32:esp32:esp32s3"},
 }

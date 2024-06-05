@@ -24,6 +24,9 @@ arduino-cli --config-file arduino_cli.yaml core install arduino:avr
 echo "\n\e[32mInstalling the Arduino Mega AVR Core\e[0m"
 arduino-cli --config-file arduino_cli.yaml core install arduino:megaavr
 
+echo "\n\e[32mInstalling the Arduino SAM Core\e[0m"
+arduino-cli --config-file arduino_cli.yaml core install arduino:sam
+
 echo "\n\e[32mInstalling the Arduino SAMD Core\e[0m"
 arduino-cli --config-file arduino_cli.yaml core install arduino:samd
 
