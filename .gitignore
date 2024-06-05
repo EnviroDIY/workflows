@@ -2,3 +2,5 @@
 .history
 __pycache__/
 runDoxygen.bat
+home/
+.github/workflows/build_examples_matrix.yaml
