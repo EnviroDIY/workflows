@@ -12,6 +12,7 @@ trap '[[ $BASH_COMMAND != echo* ]] && echo $BASH_COMMAND' DEBUG
 set -e
 
 # Update the style sheets
+echo "::group::Updating style sheets"
 cd $GITHUB_WORKSPACE/code_docs/m.css
 echo "\n\e[32mUpdate the style sheets\e[0m"
 cd $GITHUB_WORKSPACE/code_docs/m.css/css/EnviroDIY
@@ -19,8 +20,11 @@ python $GITHUB_WORKSPACE/code_docs/m.css/css/postprocess.py "m-EnviroDIY.css"
 python $GITHUB_WORKSPACE/code_docs/m.css/css/postprocess.py "m-EnviroDIY.css" "m-documentation.css" -o "m-EnviroDIY+documentation.compiled.css"
 python $GITHUB_WORKSPACE/code_docs/m.css/css/postprocess.py "m-EnviroDIY.css" "m-theme-EnviroDIY.css" "m-documentation.css" --no-import -o "m-EnviroDIY.documentation.compiled.css"
 cp $GITHUB_WORKSPACE/code_docs/m.css/css/EnviroDIY/m-EnviroDIY+documentation.compiled.css $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs/css
+echo "::endgroup::"
 
 cd $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs
+# download the markdown pre-filter
+curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/markdown_prefilter.py -o markdown_prefilter.py
 
 # echo "\n\e[32mCreating dox files from example read-me files\e[0m"
 # curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/documentExamples.py -o documentExamples.py
