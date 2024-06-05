@@ -30,8 +30,8 @@ echo "\n\e[32mCurrent Doxygen version...\e[0m"
 $GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen -v 2>&1
 
 echo "::group::Listing directory contents"
-ls $GITHUB_WORKSPACE/code_docs/ -R
-echo "\n\e[32mUpdate the style sheets\e[0m"
+ls $GITHUB_WORKSPACE/code_docs/
+ls $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} -R
 echo "::endgroup::"
 
 # echo "\n\e[32mCreating dox files from example read-me files\e[0m"
