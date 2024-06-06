@@ -11,22 +11,27 @@ on:
         description: 'Change this number to force a cache rebuild'
         required: true
         type: number
+      build_doxygen:
+        description: 'True to rebuild Doxygen from source instead of using a tarball release'
+        required: false
+        type: boolean
+        default: false
       doxygen_version:
         description: 'The version of Doxygen to build'
         required: false
         type: string
         default: 'Release_1_11_0'
-      tex_version:
-        description: 'The version of TeX live to build'
-        required: false
-        type: string
-        default: '2019'
-        # ^^ 2019 is the latest TeX live available on apt-get and that's good enough
-      graphviz_version:
-        description: 'The version of GraphViz to build'
-        required: false
-        type: string
-        default: '2.43.0'
+  # Also give a manual trigger
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish Documentation to GitHub Pages'
+        required: true
+        type: boolean
+      rebuild_cache_number:
+        description: 'Change this number to force a cache rebuild'
+        required: true
+        type: number
 
 jobs:
   doc_build:
@@ -62,25 +67,65 @@ jobs:
         run: |
           pip install --upgrade --upgrade-strategy only-if-needed -r requirements.txt
 
-      - name: Restore Doxygen, Graphviz, and TeX Live
-        id: cache_doxygen
-        uses: actions/cache@v4
+      - name: Install or Restore apt-get packages
+        id: install_apt_get_deps
+        uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          path: |
-            /usr/lib/x86_64-linux-gnu/texlive
-            /usr/lib/x86_64-linux-gnu/graphviz
-            doxygen-src
-          key: ${{ runner.os }}-doxygen-${{ inputs.rebuild_cache_number }}-${{ inputs.doxygen_version }}-${{ inputs.tex_version }}-${{ inputs.graphviz_version }}
+          packages: >
+            dia curl wget
+            build-essential flex bison
+            texlive-base texlive-latex-extra texlive-fonts-extra texlive-fonts-recommended
+            doxygen doxygen-doc doxygen-gui doxygen-latex
+            graphviz mscgen
+          version: ${{ inputs.rebuild_cache_number }}
+          debug: true
 
-      - name: Build and install doxygen and its dependencies
-        if: steps.cache_doxygen.outputs.cache-hit != 'true'
+      - name: Check doxygen version
+        id: check_doxygen_version
         env:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
         run: |
+          echo package versions: ${{ steps.install_apt_get_deps.outputs.package-version-list }}
+          installed_doxygen=$(doxygen -v)
+          echo "\n\e[32mCurrent Doxygen version...\e[0m"
+          installed_doxygen=${installed_doxygen=#* }
+          echo "${installed_doxygen}"
+          requested_doxygen=$(echo "$DOXYGEN_VERSION" | sed "s/Release_//g")
+          requested_doxygen=$(echo "$requested_doxygen" | sed "s/_/./g")
+          echo "${requested_doxygen}"
+          echo "installed_doxygen=${installed_doxygen}" >> $GITHUB_OUTPUT
+          if [ "$installed_doxygen" = "$requested_doxygen" ]
+          then
+            echo "The requested Doxygen version is already installed"
+            echo "correct_doxygen=true" >> $GITHUB_OUTPUT
+          else
+            echo "The installed Doxygen version is different than requestsed"
+            echo "correct_doxygen=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and install doxygen from source
+        if: inputs.build_doxygen
+        env:
+          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
+        run: |
+          sudo apt-get remove doxygen
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
           chmod +x build-install-doxygen.sh
           sh build-install-doxygen.sh
+
+      - name: Install Doxygen from Tarball
+        if: ${{ ! inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
+        env:
+          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
+        run: |
+          sudo apt-get remove doxygen
+          curl https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.installed_doxygen }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.installed_doxygen }}.linux.bin.tar.gz
+          tar zxf doxygen-${{ steps.check_doxygen_version.outputs.installed_doxygen }}.linux.bin.tar.gz
+          ls
+          cd doxygen-${{ steps.check_doxygen_version.outputs.installed_doxygen }}/
+          make
+          sudo make install
 
       # check out my fork of m.css, for post-processing and re-formatting Doxygen output
       - name: Checkout m.css

@@ -26,7 +26,7 @@ cd $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs
 curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/markdown_prefilter.py -o markdown_prefilter.py
 
 echo "\n\e[32mCurrent Doxygen version...\e[0m"
-$GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen -v 2>&1
+doxygen -v 2>&1
 
 echo "::group::Listing directory contents"
 echo "$PWD"
@@ -45,8 +45,8 @@ set +e
 echo "\n\e[32mGenerating Doxygen code documentation...\e[0m"
 echo "::group::Doxygen Run Log"
 # Redirect both stderr and stdout to the log file AND the console.
-$GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen Doxyfile 2>&1 | tee output.log
-result_code=$(PIPESTATUS[0])
+doxygen Doxyfile 2>&1 | tee output.log
+result_code=${PIPESTATUS[0]}
 echo "::endgroup::"
 echo "::group::Doxygen Output"
 echo "$(<output_doxygen.log )"

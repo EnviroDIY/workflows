@@ -2,6 +2,8 @@ name: Prepare a new release and add release assets
 
 on:
   workflow_call:
+  # Also give a manual trigger
+  workflow_dispatch:
 
 env:
   PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
