@@ -132,6 +132,7 @@ jobs:
           tar zxf graphviz-${{ inputs.graphviz_version }}.tar.gz
           ls
           cd graphviz-${{ inputs.graphviz_version }}/
+          ./configure
           sudo make
           sudo make install
 
