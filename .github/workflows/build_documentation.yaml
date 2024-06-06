@@ -121,10 +121,10 @@ jobs:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
         run: |
           sudo apt-get remove doxygen
-          curl https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygenn }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygenn }}.linux.bin.tar.gz
-          tar zxf doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygenn }}.linux.bin.tar.gz
+          curl https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
+          tar zxf doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
           ls
-          cd doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygenn }}/
+          cd doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}/
           make
           sudo make install
 
