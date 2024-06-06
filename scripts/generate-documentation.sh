@@ -29,6 +29,7 @@ echo "\n\e[32mCurrent Doxygen version...\e[0m"
 $GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen -v 2>&1
 
 echo "::group::Listing directory contents"
+echo "$PWD"
 ls $GITHUB_WORKSPACE/code_docs/
 ls $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} -R
 echo "::endgroup::"

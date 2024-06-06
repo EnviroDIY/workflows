@@ -15,7 +15,7 @@ on:
         description: 'The version of Doxygen to build'
         required: false
         type: string
-        default: 'Release_1_9_6'
+        default: 'Release_1_11_0'
       tex_version:
         description: 'The version of TeX live to build'
         required: false
