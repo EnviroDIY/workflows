@@ -82,7 +82,8 @@ jobs:
             dia curl wget
             build-essential flex bison
             doxygen doxygen-doc doxygen-gui doxygen-latex
-            graphviz mscgen
+            graphviz mscgen ghostscript
+            libtool libltdl-dev automake autoconf pkg-config pkgconf
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
@@ -93,6 +94,10 @@ jobs:
           GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
         run: |
           echo package versions: ${{ steps.install_apt_get_deps.outputs.package-version-list }}
+          sudo apt update        # Fetches the list of available updates
+          sudo apt upgrade       # Installs some updates; does not remove packages
+          sudo apt full-upgrade  # Installs updates; may also remove some packages, if needed
+          sudo apt autoremove    # Removes any old packages that are no longer needed
           installed_doxygen=$(doxygen -v)
           installed_doxygen=${installed_doxygen=#* }
           echo "Current Doxygen version..."
