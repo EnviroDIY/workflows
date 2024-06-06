@@ -71,7 +71,7 @@ jobs:
         id: install_tex_live
         uses: zauguin/install-texlive@v3
         with:
-          packages: texlive # texlive-latex-base, texlive-latex-recommended, and texlive-fonts-recommended
+          packages: scheme-medium
           cache_version: ${{ inputs.rebuild_cache_number }}
 
       - name: Install or Restore other apt-get packages
