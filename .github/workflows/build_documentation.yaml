@@ -55,7 +55,7 @@ jobs:
 
       - name: Pull the requirements file
         run: |
-          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/doxygen_mcss_requirements.txt -o requirements.txt
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/doxygen_mcss_requirements.txt -o requirements.txt
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -78,7 +78,7 @@ jobs:
             doxygen doxygen-doc doxygen-gui doxygen-latex
             graphviz mscgen
           version: ${{ inputs.rebuild_cache_number }}
-          debug: true
+          debug: false
 
       - name: Check doxygen version
         id: check_doxygen_version
@@ -111,7 +111,7 @@ jobs:
         run: |
           sudo apt-get remove doxygen
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
-          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
           chmod +x build-install-doxygen.sh
           sh build-install-doxygen.sh
 
@@ -121,7 +121,7 @@ jobs:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
         run: |
           sudo apt-get remove doxygen
-          curl https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
+          curl -SL https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
           tar zxf doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
           ls
           cd doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}/
@@ -140,7 +140,7 @@ jobs:
         id: generate_docs
         run: |
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
-          curl https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
           chmod +x generate-documentation.sh
           sh generate-documentation.sh 2>&1 | tee doxygen_run_output.log
           result_code=${PIPESTATUS[0]}
