@@ -45,7 +45,7 @@ if [ ! -f $GITHUB_WORKSPACE/doxygen-src/build/bin/doxygen ]; then
     echo "\e[32mMake...\e[0m"
     cmake -G "Unix Makefiles" ..
     make
-    make install
+    # make install
     echo "\e[32mDone building doxygen.\e[0m"
     echo "\e[32mdoxygen path: \e[0m" $(pwd)
 fi
