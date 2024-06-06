@@ -125,7 +125,6 @@ jobs:
           tar zxf doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
           ls
           cd doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}/
-          make
           sudo make install
 
       # check out my fork of m.css, for post-processing and re-formatting Doxygen output
