@@ -7,11 +7,11 @@ set CALLING_DIR=%CALLING_DIR:~0,-1%
 
 @REM https://stackoverflow.com/questions/17279114/split-path-and-take-last-folder-name-in-batch-script
 
-for %%f in ("%CALLING_DIR%") do set GITHUB_REPOSITORY=%%~nxf
+for %%f in ("%CURRENT_DIR%") do set GITHUB_REPOSITORY=%%~nxf
 echo GitHub Repo: %GITHUB_REPOSITORY%
 
 @REM https://stackoverflow.com/questions/26537949/how-to-split-variables-in-batch-files
-FOR /F "tokens=1-10 delims=\" %%G IN ("%CALLING_DIR%") DO echo %%G %%H %%I %%J %%K %%L %%M %%N %%O %%P & set GIBHUB_BASE_DIR=%%G\%%H\%%I\%%J\%%K
+FOR /F "tokens=1-10 delims=\" %%G IN ("%CURRENT_DIR%") DO echo %%G %%H %%I %%J %%K %%L %%M %%N %%O %%P & set GIBHUB_BASE_DIR=%%G\%%H\%%I\%%J\%%K
 echo GitHub Orgs Directory: %GIBHUB_BASE_DIR%
 
 @REM IF "%~1"=="" (
