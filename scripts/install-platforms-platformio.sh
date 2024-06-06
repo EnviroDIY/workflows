@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# Makes the bash script print out every command before it is executed, except echo
-trap '[[ $BASH_COMMAND != echo* ]] && echo $BASH_COMMAND' DEBUG
-
-# Exit with nonzero exit code if anything fails
-set -e
+# Set options,
+set -e # Exit with nonzero exit code if anything fails
+set -v # Prints shell input lines as they are read.
+set -x # Print command traces before executing command.
 
 echo "::group::Installing Platforms and Frameworks"
 echo "\e[32mInstalling Atmel AVR platforms \e[0m"

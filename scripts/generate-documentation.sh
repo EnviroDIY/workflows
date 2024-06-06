@@ -1,15 +1,14 @@
 #!/bin/bash
 
-# Makes the bash script print out every command before it is executed, except echo
-trap '[[ $BASH_COMMAND != echo* ]] && echo $BASH_COMMAND' DEBUG
-
 # Script modified from scripts by Jeroen de Bruijn, thephez, and Adafruit
 # https://gist.github.com/vidavidorra/548ffbcdae99d752da02
 # https://github.com/thephez/doxygen-travis-build
 # https://learn.adafruit.com/the-well-automated-arduino-library/travis-ci
 
-# Exit with nonzero exit code if anything fails
-set -e
+# Set options,
+set -e # Exit with nonzero exit code if anything fails
+set -v # Prints shell input lines as they are read.
+set -x # Print command traces before executing command.
 
 # Update the style sheets
 echo "::group::Updating style sheets"
