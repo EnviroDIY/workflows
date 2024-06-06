@@ -69,7 +69,7 @@ jobs:
 
       - name: Install or Restore Tex Live
         id: install_tex_live
-        uses: awalsh128/cache-apt-pkgs-action@v1
+        uses: zauguin/install-texlive@v3
         with:
           packages: texlive # texlive-latex-base, texlive-latex-recommended, and texlive-fonts-recommended
           cache_version: ${{ inputs.rebuild_cache_number }}
