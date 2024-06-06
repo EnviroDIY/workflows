@@ -87,13 +87,14 @@ jobs:
         run: |
           echo package versions: ${{ steps.install_apt_get_deps.outputs.package-version-list }}
           installed_doxygen=$(doxygen -v)
-          echo "\n\e[32mCurrent Doxygen version...\e[0m"
+          echo "Current Doxygen version..."
           installed_doxygen=${installed_doxygen=#* }
           echo "${installed_doxygen}"
           requested_doxygen=$(echo "$DOXYGEN_VERSION" | sed "s/Release_//g")
           requested_doxygen=$(echo "$requested_doxygen" | sed "s/_/./g")
           echo "${requested_doxygen}"
           echo "installed_doxygen=${installed_doxygen}" >> $GITHUB_OUTPUT
+          echo "requested_doxygen=${requested_doxygen}" >> $GITHUB_OUTPUT
           if [ "$installed_doxygen" = "$requested_doxygen" ]
           then
             echo "The requested Doxygen version is already installed"
@@ -120,10 +121,10 @@ jobs:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
         run: |
           sudo apt-get remove doxygen
-          curl https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.installed_doxygen }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.installed_doxygen }}.linux.bin.tar.gz
-          tar zxf doxygen-${{ steps.check_doxygen_version.outputs.installed_doxygen }}.linux.bin.tar.gz
+          curl https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygenn }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygenn }}.linux.bin.tar.gz
+          tar zxf doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygenn }}.linux.bin.tar.gz
           ls
-          cd doxygen-${{ steps.check_doxygen_version.outputs.installed_doxygen }}/
+          cd doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygenn }}/
           make
           sudo make install
 
