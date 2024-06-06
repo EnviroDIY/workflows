@@ -6,18 +6,21 @@ import os
 import glob
 import xml.etree.ElementTree as ET
 
+# %%
 # The workspace directory
-if "GITHUB_WORKSPACE" in os.environ.keys():
-    workspace_dir = os.environ.get("GITHUB_WORKSPACE")
+if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
+    docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]
+    relative_dir = f"{repo_name}_Doxygen/xml/"
 else:
-    workspace_dir = os.getcwd()
-    repo_name = workspace_dir.split("/")[-1]
+    docbuild_dir = os.getcwd()
+    repo_name = docbuild_dir.split("/")[-1]
+    relative_dir = f"../{repo_name}_Doxygen/xml/"
 
-print(f"Workspace Directory: {workspace_dir}")
-relative_dir = f"../{repo_name}_Doxygen/xml/"
-doxy_xml_dir = os.path.join(workspace_dir, relative_dir)
+doxy_xml_dir = os.path.join(docbuild_dir, relative_dir)
 doxy_xml_dir = os.path.abspath(os.path.realpath(doxy_xml_dir))
+
+print(f"Workspace Directory: {docbuild_dir}")
 print("XML Directory: {}".format(doxy_xml_dir))
 
 all_files = [
@@ -31,6 +34,7 @@ all_files = [
 compound_def = r"<compounddef id=\"(?P<doxygen_compound_id>.+?)\" kind=\"\w+?\">"
 section_header = r"<sect(?P<section_number>[123456]) id=\"(?P<doxygen_sect_id>.+)\">"
 doxy_file_location = r"<location file=\"(?P<file_location>.+)\"/>"
+
 # %%
 for filename in all_files:
     # print("Now on {}".format(os.path.join(doxy_xml_dir, filename)))
