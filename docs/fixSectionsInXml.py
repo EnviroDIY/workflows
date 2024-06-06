@@ -15,7 +15,7 @@ else:
     repo_name = workspace_dir.split("/")[-1]
 
 print(f"Workspace Directory: {workspace_dir}")
-relative_dir = f"../../{repo_name}_Doxygen/xml/"
+relative_dir = f"../{repo_name}_Doxygen/xml/"
 doxy_xml_dir = os.path.join(workspace_dir, relative_dir)
 doxy_xml_dir = os.path.abspath(os.path.realpath(doxy_xml_dir))
 print("XML Directory: {}".format(doxy_xml_dir))
