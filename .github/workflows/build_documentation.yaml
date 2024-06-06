@@ -11,16 +11,16 @@ on:
         description: 'Change this number to force a cache rebuild'
         required: true
         type: number
-      build_doxygen:
-        description: 'True to rebuild Doxygen from source instead of using a tarball release'
-        required: false
-        type: boolean
-        default: false
       doxygen_version:
         description: 'The version of Doxygen to build'
         required: false
         type: string
         default: 'Release_1_11_0'
+      graphviz_version:
+        description: 'The version of GraphViz to build'
+        required: false
+        type: string
+        default: '11.0.0'
   # Also give a manual trigger
   workflow_dispatch:
     inputs:
@@ -67,28 +67,35 @@ jobs:
         run: |
           pip install --upgrade --upgrade-strategy only-if-needed -r requirements.txt
 
-      - name: Install or Restore apt-get packages
+      - name: Install or Restore Tex Live
+        id: install_tex_live
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: texlive # texlive-latex-base, texlive-latex-recommended, and texlive-fonts-recommended
+          cache_version: ${{ inputs.rebuild_cache_number }}
+
+      - name: Install or Restore other apt-get packages
         id: install_apt_get_deps
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
             dia curl wget
             build-essential flex bison
-            texlive-base texlive-latex-extra texlive-fonts-extra texlive-fonts-recommended
             doxygen doxygen-doc doxygen-gui doxygen-latex
             graphviz mscgen
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
-      - name: Check doxygen version
+      - name: Check Doxygen and GraphViz versions
         id: check_doxygen_version
         env:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
+          GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
         run: |
           echo package versions: ${{ steps.install_apt_get_deps.outputs.package-version-list }}
           installed_doxygen=$(doxygen -v)
-          echo "Current Doxygen version..."
           installed_doxygen=${installed_doxygen=#* }
+          echo "Current Doxygen version..."
           echo "${installed_doxygen}"
           requested_doxygen=$(echo "$DOXYGEN_VERSION" | sed "s/Release_//g")
           requested_doxygen=$(echo "$requested_doxygen" | sed "s/_/./g")
@@ -103,23 +110,35 @@ jobs:
             echo "The installed Doxygen version is different than requestsed"
             echo "correct_doxygen=false" >> $GITHUB_OUTPUT
           fi
+          installed_graphviz=$(dot -V)
+          installed_graphviz=${installed_graphviz=#* }
+          echo "Current GraphViz version..."
+          echo "${installed_graphviz}"
+          if [ "$installed_graphviz" = "$GRAPHVIZ_VERSION" ]
+          then
+            echo "The requested GraphViz version is already installed"
+            echo "correct_graphviz=true" >> $GITHUB_OUTPUT
+          else
+            echo "The installed GraphViz version is different than requestsed"
+            echo "correct_graphviz=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Build and install doxygen from source
-        if: inputs.build_doxygen
-        env:
-          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
+      - name: Install GraphViz from Tarball
+        if: ${{ ! inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
         run: |
-          sudo apt-get remove doxygen
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
-          chmod +x build-install-doxygen.sh
-          sh build-install-doxygen.sh
+          sudo apt-get remove graphviz
+          curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/graphviz-${{ inputs.graphviz_version }}.tar.gz -o graphviz-${{ inputs.graphviz_version }}.tar.gz
+          tar zxf graphviz-${{ inputs.graphviz_version }}.tar.gz
+          ls
+          cd graphviz-${{ inputs.graphviz_version }}/
+          sudo make
+          sudo make install
 
       - name: Install Doxygen from Tarball
         if: ${{ ! inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
-        env:
-          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
         run: |
+          cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           sudo apt-get remove doxygen
           curl -SL https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
           tar zxf doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
