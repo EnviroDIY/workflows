@@ -84,8 +84,9 @@ jobs:
             doxygen doxygen-doc doxygen-gui doxygen-latex
             graphviz mscgen ghostscript
             libtool libltdl-dev automake autoconf pkg-config
+            libperl-dev
           version: ${{ inputs.rebuild_cache_number }}
-          debug: true
+          debug: false
 
       - name: Check Doxygen and GraphViz versions
         id: check_doxygen_version
@@ -98,6 +99,7 @@ jobs:
           sudo apt upgrade -y      # Installs some updates; does not remove packages
           sudo apt full-upgrade -y # Installs updates; may also remove some packages, if needed
           sudo apt autoremove -y   # Removes any old packages that are no longer needed
+          doxygen -v
           installed_doxygen=$(doxygen -v)
           installed_doxygen=${installed_doxygen=#* }
           echo "Current Doxygen version..."
@@ -115,6 +117,7 @@ jobs:
             echo "The installed Doxygen version is different than requestsed"
             echo "correct_doxygen=false" >> $GITHUB_OUTPUT
           fi
+          dot -V
           installed_graphviz=$(dot -V)
           installed_graphviz=${installed_graphviz=#* }
           echo "Current GraphViz version..."
