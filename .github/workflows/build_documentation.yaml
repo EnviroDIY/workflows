@@ -84,7 +84,7 @@ jobs:
             doxygen doxygen-doc doxygen-gui doxygen-latex
             graphviz mscgen ghostscript
             libtool libltdl-dev automake autoconf pkg-config
-            libperl-dev libsodium-dev argon2 libargon2-0-dev
+            libperl-dev libsodium-dev argon2 libargon2-dev
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
@@ -122,9 +122,9 @@ jobs:
           installed_graphviz_full=$(dot -V)
           # dot - graphviz version 2.43.0 (0)
           echo "${installed_graphviz_full}"
-          installed_graphviz=$(cut -c 23-30 <<< "${installed_graphviz_full}")
+          installed_graphviz=${installed_graphviz_full:16:8}
           echo "${installed_graphviz}"
-          installed_graphviz=${installed_graphviz=#* }
+          installed_graphviz="$(echo -e "${installed_graphviz}" | tr -d '[:space:]')"
           echo "Current GraphViz version is ${installed_graphviz}"
           echo "The requested GraphViz version was ${GRAPHVIZ_VERSION}"
           if [ "$installed_graphviz" = "$GRAPHVIZ_VERSION" ]
