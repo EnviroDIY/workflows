@@ -121,9 +121,10 @@ jobs:
           dot -V
           installed_graphviz_full=$(dot -V)
           # dot - graphviz version 2.43.0 (0)
-          echo "${installed_graphviz_full}"
-          installed_graphviz=${installed_graphviz_full:16:8}
-          echo "${installed_graphviz}"
+          echo "Full version of GraphViz ${installed_graphviz_full}"
+          installed_graphviz=$(echo "$installed_graphviz_full" | sed "s/dot - graphviz version //g")
+          installed_graphviz=$(echo "$installed_graphviz" | sed -r "s/ \(\d+\)//g")
+          echo "Substring of ${installed_graphviz}"
           installed_graphviz="$(echo -e "${installed_graphviz}" | tr -d '[:space:]')"
           echo "Current GraphViz version is ${installed_graphviz}"
           echo "The requested GraphViz version was ${GRAPHVIZ_VERSION}"
@@ -139,10 +140,10 @@ jobs:
       - name: Install GraphViz from Tarball
         if: ${{ ! inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
         run: |
-          cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
+          cd ${{ github.workspace }}/
           sudo apt-get remove graphviz
           # build and install libsodium
-          cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
+          cd ${{ github.workspace }}/
           curl -SL https://download.libsodium.org/libsodium/releases/LATEST.tar.gz -o LATEST.tar.gz
           tar zxf LATEST.tar.gz
           ls
@@ -151,7 +152,7 @@ jobs:
           sudo make
           sudo make install
           # build and install graphviz
-          cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
+          cd ${{ github.workspace }}/
           curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/graphviz-${{ inputs.graphviz_version }}.tar.gz -o graphviz-${{ inputs.graphviz_version }}.tar.gz
           tar zxf graphviz-${{ inputs.graphviz_version }}.tar.gz
           ls
@@ -163,7 +164,7 @@ jobs:
       - name: Install Doxygen from Tarball
         if: ${{ ! inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
         run: |
-          cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
+          cd ${{ github.workspace }}/
           sudo apt-get remove doxygen
           curl -SL https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
           tar zxf doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
