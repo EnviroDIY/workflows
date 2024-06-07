@@ -94,6 +94,8 @@ jobs:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
           GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
         run: |
+          set -v # Prints shell input lines as they are read.
+          set -x # Print command traces before executing command.
           echo package versions: ${{ steps.install_apt_get_deps.outputs.package-version-list }}
           # sudo apt update          # Fetches the list of available updates
           # sudo apt upgrade -y      # Installs some updates; does not remove packages
@@ -120,7 +122,7 @@ jobs:
           installed_graphviz_full=$(dot -V)
           # dot - graphviz version 2.43.0 (0)
           echo "${installed_graphviz_full}"
-          installed_graphviz=$(cut -c 23:7 <<< "${installed_graphviz_full:24:7}")
+          installed_graphviz=$(cut -c 23-30 <<< "${installed_graphviz_full}")
           echo "${installed_graphviz}"
           installed_graphviz=${installed_graphviz=#* }
           echo "Current GraphViz version is ${installed_graphviz}"
