@@ -84,7 +84,7 @@ jobs:
             doxygen doxygen-doc doxygen-gui doxygen-latex
             graphviz mscgen ghostscript
             libtool libltdl-dev automake autoconf pkg-config
-            libperl-dev
+            libperl-dev libsodium-dev argon2
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
@@ -102,11 +102,10 @@ jobs:
           doxygen -v
           installed_doxygen=$(doxygen -v)
           installed_doxygen=${installed_doxygen=#* }
-          echo "Current Doxygen version..."
-          echo "${installed_doxygen}"
+          echo "Current Doxygen version is ${installed_doxygen}"
           requested_doxygen=$(echo "$DOXYGEN_VERSION" | sed "s/Release_//g")
           requested_doxygen=$(echo "$requested_doxygen" | sed "s/_/./g")
-          echo "${requested_doxygen}"
+          echo "Requested Doxygen version was ${requested_doxygen}"
           echo "installed_doxygen=${installed_doxygen}" >> $GITHUB_OUTPUT
           echo "requested_doxygen=${requested_doxygen}" >> $GITHUB_OUTPUT
           if [ "$installed_doxygen" = "$requested_doxygen" ]
@@ -119,9 +118,11 @@ jobs:
           fi
           dot -V
           installed_graphviz=$(dot -V)
+          # dot - graphviz version 2.43.0 (0)
+          installed_graphviz=${installed_graphviz:24:7}
           installed_graphviz=${installed_graphviz=#* }
-          echo "Current GraphViz version..."
-          echo "${installed_graphviz}"
+          echo "Current GraphViz version is ${installed_graphviz}"
+          echo "The requested GraphViz version was ${GRAPHVIZ_VERSION}"
           if [ "$installed_graphviz" = "$GRAPHVIZ_VERSION" ]
           then
             echo "The requested GraphViz version is already installed"
@@ -136,6 +137,15 @@ jobs:
         run: |
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           sudo apt-get remove graphviz
+          # build and install libsodium
+          curl -SL https://download.libsodium.org/libsodium/releases/LATEST.tar.gz
+          tar zxf LATEST.tar.gz
+          ls
+          cd libsodium-stable/
+          ./configure
+          sudo make
+          sudo make install
+          # build and install graphviz
           curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/graphviz-${{ inputs.graphviz_version }}.tar.gz -o graphviz-${{ inputs.graphviz_version }}.tar.gz
           tar zxf graphviz-${{ inputs.graphviz_version }}.tar.gz
           ls
