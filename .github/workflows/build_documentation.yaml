@@ -117,9 +117,11 @@ jobs:
             echo "correct_doxygen=false" >> $GITHUB_OUTPUT
           fi
           dot -V
-          installed_graphviz=$(dot -V)
+          installed_graphviz_full=$(dot -V)
           # dot - graphviz version 2.43.0 (0)
-          installed_graphviz=${installed_graphviz:24:7}
+          echo "${installed_graphviz_full}"
+          installed_graphviz=${installed_graphviz_full:24:7}
+          echo "${installed_graphviz}"
           installed_graphviz=${installed_graphviz=#* }
           echo "Current GraphViz version is ${installed_graphviz}"
           echo "The requested GraphViz version was ${GRAPHVIZ_VERSION}"
@@ -138,7 +140,8 @@ jobs:
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           sudo apt-get remove graphviz
           # build and install libsodium
-          curl -SL https://download.libsodium.org/libsodium/releases/LATEST.tar.gz
+          cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
+          curl -SL https://download.libsodium.org/libsodium/releases/LATEST.tar.gz -o LATEST.tar.gz
           tar zxf LATEST.tar.gz
           ls
           cd libsodium-stable/
@@ -146,6 +149,7 @@ jobs:
           sudo make
           sudo make install
           # build and install graphviz
+          cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/graphviz-${{ inputs.graphviz_version }}.tar.gz -o graphviz-${{ inputs.graphviz_version }}.tar.gz
           tar zxf graphviz-${{ inputs.graphviz_version }}.tar.gz
           ls
