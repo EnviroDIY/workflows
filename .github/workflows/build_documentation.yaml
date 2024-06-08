@@ -148,7 +148,7 @@ jobs:
           # check the version
           sudo dot -V
           # check for linkage dependencies
-          sudo ldd -v dot
+          sudo ldd -v /usr/bin/dot
           # Attempt initial dot config
           sudo dot -c
           # test a simple command to make sure the linking works
