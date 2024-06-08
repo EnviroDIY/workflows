@@ -111,19 +111,25 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            /usr/lib/x86_64-linux-gnu/doxygen
+            /usr/local/bin/doxygen
             /usr/bin/dot
+            /usr/include
+            /usr/lib
+            /usr/share
             /bin/dot
           key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
 
       - name: Install GraphViz from Deb Package
         if: ${{ ! inputs.build_doxygen && (steps.check_doxygen_version.outcome != 'success' || steps.check_doxygen_version.outputs.correct_doxygen != 'true') }}
+        env:
+          LD_LIBRARY_PATH: /path/to/graphviz/lib /path/to/graphviz/bin/dot
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove graphviz
           cd ${{ github.workspace }}/
           curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb -o ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
           sudo apt install -y ./ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
+          env LD_LIBRARY_PATH=/usr/lib /usr/bin/dot
           dot -V
           type -a dot
 
@@ -145,8 +151,12 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            /usr/lib/x86_64-linux-gnu/doxygen
-            /usr/lib/x86_64-linux-gnu/graphviz
+            /usr/local/bin/doxygen
+            /usr/bin/dot
+            /usr/include
+            /usr/lib
+            /usr/share
+            /bin/dot
           key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
 
 
@@ -160,6 +170,8 @@ jobs:
 
       - name: Generate all the documentation
         id: generate_docs
+        env:
+          LD_LIBRARY_PATH: /path/to/graphviz/lib /path/to/graphviz/bin/dot
         run: |
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
