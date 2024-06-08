@@ -100,6 +100,11 @@ jobs:
         env:
           GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
         run: |
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            echo "Enabling debugging!"
+            set -v # Prints shell input lines as they are read.
+            set -x # Print command traces before executing command.
+          fi
           cd ${{ github.workspace }}/
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-graphviz-version.sh -o check-graphviz-version.sh
           chmod +x check-graphviz-version.sh
@@ -120,6 +125,11 @@ jobs:
               steps.check_graphviz_version.outputs.correct_graphviz != 'true')
           }}
         run: |
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            echo "Enabling debugging!"
+            set -v # Prints shell input lines as they are read.
+            set -x # Print command traces before executing command.
+          fi
           cd ${{ github.workspace }}/
           sudo apt-get remove --purge "^graphviz.*"
           cd ${{ github.workspace }}/
@@ -169,6 +179,11 @@ jobs:
         env:
           GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
         run: |
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            echo "Enabling debugging!"
+            set -v # Prints shell input lines as they are read.
+            set -x # Print command traces before executing command.
+          fi
           cd ${{ github.workspace }}/
           sudo apt-get remove --purge "^graphviz.*"
           cd ${{ github.workspace }}/
@@ -218,6 +233,11 @@ jobs:
                     steps.install_doxygen_tar.outcome != 'skipped')
           }}
         run: |
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            echo "Enabling debugging!"
+            set -v # Prints shell input lines as they are read.
+            set -x # Print command traces before executing command.
+          fi
           cd ${{ github.workspace }}/
           sudo apt-get remove --purge "^doxygen.*"
           curl -SL https://github.com/doxygen/doxygen/releases/download/${{ steps.parse_doxygen_version.outputs.doxygen_tag }}/doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz -o doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz
