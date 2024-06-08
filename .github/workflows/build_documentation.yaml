@@ -25,7 +25,7 @@ on:
         description: 'The version of GraphViz to build'
         required: false
         type: string
-        default: '11.0.0'
+        default: '11.0.0' #2.43.0 is the latest on apt-get, but it can't make svgs
       build_graphviz:
         description: 'True to rebuild GraphViz from source instead of using a tarball release'
         required: false
@@ -121,7 +121,7 @@ jobs:
           }}
         run: |
           cd ${{ github.workspace }}/
-          sudo apt-get remove graphviz
+          sudo apt-get remove --purge "^graphviz.*"
           cd ${{ github.workspace }}/
           curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb -o ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
           sudo apt install -y ./ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
@@ -149,7 +149,7 @@ jobs:
           packages: >
             mscgen ghostscript
             libtool libltdl-dev automake autoconf pkg-config
-            libperl-dev libsodium-dev argon2 libargon2-dev
+            perl libperl-dev libsodium libsodium-dev argon2 libargon2-dev
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
@@ -166,7 +166,7 @@ jobs:
           }}
         run: |
           cd ${{ github.workspace }}/
-          sudo apt-get remove graphviz
+          sudo apt-get remove --purge "^graphviz.*"
           cd ${{ github.workspace }}/
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-graphviz.sh -o build-install-graphviz.sh
           chmod +x build-install-graphviz.sh
@@ -213,7 +213,7 @@ jobs:
           }}
         run: |
           cd ${{ github.workspace }}/
-          sudo apt-get remove doxygen
+          sudo apt-get remove --purge "^doxygen.*"
           curl -SL https://github.com/doxygen/doxygen/releases/download/${{ steps.parse_doxygen_version.outputs.doxygen_tag }}/doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz -o doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz
           tar zxf doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz
           ls
@@ -254,7 +254,7 @@ jobs:
           }}
         run: |
           cd ${{ github.workspace }}/
-          sudo apt-get remove doxygen
+          sudo apt-get remove --purge "^doxygen.*"
           cd ${{ github.workspace }}/
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
           chmod +x build-install-doxygen.sh

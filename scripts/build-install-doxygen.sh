@@ -11,7 +11,7 @@ fi
 cd $GITHUB_WORKSPACE
 
 # Remove any old versions
-sudo apt-get remove doxygen
+sudo apt-get remove --purge "^doxygen.*"
 
 # Build instructions from: https://www.stack.nl/~dimitri/doxygen/download.html
 echo "\e[32mCloning doxygen repository...\e[0m"

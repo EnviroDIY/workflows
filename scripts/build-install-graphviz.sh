@@ -11,8 +11,8 @@ fi
 cd $GITHUB_WORKSPACE
 
 # Remove any old versions
-sudo apt-get remove libsodium
-sudo apt-get remove graphviz
+sudo apt-get remove --purge "^libsodium.*"
+sudo apt-get remove --purge "^graphviz.*"
 
 # build and install libsodium (needed to build GraphViz)
 curl -SL https://download.libsodium.org/libsodium/releases/LATEST.tar.gz -o LATEST.tar.gz
