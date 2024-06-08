@@ -125,7 +125,7 @@ jobs:
               steps.check_graphviz_version.outputs.correct_graphviz != 'true')
           }}
         # env:
-        #   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.3/x64/lib /usr/lib /usr/lib/graphviz /usr/lib/graphviz/R /usr/lib/graphviz/go /usr/lib/graphviz/perl /usr/lib/graphviz/python3 /usr/lib/graphviz/ruby /usr/lib/graphviz/sharp /usr/bin/dot /usr/local/lib /usr/local/lib/graphviz /usr/local/lib/graphviz/R /usr/local/lib/graphviz/go /usr/local/lib/graphviz/perl /usr/local/lib/graphviz/python3 /usr/local/lib/graphviz/ruby /usr/local/lib/graphviz/sharp /usr/local/bin/dot
+        #   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.3/x64/lib /usr/lib/graphviz /usr/lib/graphviz/R /usr/lib/graphviz/go /usr/lib/graphviz/perl /usr/lib/graphviz/python3 /usr/lib/graphviz/ruby /usr/lib/graphviz/sharp /usr/bin/dot /usr/local/lib /usr/local/lib/graphviz /usr/local/lib/graphviz/R /usr/local/lib/graphviz/go /usr/local/lib/graphviz/perl /usr/local/lib/graphviz/python3 /usr/local/lib/graphviz/ruby /usr/local/lib/graphviz/sharp /usr/local/bin/dot
         run: |
           if [ "$RUNNER_DEBUG" = "1" ]; then
             echo "Enabling debugging!"
@@ -137,7 +137,7 @@ jobs:
           cd ${{ github.workspace }}/
           curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb -o ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
           sudo apt install -y ./ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
-          sudo env LD_LIBRARY_PATH=/opt/hostedtoolcache/Python/3.12.3/x64/lib /usr/lib /usr/lib/graphviz /usr/lib/graphviz/R /usr/lib/graphviz/go /usr/lib/graphviz/perl /usr/lib/graphviz/python3 /usr/lib/graphviz/ruby /usr/lib/graphviz/sharp /usr/bin/dot /usr/local/lib /usr/local/lib/graphviz /usr/local/lib/graphviz/R /usr/local/lib/graphviz/go /usr/local/lib/graphviz/perl /usr/local/lib/graphviz/python3 /usr/local/lib/graphviz/ruby /usr/local/lib/graphviz/sharp /usr/local/bin/dot
+          sudo env LD_LIBRARY_PATH=/opt/hostedtoolcache/Python/3.12.3/x64/lib /usr/lib/graphviz /usr/lib/graphviz/R /usr/lib/graphviz/go /usr/lib/graphviz/perl /usr/lib/graphviz/python3 /usr/lib/graphviz/ruby /usr/lib/graphviz/sharp /usr/bin/dot /usr/local/lib /usr/local/lib/graphviz /usr/local/lib/graphviz/R /usr/local/lib/graphviz/go /usr/local/lib/graphviz/perl /usr/local/lib/graphviz/python3 /usr/local/lib/graphviz/ruby /usr/local/lib/graphviz/sharp /usr/local/bin/dot
           # check the install location
           type -a dot
           # check the version
@@ -301,7 +301,7 @@ jobs:
       - name: Generate all the documentation
         id: generate_docs
         env:
-          LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.3/x64/lib /usr/lib /usr/lib/graphviz /usr/lib/graphviz/R /usr/lib/graphviz/go /usr/lib/graphviz/perl /usr/lib/graphviz/python3 /usr/lib/graphviz/ruby /usr/lib/graphviz/sharp /usr/bin/dot /usr/local/lib /usr/local/lib/graphviz /usr/local/lib/graphviz/R /usr/local/lib/graphviz/go /usr/local/lib/graphviz/perl /usr/local/lib/graphviz/python3 /usr/local/lib/graphviz/ruby /usr/local/lib/graphviz/sharp /usr/local/bin/dot
+          LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.3/x64/lib /usr/lib/graphviz /usr/lib/graphviz/R /usr/lib/graphviz/go /usr/lib/graphviz/perl /usr/lib/graphviz/python3 /usr/lib/graphviz/ruby /usr/lib/graphviz/sharp /usr/bin/dot /usr/local/lib /usr/local/lib/graphviz /usr/local/lib/graphviz/R /usr/local/lib/graphviz/go /usr/local/lib/graphviz/perl /usr/local/lib/graphviz/python3 /usr/local/lib/graphviz/ruby /usr/local/lib/graphviz/sharp /usr/local/bin/dot
           WORKSPACE_DIR: ${{ github.workspace }}
         run: |
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
