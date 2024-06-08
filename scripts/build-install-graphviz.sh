@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Set options,
+set -e # Exit with nonzero exit code if anything fails
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    echo "Enabling debugging!"
+    set -v # Prints shell input lines as they are read.
+    set -x # Print command traces before executing command.
+fi
+
+# NOTE: Install these dependencies for building libsodium and GraphViz using awalsh128/cache-apt-pkgs-action@v1
+#   - name: Install or Restore packages for building libsodium and GraphViz
+#     id: install_graphviz_build_deps
+#     if: ${{ inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_graphviz != 'true'}}
+#     uses: awalsh128/cache-apt-pkgs-action@v1
+#     with:
+#       packages: >
+#         mscgen ghostscript
+#         libtool libltdl-dev automake autoconf pkg-config
+#         libperl-dev libsodium-dev argon2 libargon2-dev
+#       version: ${{ inputs.rebuild_cache_number }}
+#       debug: false
+
+cd $GITHUB_WORKSPACE
+
+# Remove any old versions
+sudo apt-get remove libsodium
+sudo apt-get remove graphviz
+
+# build and install libsodium (needed to build GraphViz)
+curl -SL https://download.libsodium.org/libsodium/releases/LATEST.tar.gz -o LATEST.tar.gz
+tar zxf LATEST.tar.gz
+ls
+cd libsodium-stable/
+./configure
+sudo make
+sudo make install
+
+# build and install graphviz
+cd $GITHUB_WORKSPACE
+curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/$GRAPHVIZ_VERSION/graphviz-$GRAPHVIZ_VERSION.tar.gz -o graphviz-$GRAPHVIZ_VERSION.tar.gz
+tar zxf graphviz-$GRAPHVIZ_VERSION.tar.gz
+ls
+cd graphviz-$GRAPHVIZ_VERSION/
+./configure
+sudo make
+sudo make install
+
+echo "\e[32mDone building GraphViz.\e[0m"
+echo "\e[32mDot is now installed at : \e[0m" $(type -a dot)
+
+echo "\e[32m\n\n\nCurrent GraphViz version...\e[0m"
+dot -V
+echo "\n\n\n"

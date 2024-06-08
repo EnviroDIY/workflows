@@ -74,17 +74,12 @@ jobs:
           packages: scheme-medium
           cache_version: ${{ inputs.rebuild_cache_number }}
 
-      - name: Install or Restore other apt-get packages
+      - name: Install or Restore basic apt-get packages
         id: install_apt_get_deps
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
             dia curl wget
-            build-essential flex bison
-            doxygen doxygen-doc doxygen-gui doxygen-latex
-            graphviz mscgen ghostscript
-            libtool libltdl-dev automake autoconf pkg-config
-            libperl-dev libsodium-dev argon2 libargon2-dev
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
@@ -94,72 +89,31 @@ jobs:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
           GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
         run: |
-          set -v # Prints shell input lines as they are read.
-          set -x # Print command traces before executing command.
-          echo package versions: ${{ steps.install_apt_get_deps.outputs.package-version-list }}
-          # sudo apt update          # Fetches the list of available updates
-          # sudo apt upgrade -y      # Installs some updates; does not remove packages
-          # sudo apt full-upgrade -y # Installs updates; may also remove some packages, if needed
-          # sudo apt autoremove -y   # Removes any old packages that are no longer needed
-          doxygen -v
-          installed_doxygen=$(doxygen -v)
-          installed_doxygen=${installed_doxygen=#* }
-          echo "Current Doxygen version is ${installed_doxygen}"
-          requested_doxygen=$(echo "$DOXYGEN_VERSION" | sed "s/Release_//g")
-          requested_doxygen=$(echo "$requested_doxygen" | sed "s/_/./g")
-          echo "Requested Doxygen version was ${requested_doxygen}"
-          echo "installed_doxygen=${installed_doxygen}" >> $GITHUB_OUTPUT
-          echo "requested_doxygen=${requested_doxygen}" >> $GITHUB_OUTPUT
-          if [ "$installed_doxygen" = "$requested_doxygen" ]
-          then
-            echo "The requested Doxygen version is already installed"
-            echo "correct_doxygen=true" >> $GITHUB_OUTPUT
-          else
-            echo "The installed Doxygen version is different than requestsed"
-            echo "correct_doxygen=false" >> $GITHUB_OUTPUT
-          fi
-          dot -V
-          installed_graphviz_full=$(dot -V)
-          # dot - graphviz version 2.43.0 (0)
-          echo "Full version of GraphViz ${installed_graphviz_full}"
-          installed_graphviz=$(echo "$installed_graphviz_full" | sed "s/dot - graphviz version //g")
-          installed_graphviz=$(echo "$installed_graphviz" | sed -r "s/ \(\d+\)//g")
-          echo "Substring of ${installed_graphviz}"
-          installed_graphviz="$(echo -e "${installed_graphviz}" | tr -d '[:space:]')"
-          echo "Current GraphViz version is ${installed_graphviz}"
-          echo "The requested GraphViz version was ${GRAPHVIZ_VERSION}"
-          if [ "$installed_graphviz" = "$GRAPHVIZ_VERSION" ]
-          then
-            echo "The requested GraphViz version is already installed"
-            echo "correct_graphviz=true" >> $GITHUB_OUTPUT
-          else
-            echo "The installed GraphViz version is different than requestsed"
-            echo "correct_graphviz=false" >> $GITHUB_OUTPUT
-          fi
+          cd ${{ github.workspace }}/
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-versions.sh -o check-versions.sh
+          chmod +x check-versions.sh
+          bash check-versions.sh 2>&1
 
-      - name: Install GraphViz from Tarball
+      - name: Restore GraphViz and Doxygen
+        id: restore_doxygen
+        if: ${{ steps.check_doxygen_version.outputs.correct_doxygen == 'true'}}
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/lib/x86_64-linux-gnu/doxygen
+            /usr/lib/x86_64-linux-gnu/graphviz
+          key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
+
+      - name: Install GraphViz from Deb Package
         if: ${{ ! inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove graphviz
-          # build and install libsodium
           cd ${{ github.workspace }}/
-          curl -SL https://download.libsodium.org/libsodium/releases/LATEST.tar.gz -o LATEST.tar.gz
-          tar zxf LATEST.tar.gz
-          ls
-          cd libsodium-stable/
-          ./configure
-          sudo make
-          sudo make install
-          # build and install graphviz
-          cd ${{ github.workspace }}/
-          curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/graphviz-${{ inputs.graphviz_version }}.tar.gz -o graphviz-${{ inputs.graphviz_version }}.tar.gz
-          tar zxf graphviz-${{ inputs.graphviz_version }}.tar.gz
-          ls
-          cd graphviz-${{ inputs.graphviz_version }}/
-          ./configure
-          sudo make
-          sudo make install
+          curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb -o ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
+          sudo apt install -y ./ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
+          dot -V
+          where dot
 
       - name: Install Doxygen from Tarball
         if: ${{ ! inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
@@ -171,6 +125,18 @@ jobs:
           ls
           cd doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}/
           sudo make install
+          doxygen -v
+          where doxygen
+
+      - name: Cache GraphViz and Doxygen
+        id: cache-doxygen
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /usr/lib/x86_64-linux-gnu/doxygen
+            /usr/lib/x86_64-linux-gnu/graphviz
+          key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
+
 
       # check out my fork of m.css, for post-processing and re-formatting Doxygen output
       - name: Checkout m.css
@@ -186,17 +152,7 @@ jobs:
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
           chmod +x generate-documentation.sh
-          sh generate-documentation.sh 2>&1 | tee doxygen_run_output.log
-          result_code=${PIPESTATUS[0]}
-          echo "doxygen_warnings=$(cat docs/output_doxygen.log)" >> $GITHUB_OUTPUT
-          echo "mcss_warnings=$(cat docs/output_mcss.log)" >> $GITHUB_OUTPUT
-          echo "## Doxygen completed with the following warnings:" >> $GITHUB_STEP_SUMMARY
-          echo "$(cat docs/output_doxygen.log)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## mcss Doxygen post-processing completed with the following warnings:" >> $GITHUB_STEP_SUMMARY
-          echo "$(cat docs/output_mcss.log)" >> $GITHUB_STEP_SUMMARY
-          echo "Finished generating documentation"
-          exit $result_code
+          bash generate-documentation.sh
 
       - name: Deploy to github pages
         if: inputs.publish

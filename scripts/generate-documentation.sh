@@ -7,8 +7,11 @@
 
 # Set options,
 set -e # Exit with nonzero exit code if anything fails
-set -v # Prints shell input lines as they are read.
-set -x # Print command traces before executing command.
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    echo "Enabling debugging!"
+    set -v # Prints shell input lines as they are read.
+    set -x # Print command traces before executing command.
+fi
 
 # Update the style sheets
 echo "::group::Updating style sheets"
@@ -45,13 +48,13 @@ set +e
 echo "\n\e[32mGenerating Doxygen code documentation...\e[0m"
 echo "::group::Doxygen Run Log"
 # Redirect both stderr and stdout to the log file AND the console.
-doxygen Doxyfile 2>&1 | tee output.log
+doxygen Doxyfile 2>&1 | tee output_doxygen_run.log
 result_code=${PIPESTATUS[0]}
 echo "::endgroup::"
 echo "::group::Doxygen Output"
-echo "$(<output_doxygen.log )"
+echo "$(<output_doxygen.log)"
 echo "::endgroup::"
-if [ "$result_code" -ne "0" ] ; then exit $result_code; fi
+if [[ "$result_code" -ne "0" ]]; then exit $result_code; fi
 
 # go back to immediate exit
 set -e
@@ -68,7 +71,7 @@ echo "::group::m.css Run Log"
 python -u $GITHUB_WORKSPACE/code_docs/m.css/documentation/doxygen.py "mcss-conf.py" --no-doxygen --output "$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs/output_mcss.log" --templates "$GITHUB_WORKSPACE/code_docs/m.css/documentation/templates/EnviroDIY"
 echo "::endgroup::"
 echo "::group::m.css Output"
-echo "$(<output_mcss.log )"
+echo "$(<output_mcss.log)"
 echo "::endgroup::"
 
 # copy functions so they look right
@@ -80,3 +83,14 @@ python -u copyFunctions.py 2>&1
 # echo "\n\e[32mConverting the Doxygen output to an Arudino keywords file\e[0m"
 # java  -jar "C:\Users\sdamiano\Downloads\SaxonHE12-4J\saxon-he-12.4.jar" -o:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt" -s:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensorsDoxygen\xml\index.xml" -xsl:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\workflows\docs\doxygen2keywords.xsl"
 # perl -i -ne 'print if ! $x{$_}++' "C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt"
+
+# Echo outputs to output and step summaries
+echo "doxygen_warnings=$(cat docs/output_doxygen.log)" >>$GITHUB_OUTPUT
+echo "mcss_warnings=$(cat docs/output_mcss.log)" >>$GITHUB_OUTPUT
+echo "## Doxygen completed with the following warnings:" >>$GITHUB_STEP_SUMMARY
+echo "$(cat docs/output_doxygen.log)" >>$GITHUB_STEP_SUMMARY
+echo "" >>$GITHUB_STEP_SUMMARY
+echo "## mcss Doxygen post-processing completed with the following warnings:" >>$GITHUB_STEP_SUMMARY
+echo "$(cat docs/output_mcss.log)" >>$GITHUB_STEP_SUMMARY
+
+echo "::notice::Finished generating documentation"

@@ -2,8 +2,11 @@
 
 # Set options,
 set -e # Exit with nonzero exit code if anything fails
-set -v # Prints shell input lines as they are read.
-set -x # Print command traces before executing command.
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    echo "Enabling debugging!"
+    set -v # Prints shell input lines as they are read.
+    set -x # Print command traces before executing command.
+fi
 
 echo "::group::Installing Platforms and Frameworks"
 echo "\e[32mInstalling Atmel AVR platforms \e[0m"
