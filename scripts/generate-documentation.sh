@@ -35,11 +35,15 @@ echo "::group::Listing current directory contents"
 echo "Current directory: $PWD"
 ls
 echo "::endgroup::"
+
 echo "-------------------"
+
 echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/"
 ls $GITHUB_WORKSPACE/code_docs/
 echo "::endgroup::"
+
 echo "-------------------"
+
 echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} recursively"
 ls $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} -R
 echo "::endgroup::"
@@ -62,6 +66,7 @@ echo "::endgroup::"
 
 echo "::group::Doxygen Output"
 echo "$(<output_doxygen.log)"
+
 echo "::endgroup::"
 
 if [[ "$result_code" -ne "0" ]]; then exit $result_code; fi
@@ -73,15 +78,21 @@ echo "::group::Listing current directory contents"
 echo "Current directory: $PWD"
 ls
 echo "::endgroup::"
+
 echo "-------------------"
+
 echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/"
 ls $GITHUB_WORKSPACE/code_docs/
 echo "::endgroup::"
+
 echo "-------------------"
+
 echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} recursively"
 ls $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} -R
 echo "::endgroup::"
+
 echo "-------------------"
+
 echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}_Doxygen recursively"
 ls $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}_Doxygen -R
 echo "::endgroup::"
@@ -97,9 +108,11 @@ python -u fixSectionsInXml.py 2>&1
 echo "\n\e[32Running m.css Doxygen post-processor...\e[0m"
 echo "::group::m.css Run Log"
 python -u $GITHUB_WORKSPACE/code_docs/m.css/documentation/doxygen.py "mcss-conf.py" --no-doxygen --output "$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs/output_mcss.log" --templates "$GITHUB_WORKSPACE/code_docs/m.css/documentation/templates/EnviroDIY"
+
 echo "::endgroup::"
 echo "::group::m.css Output"
 echo "$(<output_mcss.log)"
+
 echo "::endgroup::"
 
 # copy functions so they look right

@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]
-    relative_dir = f"{repo_name}_Doxygen/xml/"
+    relative_dir = f"../../../../{repo_name}_Doxygen/xml/"
 else:
     docbuild_dir = os.getcwd()
     repo_name = docbuild_dir.split("/")[-1]
@@ -22,7 +22,8 @@ else:
 doxy_xml_dir = os.path.join(docbuild_dir, relative_dir)
 doxy_xml_dir = os.path.abspath(os.path.realpath(doxy_xml_dir))
 
-print(f"Workspace Directory: {docbuild_dir}")
+print(f"Repository Name: {repo_name}")
+print(f"Documentation Building Directory: {docbuild_dir}")
 print("XML Directory: {}".format(doxy_xml_dir))
 
 all_files = [
