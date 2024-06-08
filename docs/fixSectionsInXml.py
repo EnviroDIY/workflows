@@ -11,12 +11,13 @@ import xml.etree.ElementTree as ET
 if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]
-    relative_dir = f"../../{repo_name}_Doxygen/xml/"
+    relative_dir = f"../../../{repo_name}_Doxygen/xml/"
 else:
     docbuild_dir = os.getcwd()
     repo_name = docbuild_dir.split("/")[-1]
     relative_dir = f"../{repo_name}_Doxygen/xml/"
 
+print(f"relative_dir: {relative_dir}")
 doxy_xml_dir = os.path.join(docbuild_dir, relative_dir)
 print(f"doxy_xml_dir1: {doxy_xml_dir}")
 doxy_xml_dir = os.path.abspath(os.path.realpath(doxy_xml_dir))
