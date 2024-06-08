@@ -38,4 +38,7 @@ echo "\e[32mDot is now installed at : \e[0m" $(type -a dot)
 
 echo "\e[32m\n\n\nCurrent GraphViz version...\e[0m"
 dot -V
+
+echo "\e[32m\n\n\nAttempting initial dot config...\e[0m"
+sudo dot -c
 echo "\n\n\n"

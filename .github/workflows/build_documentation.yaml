@@ -130,6 +130,8 @@ jobs:
           type -a dot
           # check the version
           dot -V
+          # Attempt initial dot config
+          sudo dot -c
           # test a simple command to make sure the linking works
           echo 'digraph { a -> b }' | dot -Tsvg > output.svg
 
@@ -164,6 +166,8 @@ jobs:
             ) || (steps.install_graphviz_deb.outcome != 'success' &&
                     steps.install_graphviz_deb.outcome != 'skipped')
           }}
+        env:
+          GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove --purge "^graphviz.*"
@@ -176,6 +180,8 @@ jobs:
           type -a dot
           # check the version
           dot -V
+          # Attempt initial dot config
+          sudo dot -c
           # test a simple command to make sure the linking works
           echo 'digraph { a -> b }' | dot -Tsvg > output.svg
 
@@ -252,6 +258,9 @@ jobs:
                   steps.install_doxygen_tar.outcome != 'skipped')
             )
           }}
+        env:
+          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
+          DOXYGEN_TAG: ${{ steps.parse_doxygen_version.outputs.doxygen_tag }}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove --purge "^doxygen.*"

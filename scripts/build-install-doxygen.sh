@@ -15,7 +15,7 @@ sudo apt-get remove --purge "^doxygen.*"
 
 # Build instructions from: https://www.stack.nl/~dimitri/doxygen/download.html
 echo "\e[32mCloning doxygen repository...\e[0m"
-git clone https://github.com/doxygen/doxygen.git doxygen-src --branch $DOXYGEN_VERSION --depth 1
+git clone https://github.com/doxygen/doxygen.git doxygen-src --branch $DOXYGEN_TAG --depth 1
 
 cd doxygen-src
 
