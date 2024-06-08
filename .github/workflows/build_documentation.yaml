@@ -89,8 +89,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
-            dia curl wget
-            graphviz mscgen
+            dia curl wget mscgen
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
@@ -193,7 +192,6 @@ jobs:
             /usr/local/bin/doxywizard
           key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
 
-
       - name: Check GraphViz versions
         id: check_graphviz_version
         continue-on-error: true
@@ -262,7 +260,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
-            mscgen ghostscript
+            ghostscript
             libtool libltdl-dev automake autoconf pkg-config
             perl libperl-dev libsodium libsodium-dev argon2 libargon2-dev
           version: ${{ inputs.rebuild_cache_number }}
@@ -300,6 +298,95 @@ jobs:
           sudo dot -c
           # test a simple command to make sure the linking works
           echo 'digraph { a -> b }' | dot -Tsvg > output.svg
+
+      - name: Parse Doxygen Versions
+        id: parse_doxygen_version
+        env:
+          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
+        run: |
+          doxygen_tag=$(echo ${{ inputs.doxygen_version }} | sed "s/\./_/g")
+          doxygen_tag="Release_$doxygen_tag"
+          echo "Release tag for Doxgen version ${{ inputs.doxygen_version }} is ${doxygen_tag}"
+          echo "doxygen_tag=${doxygen_tag}" >>$GITHUB_OUTPUT
+
+      - name: Check Doxygen version
+        id: check_doxygen_version
+        continue-on-error: true
+        env:
+          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
+        run: |
+          cd ${{ github.workspace }}/
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-doxygen-version.sh -o check-doxygen-version.sh
+          chmod +x check-doxygen-version.sh
+          bash check-doxygen-version.sh 2>&1
+
+      - name: Install Doxygen from Tarball
+        continue-on-error: true
+        id: install_doxygen_tar
+        if: >-
+          ${{
+            (  inputs.build_doxygen &&
+              (steps.check_doxygen_version.outcome != 'success' ||
+                  steps.check_doxygen_version.outputs.correct_doxygen != 'true')
+            ) || (steps.install_doxygen_tar.outcome != 'success' &&
+                    steps.install_doxygen_tar.outcome != 'skipped')
+          }}
+        run: |
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            echo "Enabling debugging!"
+            set -v # Prints shell input lines as they are read.
+            set -x # Print command traces before executing command.
+          fi
+          cd ${{ github.workspace }}/
+          sudo apt-get remove --purge "^doxygen.*"
+          curl -SL https://github.com/doxygen/doxygen/releases/download/${{ steps.parse_doxygen_version.outputs.doxygen_tag }}/doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz -o doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz
+          tar zxf doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz
+          ls
+          cd doxygen-${{ inputs.doxygen_version }}/
+          sudo make install
+          doxygen -v
+          type -a doxygen
+
+      # NOTE: Install dependencies for building Doxygen using awalsh128/cache-apt-pkgs-action@v1
+      - name: Install or Restore apt-get packages for building Doxygen
+        id: install_doxygen_build_deps
+        if: >-
+          ${{
+            (  inputs.build_doxygen &&
+              (steps.check_doxygen_version.outcome != 'success' ||
+                  steps.check_doxygen_version.outputs.correct_doxygen != 'true')
+            ) || (steps.install_doxygen_tar.outcome != 'success' &&
+                    steps.install_doxygen_tar.outcome != 'skipped')
+          }}
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: >
+            build-essential flex bison
+          version: ${{ inputs.rebuild_cache_number }}
+          debug: false
+
+      # build from source if we said to and we have the wrong version,
+      # or if the install from tarball failed
+      - name: Build Doxygen from Source
+        if: >-
+          ${{
+            inputs.build_doxygen &&
+            (  (steps.check_doxygen_version.outcome != 'success' ||
+                  steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
+                (steps.install_doxygen_tar.outcome != 'success' &&
+                  steps.install_doxygen_tar.outcome != 'skipped')
+            )
+          }}
+        env:
+          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
+          DOXYGEN_TAG: ${{ steps.parse_doxygen_version.outputs.doxygen_tag }}
+        run: |
+          cd ${{ github.workspace }}/
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
+          chmod +x build-install-doxygen.sh
+          bash build-install-doxygen.sh
+          doxygen -v
+          type -a doxygen
 
       - name: Cache Doxygen and GraphViz
         id: cache_doxygen_graphviz
@@ -399,95 +486,6 @@ jobs:
             /usr/local/bin/doxysearch.cgi
             /usr/local/bin/doxywizard
           key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
-
-      - name: Parse Doxygen Versions
-        id: parse_doxygen_version
-        env:
-          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
-        run: |
-          doxygen_tag=$(echo ${{ inputs.doxygen_version }} | sed "s/\./_/g")
-          doxygen_tag="Release_$doxygen_tag"
-          echo "Release tag for Doxgen version ${{ inputs.doxygen_version }} is ${doxygen_tag}"
-          echo "doxygen_tag=${doxygen_tag}" >>$GITHUB_OUTPUT
-
-      - name: Check Doxygen version
-        id: check_doxygen_version
-        continue-on-error: true
-        env:
-          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
-        run: |
-          cd ${{ github.workspace }}/
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-doxygen-version.sh -o check-doxygen-version.sh
-          chmod +x check-doxygen-version.sh
-          bash check-doxygen-version.sh 2>&1
-
-      - name: Install Doxygen from Tarball
-        continue-on-error: true
-        id: install_doxygen_tar
-        if: >-
-          ${{
-            (  inputs.build_doxygen &&
-              (steps.check_doxygen_version.outcome != 'success' ||
-                  steps.check_doxygen_version.outputs.correct_doxygen != 'true')
-            ) || (steps.install_doxygen_tar.outcome != 'success' &&
-                    steps.install_doxygen_tar.outcome != 'skipped')
-          }}
-        run: |
-          if [ "$RUNNER_DEBUG" = "1" ]; then
-            echo "Enabling debugging!"
-            set -v # Prints shell input lines as they are read.
-            set -x # Print command traces before executing command.
-          fi
-          cd ${{ github.workspace }}/
-          sudo apt-get remove --purge "^doxygen.*"
-          curl -SL https://github.com/doxygen/doxygen/releases/download/${{ steps.parse_doxygen_version.outputs.doxygen_tag }}/doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz -o doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz
-          tar zxf doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz
-          ls
-          cd doxygen-${{ inputs.doxygen_version }}/
-          sudo make install
-          doxygen -v
-          type -a doxygen
-
-      # NOTE: Install dependencies for building Doxygen using awalsh128/cache-apt-pkgs-action@v1
-      - name: Install or Restore apt-get packages for building Doxygen
-        id: install_doxygen_build_deps
-        if: >-
-          ${{
-            (  inputs.build_doxygen &&
-              (steps.check_doxygen_version.outcome != 'success' ||
-                  steps.check_doxygen_version.outputs.correct_doxygen != 'true')
-            ) || (steps.install_doxygen_tar.outcome != 'success' &&
-                    steps.install_doxygen_tar.outcome != 'skipped')
-          }}
-        uses: awalsh128/cache-apt-pkgs-action@v1
-        with:
-          packages: >
-            build-essential flex bison
-          version: ${{ inputs.rebuild_cache_number }}
-          debug: false
-
-      # build from source if we said to and we have the wrong version,
-      # or if the install from tarball failed
-      - name: Build Doxygen from Source
-        if: >-
-          ${{
-            inputs.build_doxygen &&
-            (  (steps.check_doxygen_version.outcome != 'success' ||
-                  steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
-                (steps.install_doxygen_tar.outcome != 'success' &&
-                  steps.install_doxygen_tar.outcome != 'skipped')
-            )
-          }}
-        env:
-          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
-          DOXYGEN_TAG: ${{ steps.parse_doxygen_version.outputs.doxygen_tag }}
-        run: |
-          cd ${{ github.workspace }}/
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
-          chmod +x build-install-doxygen.sh
-          bash build-install-doxygen.sh
-          doxygen -v
-          type -a doxygen
 
       # check out my fork of m.css, for post-processing and re-formatting Doxygen output
       - name: Checkout m.css
