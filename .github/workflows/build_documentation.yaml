@@ -131,7 +131,7 @@ jobs:
             (  (steps.check_graphviz_version.outcome != 'success' &&
                   steps.check_graphviz_version.outputs.correct_graphviz != 'true') ||
                 (steps.install_graphviz_deb.outcome != 'success' &&
-                  steps.install_graphviz_deb.outcome != 'skipped)
+                  steps.install_graphviz_deb.outcome != 'skipped')
             )
           }}
         uses: awalsh128/cache-apt-pkgs-action@v1
@@ -152,7 +152,7 @@ jobs:
             (  (steps.check_graphviz_version.outcome != 'success' &&
                   steps.check_graphviz_version.outputs.correct_graphviz != 'true') ||
                 (steps.install_graphviz_deb.outcome != 'success' &&
-                  steps.install_graphviz_deb.outcome != 'skipped)
+                  steps.install_graphviz_deb.outcome != 'skipped')
             )
           }}
         run: |
@@ -220,7 +220,7 @@ jobs:
             (  (steps.check_doxygen_version.outcome != 'success' &&
                   steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
                 (steps.install_doxygen_tar.outcome != 'success' &&
-                  steps.install_doxygen_tar.outcome != 'skipped)
+                  steps.install_doxygen_tar.outcome != 'skipped')
             )
           }}
         uses: awalsh128/cache-apt-pkgs-action@v1
@@ -239,7 +239,7 @@ jobs:
             (  (steps.check_doxygen_version.outcome != 'success' &&
                   steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
                 (steps.install_doxygen_tar.outcome != 'success' &&
-                  steps.install_doxygen_tar.outcome != 'skipped)
+                  steps.install_doxygen_tar.outcome != 'skipped')
             )
           }}
         run: |
