@@ -16,11 +16,21 @@ on:
         required: false
         type: string
         default: '1.11.0'
+      build_doxygen:
+        description: 'True to rebuild Doxygen from source instead of using a tarball release'
+        required: false
+        type: boolean
+        default: false
       graphviz_version:
         description: 'The version of GraphViz to build'
         required: false
         type: string
         default: '11.0.0'
+      build_graphviz:
+        description: 'True to rebuild GraphViz from source instead of using a tarball release'
+        required: false
+        type: boolean
+        default: false
   # Also give a manual trigger
   workflow_dispatch:
     inputs:
@@ -128,12 +138,11 @@ jobs:
         id: install_graphviz_build_deps
         if: >-
           ${{
-            inputs.build_graphviz &&
-            (  (steps.check_graphviz_version.outcome != 'success' &&
-                  steps.check_graphviz_version.outputs.correct_graphviz != 'true') ||
-                (steps.install_graphviz_deb.outcome != 'success' &&
-                  steps.install_graphviz_deb.outcome != 'skipped')
-            )
+            (  inputs.build_graphviz &&
+              (steps.check_graphviz_version.outcome != 'success' ||
+                  steps.check_graphviz_version.outputs.correct_graphviz != 'true')
+            ) || (steps.install_graphviz_deb.outcome != 'success' &&
+                    steps.install_graphviz_deb.outcome != 'skipped')
           }}
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
@@ -149,12 +158,11 @@ jobs:
       - name: Build GraphViz from Source
         if: >-
           ${{
-            inputs.build_graphviz &&
-            (  (steps.check_graphviz_version.outcome != 'success' &&
-                  steps.check_graphviz_version.outputs.correct_graphviz != 'true') ||
-                (steps.install_graphviz_deb.outcome != 'success' &&
-                  steps.install_graphviz_deb.outcome != 'skipped')
-            )
+            (  inputs.build_graphviz &&
+              (steps.check_graphviz_version.outcome != 'success' ||
+                  steps.check_graphviz_version.outputs.correct_graphviz != 'true')
+            ) || (steps.install_graphviz_deb.outcome != 'success' &&
+                    steps.install_graphviz_deb.outcome != 'skipped')
           }}
         run: |
           cd ${{ github.workspace }}/
@@ -197,10 +205,11 @@ jobs:
         id: install_doxygen_tar
         if: >-
           ${{
-            ! inputs.build_doxygen &&
-            ( steps.check_doxygen_version.outcome != 'success' ||
-              steps.check_doxygen_version.outputs.correct_doxygen != 'true'
-            )
+            (  inputs.build_doxygen &&
+              (steps.check_doxygen_version.outcome != 'success' ||
+                  steps.check_doxygen_version.outputs.correct_doxygen != 'true')
+            ) || (steps.install_doxygen_tar.outcome != 'success' &&
+                    steps.install_doxygen_tar.outcome != 'skipped')
           }}
         run: |
           cd ${{ github.workspace }}/
@@ -218,12 +227,11 @@ jobs:
         id: install_doxygen_build_deps
         if: >-
           ${{
-            inputs.build_doxygen &&
-            (  (steps.check_doxygen_version.outcome != 'success' &&
-                  steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
-                (steps.install_doxygen_tar.outcome != 'success' &&
-                  steps.install_doxygen_tar.outcome != 'skipped')
-            )
+            (  inputs.build_doxygen &&
+              (steps.check_doxygen_version.outcome != 'success' ||
+                  steps.check_doxygen_version.outputs.correct_doxygen != 'true')
+            ) || (steps.install_doxygen_tar.outcome != 'success' &&
+                    steps.install_doxygen_tar.outcome != 'skipped')
           }}
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
@@ -238,7 +246,7 @@ jobs:
         if: >-
           ${{
             inputs.build_doxygen &&
-            (  (steps.check_doxygen_version.outcome != 'success' &&
+            (  (steps.check_doxygen_version.outcome != 'success' ||
                   steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
                 (steps.install_doxygen_tar.outcome != 'success' &&
                   steps.install_doxygen_tar.outcome != 'skipped')
