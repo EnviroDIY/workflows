@@ -18,9 +18,12 @@ else:
     relative_dir = f"../{repo_name}_Doxygen/xml/"
 
 doxy_xml_dir = os.path.join(docbuild_dir, relative_dir)
+print(f"doxy_xml_dir1: {doxy_xml_dir}")
 doxy_xml_dir = os.path.abspath(os.path.realpath(doxy_xml_dir))
+print(f"doxy_xml_dir2: {doxy_xml_dir}\n\n")
 
-print(f"Workspace Directory: {docbuild_dir}")
+print(f"Repository Name: {repo_name}")
+print(f"Documentation Building Directory: {docbuild_dir}")
 print("XML Directory: {}".format(doxy_xml_dir))
 
 all_files = [
