@@ -114,7 +114,7 @@ jobs:
           curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb -o ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
           sudo apt install -y ./ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
           dot -V
-          where dot
+          type -a dot
 
       - name: Install Doxygen from Tarball
         if: ${{ ! inputs.build_doxygen && (steps.check_doxygen_version.outcome != 'success' || steps.check_doxygen_version.outputs.correct_doxygen != 'true') }}
@@ -127,7 +127,7 @@ jobs:
           cd doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}/
           sudo make install
           doxygen -v
-          where doxygen
+          type -a doxygen
 
       - name: Cache GraphViz and Doxygen
         id: cache-doxygen
