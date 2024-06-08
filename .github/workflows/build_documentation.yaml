@@ -89,7 +89,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
-            dia curl wget mscgen
+            dia curl wget mscgen ghostscript
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
@@ -136,18 +136,19 @@ jobs:
             set -x # Print command traces before executing command.
           fi
           cd ${{ github.workspace }}/
-          sudo apt-get remove --purge "^graphviz.*"
+          sudo apt-get remove "^graphviz.*"
+          # sudo apt-get remove --purge "^graphviz.*"
           cd ${{ github.workspace }}/
           curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb -o ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
           sudo apt install -y ./ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
           # check and recreate library source links
-          echo "${LD_LIBRARY_PATH}"
           sudo ldconfig
-          echo "${LD_LIBRARY_PATH}"
           # check the install location
           type -a dot
           # check the version
           sudo dot -V
+          # check for linkage dependencies
+          sudo ldd -v dot
           # Attempt initial dot config
           sudo dot -c
           # test a simple command to make sure the linking works
@@ -168,7 +169,6 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
-            ghostscript
             libtool libltdl-dev automake autoconf pkg-config
             perl libperl-dev libsodium libsodium-dev argon2 libargon2-dev
           version: ${{ inputs.rebuild_cache_number }}
