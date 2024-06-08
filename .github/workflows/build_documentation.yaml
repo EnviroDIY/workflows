@@ -85,6 +85,7 @@ jobs:
 
       - name: Check Doxygen and GraphViz versions
         id: check_doxygen_version
+        continue-on-error: true
         env:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
           GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
@@ -96,7 +97,7 @@ jobs:
 
       - name: Restore GraphViz and Doxygen
         id: restore_doxygen
-        if: ${{ steps.check_doxygen_version.outputs.correct_doxygen == 'true'}}
+        if: ${{ steps.check_doxygen_version.outcome != 'success' || steps.check_doxygen_version.outputs.correct_doxygen == 'true'}}
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -105,7 +106,7 @@ jobs:
           key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
 
       - name: Install GraphViz from Deb Package
-        if: ${{ ! inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
+        if: ${{ ! inputs.build_doxygen && (steps.check_doxygen_version.outcome != 'success' || steps.check_doxygen_version.outputs.correct_doxygen != 'true') }}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove graphviz
@@ -116,7 +117,7 @@ jobs:
           where dot
 
       - name: Install Doxygen from Tarball
-        if: ${{ ! inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
+        if: ${{ ! inputs.build_doxygen && (steps.check_doxygen_version.outcome != 'success' || steps.check_doxygen_version.outputs.correct_doxygen != 'true') }}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove doxygen
