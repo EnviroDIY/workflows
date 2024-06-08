@@ -102,6 +102,7 @@ jobs:
 
       - name: Install GraphViz from Deb Package
         id: install_graphviz_deb
+        continue-on-error: true
         if: >-
           ${{
             ! inputs.build_graphviz &&
@@ -192,6 +193,7 @@ jobs:
           bash check-doxygen-version.sh 2>&1
 
       - name: Install Doxygen from Tarball
+        continue-on-error: true
         id: install_doxygen_tar
         if: >-
           ${{
