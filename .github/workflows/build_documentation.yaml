@@ -80,6 +80,8 @@ jobs:
         with:
           packages: >
             dia curl wget
+            doxygen doxygen-doc doxygen-gui doxygen-latex
+            graphviz mscgen
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
@@ -104,20 +106,6 @@ jobs:
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-versions.sh -o check-versions.sh
           chmod +x check-versions.sh
           bash check-versions.sh 2>&1
-
-      - name: Restore GraphViz and Doxygen
-        id: restore_doxygen
-        if: ${{ steps.check_doxygen_version.outcome != 'success' || steps.check_doxygen_version.outputs.correct_doxygen == 'true'}}
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            /usr/local/bin/doxygen
-            /usr/bin/dot
-            /usr/include
-            /usr/lib
-            /usr/share
-            /bin/dot
-          key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
 
       - name: Install GraphViz from Deb Package
         if: ${{ ! inputs.build_doxygen && (steps.check_doxygen_version.outcome != 'success' || steps.check_doxygen_version.outputs.correct_doxygen != 'true') }}
@@ -145,20 +133,6 @@ jobs:
           sudo make install
           doxygen -v
           type -a doxygen
-
-      - name: Cache GraphViz and Doxygen
-        id: cache-doxygen
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            /usr/local/bin/doxygen
-            /usr/bin/dot
-            /usr/include
-            /usr/lib
-            /usr/share
-            /bin/dot
-          key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
-
 
       # check out my fork of m.css, for post-processing and re-formatting Doxygen output
       - name: Checkout m.css
