@@ -16,7 +16,7 @@ jobs:
   determine_library_source:
     name: determine_library_source
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
     outputs:
       library_install_zip: ${{ steps.store_vars.outputs.library_install_zip }}
       library_install_git: ${{ steps.store_vars.outputs.library_install_git }}
@@ -43,7 +43,7 @@ jobs:
         run: |
           echo "Pull Request from the fork ${{ github.event.pull_request.head.repo.full_name }} at ${{ github.event.pull_request.head.ref }}"
           echo "LIBRARY_INSTALL_ZIP=https://github.com/${{ github.event.pull_request.head.repo.full_name }}/archive/${{ github.event.pull_request.head.ref }}.zip" >> $GITHUB_ENV
-          echo "LIBRARY_INSTALL_GIT=https://github.com${{ github.event.pull_request.head.repo.full_name }}.git#${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
+          echo "LIBRARY_INSTALL_GIT=https://github.com/${{ github.event.pull_request.head.repo.full_name }}.git#${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
 
       - name: store enviroment variables as output
         id: store_vars

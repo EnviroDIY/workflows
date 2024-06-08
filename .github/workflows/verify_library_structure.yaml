@@ -17,7 +17,7 @@ jobs:
   pio_lint:
     name: Verify library.json for PlatformIO
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
 
     steps:
       - uses: actions/checkout@v4
@@ -68,7 +68,7 @@ jobs:
   arduino_lint:
     name: Validate library structure for Arduino Library Manager inclusion
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
 
     steps:
       - uses: actions/checkout@v4

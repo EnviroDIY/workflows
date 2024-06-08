@@ -19,7 +19,7 @@ jobs:
   generate_matrix:
     name: Generate build matrices
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
     outputs:
       arduino_job_matrix: ${{ steps.py_matrix.outputs.arduino_job_matrix }}
       pio_job_matrix: ${{ steps.py_matrix.outputs.pio_job_matrix }}
