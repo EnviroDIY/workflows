@@ -102,10 +102,11 @@ jobs:
 
       - name: Install GraphViz from Deb Package
         id: install_graphviz_deb
-        if: >
+        if: >-
           ${{ ! inputs.build_graphviz &&
             (steps.check_graphviz_version.outcome != 'success' ||
-              steps.check_graphviz_version.outputs.correct_graphviz != 'true') }}
+              steps.check_graphviz_version.outputs.correct_graphviz != 'true')
+          }}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove graphviz
@@ -123,13 +124,14 @@ jobs:
       # Install these dependencies for building libsodium and GraphViz using awalsh128/cache-apt-pkgs-action@v1
       - name: Install or Restore packages for building libsodium and GraphViz
         id: install_graphviz_build_deps
-        if: >
+        if: >-
           ${{ inputs.build_graphviz &&
             (  (steps.check_graphviz_version.outcome != 'success' &&
                   steps.check_graphviz_version.outputs.correct_graphviz != 'true') ||
                 (steps.install_graphviz_deb.outcome != 'success' &&
                   steps.install_graphviz_deb.outcome != 'skipped)
-            ) }}
+            )
+          }}
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
@@ -142,13 +144,14 @@ jobs:
       # build from source if we said to and we have the wrong version,
       # or if the install from deb failed
       - name: Build GraphViz from Source
-        if: >
+        if: >-
           ${{ inputs.build_graphviz &&
             (  (steps.check_graphviz_version.outcome != 'success' &&
                   steps.check_graphviz_version.outputs.correct_graphviz != 'true') ||
                 (steps.install_graphviz_deb.outcome != 'success' &&
                   steps.install_graphviz_deb.outcome != 'skipped)
-            ) }}
+            )
+          }}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove graphviz
@@ -187,11 +190,12 @@ jobs:
 
       - name: Install Doxygen from Tarball
         id: install_doxygen_tar
-        if: >
+        if: >-
           ${{ ! inputs.build_doxygen &&
             ( steps.check_doxygen_version.outcome != 'success' ||
               steps.check_doxygen_version.outputs.correct_doxygen != 'true'
-            ) }}
+            )
+          }}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove doxygen
@@ -206,13 +210,14 @@ jobs:
       # NOTE: Install dependencies for building Doxygen using awalsh128/cache-apt-pkgs-action@v1
       - name: Install or Restore apt-get packages for building Doxygen
         id: install_doxygen_build_deps
-        if: >
+        if: >-
           ${{ inputs.build_doxygen &&
             (  (steps.check_doxygen_version.outcome != 'success' &&
                   steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
                 (steps.install_doxygen_tar.outcome != 'success' &&
                   steps.install_doxygen_tar.outcome != 'skipped)
-            ) }}
+            )
+          }}
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
@@ -223,13 +228,14 @@ jobs:
       # build from source if we said to and we have the wrong version,
       # or if the install from tarball failed
       - name: Build Doxygen from Source
-        if: >
+        if: >-
           ${{ inputs.build_doxygen &&
             (  (steps.check_doxygen_version.outcome != 'success' &&
                   steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
                 (steps.install_doxygen_tar.outcome != 'success' &&
                   steps.install_doxygen_tar.outcome != 'skipped)
-            ) }}
+            )
+          }}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove doxygen
