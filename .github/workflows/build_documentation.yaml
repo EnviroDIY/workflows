@@ -94,6 +94,11 @@ jobs:
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-graphviz-version.sh -o check-graphviz-version.sh
           chmod +x check-graphviz-version.sh
           bash check-graphviz-version.sh 2>&1
+          echo "${LD_LIBRARY_PATH}"
+          # check the install location
+          type -a dot
+          # test a simple command to make sure the linking works
+          echo 'digraph { a -> b }' | dot -Tsvg > output.svg
 
       - name: Install GraphViz from Deb Package
         id: install_graphviz_deb
