@@ -15,7 +15,7 @@ on:
         description: 'The version of Doxygen to build'
         required: false
         type: string
-        default: 'Release_1_11_0'
+        default: '1.11.0'
       graphviz_version:
         description: 'The version of GraphViz to build'
         required: false
@@ -83,6 +83,16 @@ jobs:
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
+      - name: Parse Doxygen Versions
+        id: parse_doxygen_version
+        env:
+          DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
+        run: |
+          doxygen_tag=$(echo ${{ inputs.doxygen_version }} | sed "s/_/./g")
+          doxygen_tag="Release_$doxygen_tag"
+          echo "Release tag for Doxgen version ${{ inputs.doxygen_version }} is ${doxygen_tag}"
+          echo "doxygen_tag=${doxygen_tag}" >>$GITHUB_OUTPUT
+
       - name: Check Doxygen and GraphViz versions
         id: check_doxygen_version
         continue-on-error: true
@@ -102,7 +112,8 @@ jobs:
         with:
           path: |
             /usr/lib/x86_64-linux-gnu/doxygen
-            /usr/lib/x86_64-linux-gnu/graphviz
+            /usr/bin/dot
+            /bin/dot
           key: ${{ runner.os }}-${{ inputs.graphviz_version }}-${{ inputs.doxygen_version }}
 
       - name: Install GraphViz from Deb Package
@@ -121,10 +132,10 @@ jobs:
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove doxygen
-          curl -SL https://github.com/doxygen/doxygen/releases/download/${{ inputs.doxygen_version }}/doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz -o doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
-          tar zxf doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}.linux.bin.tar.gz
+          curl -SL https://github.com/doxygen/doxygen/releases/download/${{ steps.parse_doxygen_version.outputs.doxygen_tag }}/doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz -o doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz
+          tar zxf doxygen-${{ inputs.doxygen_version }}.linux.bin.tar.gz
           ls
-          cd doxygen-${{ steps.check_doxygen_version.outputs.requested_doxygen }}/
+          cd doxygen-${{ inputs.doxygen_version }}/
           sudo make install
           doxygen -v
           type -a doxygen

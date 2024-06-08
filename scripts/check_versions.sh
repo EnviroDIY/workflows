@@ -24,12 +24,9 @@ echo "$installed_doxygen"
 echo "$installed_doxygen" | cut -d ' ' -f1
 installed_doxygen=$(echo "$installed_doxygen" | cut -d ' ' -f1)
 echo "Current Doxygen version is ${installed_doxygen}"
-requested_doxygen=$(echo "$DOXYGEN_VERSION" | sed "s/Release_//g")
-requested_doxygen=$(echo "$requested_doxygen" | sed "s/_/./g")
-echo "Requested Doxygen version was ${requested_doxygen}"
+echo "Requested Doxygen version was ${DOXYGEN_VERSION}"
 echo "installed_doxygen=${installed_doxygen}" >>$GITHUB_OUTPUT
-echo "requested_doxygen=${requested_doxygen}" >>$GITHUB_OUTPUT
-if [ "$installed_doxygen" = "$requested_doxygen" ]; then
+if [ "$installed_doxygen" = "$DOXYGEN_VERSION" ]; then
     echo "::notice::The requested Doxygen version is already installed"
     echo "correct_doxygen=true" >>$GITHUB_OUTPUT
 else
