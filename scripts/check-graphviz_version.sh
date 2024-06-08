@@ -12,28 +12,6 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     set -x # Print command traces before executing command.
 fi
 
-# echo package versions: ${{ steps.install_apt_get_deps.outputs.package-version-list }}
-# sudo apt update          # Fetches the list of available updates
-# sudo apt upgrade -y      # Installs some updates; does not remove packages
-# sudo apt full-upgrade -y # Installs updates; may also remove some packages, if needed
-# sudo apt autoremove -y   # Removes any old packages that are no longer needed
-
-doxygen -v
-installed_doxygen=$(doxygen -v | cut -d ' ' -f1)
-echo "$installed_doxygen"
-echo "$installed_doxygen" | cut -d ' ' -f1
-installed_doxygen=$(echo "$installed_doxygen" | cut -d ' ' -f1)
-echo "Current Doxygen version is ${installed_doxygen}"
-echo "Requested Doxygen version was ${DOXYGEN_VERSION}"
-echo "installed_doxygen=${installed_doxygen}" >>$GITHUB_OUTPUT
-if [ "$installed_doxygen" = "$DOXYGEN_VERSION" ]; then
-    echo "::notice::The requested Doxygen version is already installed"
-    echo "correct_doxygen=true" >>$GITHUB_OUTPUT
-else
-    echo "::warning::The installed Doxygen version is different than requestsed"
-    echo "correct_doxygen=false" >>$GITHUB_OUTPUT
-fi
-
 installed_graphviz_full=$(dot -V 2>&1 | cut -d ' ' -f5)
 echo "Full version of GraphViz ${installed_graphviz_full}"
 installed_graphviz=$(echo "$installed_graphviz_full" | sed "s/dot - graphviz version //g")

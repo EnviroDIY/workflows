@@ -80,10 +80,84 @@ jobs:
         with:
           packages: >
             dia curl wget
-            doxygen doxygen-doc doxygen-gui doxygen-latex
             graphviz mscgen
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
+
+      - name: Check GraphViz versions
+        id: check_graphviz_version
+        continue-on-error: true
+        env:
+          GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
+        run: |
+          cd ${{ github.workspace }}/
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-graphviz-version.sh -o check-graphviz-version.sh
+          chmod +x check-graphviz-version.sh
+          bash check-graphviz-version.sh 2>&1
+
+      - name: Install GraphViz from Deb Package
+        id: install_graphviz_deb
+        if: >
+          ${{ ! inputs.build_graphviz &&
+            (steps.check_graphviz_version.outcome != 'success' ||
+              steps.check_graphviz_version.outputs.correct_graphviz != 'true') }}
+        run: |
+          cd ${{ github.workspace }}/
+          sudo apt-get remove graphviz
+          cd ${{ github.workspace }}/
+          curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb -o ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
+          sudo apt install -y ./ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
+          env LD_LIBRARY_PATH=/usr/lib /usr/bin/dot
+          # check the install location
+          type -a dot
+          # check the version
+          dot -V
+          # test a simple command to make sure the linking works
+          echo 'digraph { a -> b }' | dot -Tsvg > output.svg
+
+      # Install these dependencies for building libsodium and GraphViz using awalsh128/cache-apt-pkgs-action@v1
+      - name: Install or Restore packages for building libsodium and GraphViz
+        id: install_graphviz_build_deps
+        if: >
+          ${{ inputs.build_graphviz &&
+            (  (steps.check_graphviz_version.outcome != 'success' &&
+                  steps.check_graphviz_version.outputs.correct_graphviz != 'true') ||
+                (steps.install_graphviz_deb.outcome != 'success' &&
+                  steps.install_graphviz_deb.outcome != 'skipped)
+            ) }}
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: >
+            mscgen ghostscript
+            libtool libltdl-dev automake autoconf pkg-config
+            libperl-dev libsodium-dev argon2 libargon2-dev
+          version: ${{ inputs.rebuild_cache_number }}
+          debug: false
+
+      # build from source if we said to and we have the wrong version,
+      # or if the install from deb failed
+      - name: Build GraphViz from Source
+        if: >
+          ${{ inputs.build_graphviz &&
+            (  (steps.check_graphviz_version.outcome != 'success' &&
+                  steps.check_graphviz_version.outputs.correct_graphviz != 'true') ||
+                (steps.install_graphviz_deb.outcome != 'success' &&
+                  steps.install_graphviz_deb.outcome != 'skipped)
+            ) }}
+        run: |
+          cd ${{ github.workspace }}/
+          sudo apt-get remove graphviz
+          cd ${{ github.workspace }}/
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-graphviz.sh -o build-install-graphviz.sh
+          chmod +x build-install-graphviz.sh
+          bash build-install-graphviz.sh
+          echo "${LD_LIBRARY_PATH}"
+          # check the install location
+          type -a dot
+          # check the version
+          dot -V
+          # test a simple command to make sure the linking works
+          echo 'digraph { a -> b }' | dot -Tsvg > output.svg
 
       - name: Parse Doxygen Versions
         id: parse_doxygen_version
@@ -95,34 +169,24 @@ jobs:
           echo "Release tag for Doxgen version ${{ inputs.doxygen_version }} is ${doxygen_tag}"
           echo "doxygen_tag=${doxygen_tag}" >>$GITHUB_OUTPUT
 
-      - name: Check Doxygen and GraphViz versions
+      - name: Check Doxygen version
         id: check_doxygen_version
         continue-on-error: true
         env:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
-          GRAPHVIZ_VERSION: ${{ inputs.graphviz_version }}
         run: |
           cd ${{ github.workspace }}/
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-versions.sh -o check-versions.sh
-          chmod +x check-versions.sh
-          bash check-versions.sh 2>&1
-
-      - name: Install GraphViz from Deb Package
-        if: ${{ ! inputs.build_doxygen && (steps.check_doxygen_version.outcome != 'success' || steps.check_doxygen_version.outputs.correct_doxygen != 'true') }}
-        env:
-          LD_LIBRARY_PATH: /path/to/graphviz/lib /path/to/graphviz/bin/dot
-        run: |
-          cd ${{ github.workspace }}/
-          sudo apt-get remove graphviz
-          cd ${{ github.workspace }}/
-          curl -SL https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${{ inputs.graphviz_version }}/ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb -o ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
-          sudo apt install -y ./ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
-          env LD_LIBRARY_PATH=/usr/lib /usr/bin/dot
-          dot -V
-          type -a dot
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-doxygen-version.sh -o check-doxygen-version.sh
+          chmod +x check-doxygen-version.sh
+          bash check-doxygen-version.sh 2>&1
 
       - name: Install Doxygen from Tarball
-        if: ${{ ! inputs.build_doxygen && (steps.check_doxygen_version.outcome != 'success' || steps.check_doxygen_version.outputs.correct_doxygen != 'true') }}
+        id: install_doxygen_tar
+        if: >
+          ${{ ! inputs.build_doxygen &&
+            ( steps.check_doxygen_version.outcome != 'success' ||
+              steps.check_doxygen_version.outputs.correct_doxygen != 'true'
+            ) }}
         run: |
           cd ${{ github.workspace }}/
           sudo apt-get remove doxygen
@@ -131,6 +195,43 @@ jobs:
           ls
           cd doxygen-${{ inputs.doxygen_version }}/
           sudo make install
+          doxygen -v
+          type -a doxygen
+
+      # NOTE: Install dependencies for building Doxygen using awalsh128/cache-apt-pkgs-action@v1
+      - name: Install or Restore apt-get packages for building Doxygen
+        id: install_doxygen_build_deps
+        if: >
+          ${{ inputs.build_doxygen &&
+            (  (steps.check_doxygen_version.outcome != 'success' &&
+                  steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
+                (steps.install_doxygen_tar.outcome != 'success' &&
+                  steps.install_doxygen_tar.outcome != 'skipped)
+            ) }}
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: >
+            build-essential flex bison
+          version: ${{ inputs.rebuild_cache_number }}
+          debug: false
+
+      # build from source if we said to and we have the wrong version,
+      # or if the install from tarball failed
+      - name: Build Doxygen from Source
+        if: >
+          ${{ inputs.build_doxygen &&
+            (  (steps.check_doxygen_version.outcome != 'success' &&
+                  steps.check_doxygen_version.outputs.correct_doxygen != 'true') ||
+                (steps.install_doxygen_tar.outcome != 'success' &&
+                  steps.install_doxygen_tar.outcome != 'skipped)
+            ) }}
+        run: |
+          cd ${{ github.workspace }}/
+          sudo apt-get remove doxygen
+          cd ${{ github.workspace }}/
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
+          chmod +x build-install-doxygen.sh
+          bash build-install-doxygen.sh
           doxygen -v
           type -a doxygen
 
@@ -145,7 +246,7 @@ jobs:
       - name: Generate all the documentation
         id: generate_docs
         env:
-          LD_LIBRARY_PATH: /path/to/graphviz/lib /path/to/graphviz/bin/dot
+          LD_LIBRARY_PATH: /usr/lib /usr/bin/dot
         run: |
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh

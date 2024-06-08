@@ -8,23 +8,6 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     set -x # Print command traces before executing command.
 fi
 
-# NOTE: Install these dependencies for building Doxygen using awalsh128/cache-apt-pkgs-action@v1
-#   - name: Install or Restore apt-get packages for building Doxygen
-#     id: install_doxygen_build_deps
-#     if: ${{ inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_doxygen != 'true'}}
-#     uses: awalsh128/cache-apt-pkgs-action@v1
-#     with:
-#       packages: >
-#         build-essential flex bison
-#       version: ${{ inputs.rebuild_cache_number }}
-#       debug: false
-
-# install all the dependencies for make for Doxygen
-# sudo apt-get update
-# sudo apt-get -y install build-essential
-# sudo apt-get -y install flex
-# sudo apt-get -y install bison
-
 cd $GITHUB_WORKSPACE
 
 # Remove any old versions

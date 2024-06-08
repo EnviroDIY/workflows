@@ -8,19 +8,6 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     set -x # Print command traces before executing command.
 fi
 
-# NOTE: Install these dependencies for building libsodium and GraphViz using awalsh128/cache-apt-pkgs-action@v1
-#   - name: Install or Restore packages for building libsodium and GraphViz
-#     id: install_graphviz_build_deps
-#     if: ${{ inputs.build_doxygen && steps.check_doxygen_version.outputs.correct_graphviz != 'true'}}
-#     uses: awalsh128/cache-apt-pkgs-action@v1
-#     with:
-#       packages: >
-#         mscgen ghostscript
-#         libtool libltdl-dev automake autoconf pkg-config
-#         libperl-dev libsodium-dev argon2 libargon2-dev
-#       version: ${{ inputs.rebuild_cache_number }}
-#       debug: false
-
 cd $GITHUB_WORKSPACE
 
 # Remove any old versions
