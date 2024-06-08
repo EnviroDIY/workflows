@@ -139,7 +139,7 @@ jobs:
           sudo apt install -y ./ubuntu_22.04_graphviz-${{ inputs.graphviz_version }}-cmake.deb
           # sudo env LD_LIBRARY_PATH=/opt/hostedtoolcache/Python/3.12.3/x64/lib /usr/lib /usr/lib/graphviz /usr/lib/graphviz/R /usr/lib/graphviz/go /usr/lib/graphviz/perl /usr/lib/graphviz/python3 /usr/lib/graphviz/ruby /usr/lib/graphviz/sharp /usr/bin/dot /usr/local/lib /usr/local/lib/graphviz /usr/local/lib/graphviz/R /usr/local/lib/graphviz/go /usr/local/lib/graphviz/perl /usr/local/lib/graphviz/python3 /usr/local/lib/graphviz/ruby /usr/local/lib/graphviz/sharp /usr/local/bin/dot
           # check the install location
-          sudo type -a dot
+          type -a dot
           # check the version
           sudo dot -V
           # Attempt initial dot config
