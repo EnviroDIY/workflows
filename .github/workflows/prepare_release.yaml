@@ -206,6 +206,7 @@ jobs:
         with:
           path: ChangeLog.md
           version: ${{ needs.check_version_number.outputs.current_version }}
+          validation_level: warn
 
       - name: Download any Dependency Zip
         if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
