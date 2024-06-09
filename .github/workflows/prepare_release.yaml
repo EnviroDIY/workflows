@@ -41,7 +41,7 @@ jobs:
     uses: ./.github/workflows/check_for_dependencies.yaml
 
   check_version_number:
-    name: Prepare release assets containing dependencies
+    name: Check Version Number
     runs-on: ubuntu-latest
     outputs:
       current_version: ${{ steps.set_vesion.outputs.version }}
@@ -57,6 +57,8 @@ jobs:
           echo "::debug::Get the current version number"
           VER=$(cat VERSION)
           ZIP_FILE="${GITHUB_REPOSITORY#*/}_Dependencies_${VER}"
+          echo "Version Number: ${VER}"
+          echo "Zip Name: ${ZIP_FILE}"
           echo "VERSION=$VER" >> $GITHUB_ENV
           echo "ZIP_NAME=$ZIP_FILE" >> $GITHUB_ENV
 
