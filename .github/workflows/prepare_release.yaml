@@ -193,7 +193,8 @@ jobs:
   release:
     name: Prepare a new release
     runs-on: ubuntu-latest
-    needs: [check_for_dependencies, check_version_number]
+    needs: [check_for_dependencies, check_version_number, prepare_assets]
+    if: ${{ ! failure() && ! cancelled() }}
 
     steps:
       - name: Checkout code
