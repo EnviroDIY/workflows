@@ -51,7 +51,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set environment variable for current library version
+      - name: Output the Version Numbers
         id: set_vesion
         run: |
           echo "::debug::Get the current version number"
@@ -59,14 +59,14 @@ jobs:
           ZIP_FILE="${GITHUB_REPOSITORY#*/}_Dependencies_${VER}"
           echo "Version Number: ${VER}"
           echo "Zip Name: ${ZIP_FILE}"
-          echo "VERSION=$VER" >> $GITHUB_ENV
-          echo "ZIP_NAME=$ZIP_FILE" >> $GITHUB_ENV
+          echo "version=${VER}" >> $GITHUB_OUTPUT
+          echo "zip_name=${ZIP_FILE}" >> $GITHUB_OUTPUT
 
   prepare_assets:
     name: Prepare release assets containing dependencies
     runs-on: ubuntu-latest
     needs: [check_for_dependencies, check_version_number]
-    if: ${{ needs.check_for_dependencies.outputs.has_dependencies }}
+    if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
 
     steps:
       - name: Checkout code
@@ -202,14 +202,14 @@ jobs:
           version: ${{ needs.check_version_number.outputs.current_version }}
 
       - name: Download the prepared dependency zip
-        if: ${{ needs.check_for_dependencies.outputs.has_dependencies }}
+        if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
         uses: actions/download-artifact@v4
         with:
           name: dependency_zip
 
       # Create a new release with zipped dependencies
-      - name: Create release with assets
-        if: ${{ needs.check_for_dependencies.outputs.has_dependencies }}
+      - name: Create Release with Assets
+        if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
         id: create_release_with_zip
         uses: softprops/action-gh-release@v2.0.5
         env:
@@ -225,9 +225,9 @@ jobs:
           fail_on_unmatched_files: true
 
       # Create a new release with no zip
-      - name: Create release with assets
+      - name: Create Simple Release
         id: create_bare_release
-        if: ${{ ! needs.check_for_dependencies.outputs.has_dependencies }}
+        if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'false' }}
         uses: softprops/action-gh-release@v2.0.5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
