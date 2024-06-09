@@ -29,17 +29,6 @@ env:
   PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
 
 jobs:
-  verify_library_structure:
-    name: Validate library structure
-    uses: ./.github/workflows/verify_library_structure.yaml
-    with:
-      library-manager: ${{ inputs.library-manager }}
-      library-compliance: ${{ inputs.library-compliance }}
-
-  check_for_dependencies:
-    name: Check For Library Dependencies
-    uses: ./.github/workflows/check_for_dependencies.yaml
-
   check_version_number:
     name: Check Version Number
     runs-on: ubuntu-latest
@@ -61,6 +50,19 @@ jobs:
           echo "Zip Name: ${ZIP_FILE}"
           echo "version=${VER}" >> $GITHUB_OUTPUT
           echo "zip_name=${ZIP_FILE}" >> $GITHUB_OUTPUT
+
+  verify_library_structure:
+    name: Validate library structure
+    uses: ./.github/workflows/verify_library_structure.yaml
+    with:
+      library-manager: ${{ inputs.library-manager }}
+      library-compliance: ${{ inputs.library-compliance }}
+    needs: check_version_number
+
+  check_for_dependencies:
+    name: Check For Library Dependencies
+    uses: ./.github/workflows/check_for_dependencies.yaml
+    needs: verify_library_structure
 
   prepare_assets:
     name: Prepare Release Assets
@@ -191,9 +193,12 @@ jobs:
   release:
     name: Prepare a new release
     runs-on: ubuntu-latest
-    needs: [check_for_dependencies, check_version_number]
+    needs: [check_for_dependencies, check_version_number, prepare_assets]
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Get change log entry for release notes
         id: changelog_reader
         uses: mindsers/changelog-reader-action@v2
@@ -201,7 +206,7 @@ jobs:
           path: ChangeLog.md
           version: ${{ needs.check_version_number.outputs.current_version }}
 
-      - name: Download the prepared dependency zip
+      - name: Download any Dependency Zip
         if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
         uses: actions/download-artifact@v4
         with:
