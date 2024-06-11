@@ -60,8 +60,8 @@ C:\Users\sdamiano\AppData\Local\miniconda3\python.exe "%GIBHUB_BASE_DIR%\EnviroD
 @REM Delete any old directories then run m.css
 echo Running m.css Doxygen post-processor...
 del %GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%_Doxygen\m.css /q
-@REM C:\Users\sdamiano\AppData\Local\miniconda3\python.exe "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\templates\EnviroDIY" --debug > output_mcss_run.log 2>&1
-C:\Users\sdamiano\AppData\Local\miniconda3\python.exe "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\templates\EnviroDIY" > output_mcss_run.log 2>&1
+C:\Users\sdamiano\AppData\Local\miniconda3\python.exe "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\templates\EnviroDIY" --debug > output_mcss_run.log 2>&1
+@REM C:\Users\sdamiano\AppData\Local\miniconda3\python.exe "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\templates\EnviroDIY" > output_mcss_run.log 2>&1
 
 @REM copy functions so they look right
 echo Copying function documentation

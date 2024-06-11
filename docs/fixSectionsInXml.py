@@ -14,14 +14,11 @@ if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     relative_dir = f"../../../../{repo_name}_Doxygen/xml/"
 else:
     docbuild_dir = os.getcwd()
-    repo_name = docbuild_dir.split("/")[-1]
-    relative_dir = f"../{repo_name}_Doxygen/xml/"
+    repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
+    relative_dir = f"../../{repo_name}_Doxygen/xml/"
 
-print(f"relative_dir: {relative_dir}")
 doxy_xml_dir = os.path.join(docbuild_dir, relative_dir)
-print(f"doxy_xml_dir1: {doxy_xml_dir}")
 doxy_xml_dir = os.path.abspath(os.path.realpath(doxy_xml_dir))
-print(f"doxy_xml_dir2: {doxy_xml_dir}\n\n")
 
 print(f"Repository Name: {repo_name}")
 print(f"Documentation Building Directory: {docbuild_dir}")

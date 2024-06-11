@@ -16,8 +16,8 @@ if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     relative_dir = f"../../../../{repo_name}_Doxygen/xml/"
 else:
     docbuild_dir = os.getcwd()
-    repo_name = docbuild_dir.split("/")[-1]
-    relative_dir = f"../{repo_name}_Doxygen/xml/"
+    repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
+    relative_dir = f"../../{repo_name}_Doxygen/xml/"
 
 doxy_xml_dir = os.path.join(docbuild_dir, relative_dir)
 doxy_xml_dir = os.path.abspath(os.path.realpath(doxy_xml_dir))
