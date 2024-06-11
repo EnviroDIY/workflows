@@ -5,3 +5,6 @@ wheel
 jinja2
 Pygments
 beautifulsoup4
+pillow
+ghostscript
+black

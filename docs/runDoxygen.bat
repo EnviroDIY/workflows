@@ -1,3 +1,5 @@
+call conda activate doxymcss
+
 @REM The current working directory, will change with cd commands
 SET CURRENT_DIR=%cd%
 
@@ -19,6 +21,14 @@ echo GitHub Orgs Directory: %GIBHUB_BASE_DIR%
 @REM )
 @REM set GITHUB_REPOSITORY=%~1
 
+@REM Check versions of stuff
+echo Current Doxygen version...
+"C:\Program Files\doxygen\bin\doxygen.exe" -v
+echo Current GraphViz (dot) version...
+call dot -V
+echo Current TeXLive Version...
+call latex --version
+
 @REM REM Update the style sheets
 cd "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\css\EnviroDIY"
 echo Update the style sheets
@@ -27,14 +37,23 @@ C:\Users\sdamiano\AppData\Local\miniconda3\python.exe "%GIBHUB_BASE_DIR%\SRGDami
 C:\Users\sdamiano\AppData\Local\miniconda3\python.exe "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\css\postprocess.py" "m-EnviroDIY.css" "m-theme-EnviroDIY.css" "m-documentation.css" --no-import -o "m-EnviroDIY.documentation.compiled.css"
 copy "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\css\EnviroDIY\m-EnviroDIY+documentation.compiled.css" "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\css"
 
+@REM Move back to the repository directory
+cd "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%"
+
+echo Generating library logos
+copy "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\Ubuntu-Bold.ttf" "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\"
+copy "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\enviroDIY_Favicon.png" "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs"
+C:\Users\sdamiano\AppData\Local\miniconda3\python.exe "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\generateLogos.py" > docs\output_generateLogo.log 2>&1
+del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\Ubuntu-Bold.ttf" /q
+
 @REM Move back to the docs directory
 cd "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs"
 
+copy "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\markdown_prefilter.py" "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs"
+
+
 @REM echo Creating dox files from example read-me files
 @REM C:\Users\sdamiano\AppData\Local\miniconda3\python.exe documentExamples.py > output_documentExamples.log 2>&1
-
-echo Current Doxygen version...
-"C:\Program Files\doxygen\bin\doxygen.exe" -v
 
 @REM Delete any old versions of the documentation
 del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%_Doxygen\html" /q
@@ -72,6 +91,12 @@ IF "%GITHUB_REPOSITORY%"=="ModularSensors" (
   cd "%GIBHUB_BASE_DIR%\EnviroDIY\ModularSensors\continuous_integration"
   C:\Users\sdamiano\AppData\Local\miniconda3\python.exe check_component_inclusion.py > output_check_component_inclusion.log 2>&1
 )
+
+del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\enviroDIY_favicon.png" /q
+del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\gp-desktop-logo.png" /q
+del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\gp-mobile-logo.png" /q
+del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\gp-scrolling-logo.png" /q
+del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\markdown_prefilter.py" /q
 
 @REM navigate back to the main directory
 cd "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%"
