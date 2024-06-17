@@ -13,23 +13,23 @@ from bs4 import BeautifulSoup
 if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]
-    relative_dir = f"../../../../{repo_name}_Doxygen/xml/"
+    relative_dir = f"../../../../{repo_name}_Doxygen/m.css/"
 else:
     docbuild_dir = os.getcwd()
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
-    relative_dir = f"../../{repo_name}_Doxygen/xml/"
+    relative_dir = f"../../{repo_name}_Doxygen/m.css/"
 
-doxy_xml_dir = os.path.join(docbuild_dir, relative_dir)
-doxy_xml_dir = os.path.abspath(os.path.realpath(doxy_xml_dir))
+doxy_mcss_dir = os.path.join(docbuild_dir, relative_dir)
+doxy_mcss_dir = os.path.abspath(os.path.realpath(doxy_mcss_dir))
 
 print(f"Repository Name: {repo_name}")
 print(f"Documentation Building Directory: {docbuild_dir}")
-print("XML Directory: {}".format(doxy_xml_dir))
+print("m.css HTML Directory: {}".format(doxy_mcss_dir))
 
 all_files = [
     f
-    for f in os.listdir(doxy_xml_dir)
-    if os.path.isfile(os.path.join(doxy_xml_dir, f))
+    for f in os.listdir(doxy_mcss_dir)
+    if os.path.isfile(os.path.join(doxy_mcss_dir, f))
     and f.endswith(".html")
     and not f.endswith("fixed")
 ]
@@ -41,7 +41,7 @@ def get_section_to_paste(match: re.Match) -> str:
     # print(source_file)
     source_section = match.group("copy_section_id")
     # print(source_section)
-    with open(os.path.join(doxy_xml_dir, source_file), encoding="utf8") as fp:
+    with open(os.path.join(doxy_mcss_dir, source_file), encoding="utf8") as fp:
         soup = BeautifulSoup(fp, "html.parser")
         details = soup.find(id=source_section)
         # print("Details:", details, "\n\n")
@@ -67,10 +67,10 @@ def get_section_to_paste(match: re.Match) -> str:
 # %%
 files_to_copy_to = []
 for filename in all_files:
-    abs_in = os.path.join(doxy_xml_dir, filename)
-    abs_out = os.path.join(doxy_xml_dir, filename + "_fixed")
+    abs_in = os.path.join(doxy_mcss_dir, filename)
+    abs_out = os.path.join(doxy_mcss_dir, filename + "_fixed")
     copy_paste_needed = False
-    # with open(os.path.join(doxy_xml_dir, filename)) as fp:
+    # with open(os.path.join(doxy_mcss_dir, filename)) as fp:
     #     soup = BeautifulSoup(fp, "html.parser")
     #     for find in soup.find_all(string=[re.compile("\{\{")]):
     #         print(find.find_parent("p").a.get("href"))
@@ -107,12 +107,12 @@ for filename in all_files:
                 out_file.write(line)
 
         os.rename(
-            os.path.join(doxy_xml_dir, filename),
-            os.path.join(doxy_xml_dir, filename + "_original"),
+            os.path.join(doxy_mcss_dir, filename),
+            os.path.join(doxy_mcss_dir, filename + "_original"),
         )
         os.rename(
-            os.path.join(doxy_xml_dir, filename + "_fixed"),
-            os.path.join(doxy_xml_dir, filename),
+            os.path.join(doxy_mcss_dir, filename + "_fixed"),
+            os.path.join(doxy_mcss_dir, filename),
         )
 
 # %%
