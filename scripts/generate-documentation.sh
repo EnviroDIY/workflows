@@ -41,7 +41,7 @@ cd "$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}"
 echo Generating library logos
 # Download the font and favicon
 curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/Ubuntu-Bold.ttf -o Ubuntu-Bold.ttf
-curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/enviroDIY_Favicon.png -o enviroDIY_Favicon.png
+curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/enviroDIY_Favicon.png -o docs/enviroDIY_Favicon.png
 # Download the logo generation script
 curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/generateLogos.py -o generateLogos.py
 # Generate the logos
