@@ -1,4 +1,4 @@
-name: Check for Complete Documentation
+name: Build Documentation
 
 on:
   workflow_call:
@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_graphviz:
+        description: 'True use GraphViz/dot'
+        required: false
+        type: boolean
+        default: true
       graphviz_version:
         description: 'The version of GraphViz to build'
         required: false
@@ -96,6 +101,7 @@ jobs:
       # Install these dependencies for building libsodium and GraphViz using awalsh128/cache-apt-pkgs-action@v1
       - name: Install or Restore packages for building libsodium and GraphViz
         id: install_graphviz_build_deps
+        if: inputs.use_graphviz
         # if: >-
         #   ${{
         #     (  inputs.build_graphviz &&
@@ -115,6 +121,7 @@ jobs:
       # build from source if we said to and we have the wrong version,
       # or if the install from deb failed
       - name: Build GraphViz from Source
+        if: inputs.use_graphviz
         # if: >-
         #   ${{
         #     (  inputs.build_graphviz &&

@@ -21,23 +21,28 @@ echo GitHub Orgs Directory: %GIBHUB_BASE_DIR%
 @REM )
 @REM set GITHUB_REPOSITORY=%~1
 
+@REM Set directory links
+set MCSS_DIR=%GIBHUB_BASE_DIR%\SRGDamia1\m.css\
+set REPO_DIR=%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%
+set WORKFLOW_DIR=%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\
+
 @REM Delete any old versions of the documentation and css
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%_Doxygen\html" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%_Doxygen\xml" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%_Doxygen\m.css" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\css" /q
+del "%REPO_DIR%_Doxygen\html" /q
+del "%REPO_DIR%_Doxygen\xml" /q
+del "%REPO_DIR%_Doxygen\m.css" /q
+del "%REPO_DIR%\docs\css" /q
 
 @REM Clear out output files
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_generateLogo.log"
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_documentExamples.log"
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_doxygen_run.log"
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_doxygen.log"
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_fixSectionsInXml.log"
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_fixFunctionsInGroups.log"
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_mcss_run.log"
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_mcss.log"
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_copyFunctions.log"
-echo "" > "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\output_check_component_inclusion.log"
+echo "" > "%REPO_DIR%\docs\output_generateLogo.log"
+echo "" > "%REPO_DIR%\docs\output_documentExamples.log"
+echo "" > "%REPO_DIR%\docs\output_doxygen_run.log"
+echo "" > "%REPO_DIR%\docs\output_doxygen.log"
+echo "" > "%REPO_DIR%\docs\output_fixSectionsInXml.log"
+echo "" > "%REPO_DIR%\docs\output_fixFunctionsInGroups.log"
+echo "" > "%REPO_DIR%\docs\output_mcss_run.log"
+echo "" > "%REPO_DIR%\docs\output_mcss.log"
+echo "" > "%REPO_DIR%\docs\output_copyFunctions.log"
+echo "" > "%REPO_DIR%\docs\output_check_component_inclusion.log"
 
 @REM Check versions of stuff
 echo Current Doxygen version...
@@ -50,30 +55,30 @@ echo Current Python Version...
 call python --version
 
 @REM Update the style sheets
-cd "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\css\EnviroDIY"
 echo Update the style sheets
+cd "%MCSS_DIR%css\EnviroDIY"
 @REM pygmentize -f html -S arduino -a ".m-code-arduino" > pygments-arduino.css
 @REM pygmentize -f html -S default -a ".m-code-pygments-default" > pygments-default.css
-python -u "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\css\postprocess.py" "m-EnviroDIY.css"  2>&1
-python -u "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\css\postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "m-EnviroDIY+documentation.compiled.css"  2>&1
-python -u "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\css\postprocess.py" "m-EnviroDIY.css" "m-theme-EnviroDIY.css" "m-documentation.css" --no-import -o "m-EnviroDIY.documentation.compiled.css"  2>&1
-copy "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\css\EnviroDIY\m-EnviroDIY+documentation.compiled.css" "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\css"
-copy "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\clipboard.js" "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs"
+@REM python -u "%MCSS_DIR%css\postprocess.py" "%MCSS_DIR%css/EnviroDIY/m-EnviroDIY.css"  2>&1
+python -u "%MCSS_DIR%css\postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "%MCSS_DIR%css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"  2>&1
+@REM python -u "%MCSS_DIR%css\postprocess.py" "m-EnviroDIY.css" "m-theme-EnviroDIY.css" "m-documentation.css" --no-import -o "%MCSS_DIR%css/EnviroDIY/m-EnviroDIY.documentation.compiled.css"  2>&1
+copy "%MCSS_DIR%css\EnviroDIY\m-EnviroDIY+documentation.compiled.css" "%REPO_DIR%\docs\css"
+copy "%MCSS_DIR%documentation\clipboard.js" "%REPO_DIR%\docs"
 
 @REM Move back to the repository directory
-cd "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%"
+cd "%REPO_DIR%"
 
 echo Generating library logos
 @REM Download the font and favicon
-copy "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\Ubuntu-Bold.ttf" "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\"
-copy "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\enviroDIY_Favicon.png" "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs"
+copy "%WORKFLOW_DIR%Ubuntu-Bold.ttf" "%REPO_DIR%\"
+copy "%WORKFLOW_DIR%enviroDIY_Favicon.png" "%REPO_DIR%\docs"
 @REM Generate the logos
-python -u "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\generateLogos.py" > docs\output_generateLogo.log 2>&1
+python -u "%WORKFLOW_DIR%generateLogos.py" > docs\output_generateLogo.log 2>&1
 
 @REM Move back to the docs directory
-cd "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs"
+cd "%REPO_DIR%\docs"
 @REM  download the markdown pre-filter
-copy "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\markdown_prefilter.py" "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs"
+copy "%WORKFLOW_DIR%markdown_prefilter.py" "%REPO_DIR%\docs"
 
 @REM echo Creating dox files from example read-me files
 @REM python -u documentExamples.py > output_documentExamples.log 2>&1
@@ -91,35 +96,35 @@ endlocal
 
 @REM Fix up xml sections before running m.css
 echo Fixing errant xml section names in examples as generated by Doxygen...
-python -u "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\fixSectionsInXml.py" > output_fixSectionsInXml.log 2>&1
+python -u "%WORKFLOW_DIR%fixSectionsInXml.py" > output_fixSectionsInXml.log 2>&1
 
 @REM echo Fixing copied function documentation in group documentation
 @REM python -u fixFunctionsInGroups.py > output_fixFunctionsInGroups.log 2>&1
 
 @REM Run m.css
 echo Running m.css Doxygen post-processor...
-python -u "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\templates\EnviroDIY" --debug > output_mcss_run.log 2>&1
-@REM python -u "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%GIBHUB_BASE_DIR%\SRGDamia1\m.css\documentation\templates\EnviroDIY" > output_mcss_run.log 2>&1
+python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%MCSS_DIR%documentation\templates\EnviroDIY" --debug > output_mcss_run.log 2>&1
+@REM python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%MCSS_DIR%documentation\templates\EnviroDIY" > output_mcss_run.log 2>&1
 
 @REM copy functions so they look right
 echo Copying function documentation
-python -u "%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\copyFunctions.py" > output_copyFunctions.log 2>&1
+python -u "%WORKFLOW_DIR%copyFunctions.py" > output_copyFunctions.log 2>&1
 
 IF "%GITHUB_REPOSITORY%"=="ModularSensors" (
   echo Checking for inclusion of all ModularSensors components
-  cd "%GIBHUB_BASE_DIR%\EnviroDIY\ModularSensors\continuous_integration"
+  cd "%REPO_DIR%\continuous_integration"
   python -u check_component_inclusion.py > output_check_component_inclusion.log 2>&1
 )
 
 @REM Delete copied files
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\Ubuntu-Bold.ttf" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\enviroDIY_favicon.png" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\gp-desktop-logo.png" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\gp-mobile-logo.png" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\gp-scrolling-logo.png" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\markdown_prefilter.py" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\clipboard.js" /q
-del "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\docs\css" /q
+del "%REPO_DIR%\Ubuntu-Bold.ttf" /q
+del "%REPO_DIR%\docs\enviroDIY_favicon.png" /q
+del "%REPO_DIR%\docs\gp-desktop-logo.png" /q
+del "%REPO_DIR%\docs\gp-mobile-logo.png" /q
+del "%REPO_DIR%\docs\gp-scrolling-logo.png" /q
+del "%REPO_DIR%\docs\markdown_prefilter.py" /q
+del "%REPO_DIR%\docs\clipboard.js" /q
+del "%REPO_DIR%\docs\css" /q
 
 @REM navigate back to the main directory
-cd "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%"
+cd "%REPO_DIR%"

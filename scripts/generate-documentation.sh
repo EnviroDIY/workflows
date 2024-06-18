@@ -13,44 +13,50 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     set -x # Print command traces before executing command.
 fi
 
+# Set directory links
+MCSS_DIR=$GITHUB_WORKSPACE/code_docs/m.css/
+REPO_DIR=$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}
+WORKFLOW_DIR=https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/
+
 # Check versions of stuff
 echo "\n\e[32mCurrent Doxygen version...\e[0m"
 doxygen -v 2>&1
 echo "\n\e[32mCurrent GraphViz (dot) version......\e[0m"
 dot -V
 echo "\n\e[32mCurrent TeXLive Version......\e[0m"
-latex --version
+latex --versionecho
+"\n\e[32mCurrent Python Version......\e[0m"
+python --version
 
 # Update the style sheets
 echo "::group::Updating style sheets"
-cd $GITHUB_WORKSPACE/code_docs/m.css
 echo "\n\e[32mUpdate the style sheets\e[0m"
-cd $GITHUB_WORKSPACE/code_docs/m.css/css/EnviroDIY
+cd ${MCSS_DIR}css/EnviroDIY
 # pygmentize -f html -S arduino -a ".m-code-arduino" >pygments-arduino.css
 # pygmentize -f html -S default -a ".m-code-pygments-default" >pygments-default.css
-python -u $GITHUB_WORKSPACE/code_docs/m.css/css/postprocess.py "m-EnviroDIY.css"
-python -u $GITHUB_WORKSPACE/code_docs/m.css/css/postprocess.py "m-EnviroDIY.css" "m-documentation.css" -o "m-EnviroDIY+documentation.compiled.css"
-python -u $GITHUB_WORKSPACE/code_docs/m.css/css/postprocess.py "m-EnviroDIY.css" "m-theme-EnviroDIY.css" "m-documentation.css" --no-import -o "m-EnviroDIY.documentation.compiled.css"
-cp $GITHUB_WORKSPACE/code_docs/m.css/css/EnviroDIY/m-EnviroDIY+documentation.compiled.css $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs/css
-cp $GITHUB_WORKSPACE/code_docs/m.css/documentation/clipboard.js $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs
+# python -u ${MCSS_DIR}css/postprocess.py "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY.css"
+python -u "${MCSS_DIR}css/postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"
+# python -u ${MCSS_DIR}css/postprocess.py "m-EnviroDIY.css" "m-theme-EnviroDIY.css" "m-documentation.css" --no-import -o "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY.documentation.compiled.css"
+cp "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css" "${REPO_DIR}/docs/css"
+cp "${MCSS_DIR}documentation/clipboard.js" "${REPO_DIR}/docs"
 echo "::endgroup::"
 
 # Move back to the repository directory
-cd "$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}"
+cd "${REPO_DIR}"
 
 echo Generating library logos
 # Download the font and favicon
-curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/Ubuntu-Bold.ttf -o Ubuntu-Bold.ttf
-curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/enviroDIY_Favicon.png -o docs/enviroDIY_Favicon.png
+curl -SL "${WORKFLOW_DIR}Ubuntu-Bold.ttf" -o Ubuntu-Bold.ttf
+curl -SL "${WORKFLOW_DIR}enviroDIY_Favicon.png" -o docs/enviroDIY_Favicon.png
 # Download the logo generation script
-curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/generateLogos.py -o generateLogos.py
+curl -SL "${WORKFLOW_DIR}generateLogos.py" -o generateLogos.py
 # Generate the logos
 python -u generateLogos.py 2>&1
 
 # Move back to the docs directory
-cd $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs
+cd ${REPO_DIR}/docs
 # download the markdown pre-filter
-curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/markdown_prefilter.py -o markdown_prefilter.py
+curl -SL ${WORKFLOW_DIR}markdown_prefilter.py -o markdown_prefilter.py
 
 echo "::group::Listing current directory contents"
 echo "Current directory: $PWD"
@@ -65,13 +71,13 @@ echo "::endgroup::"
 
 echo "-------------------"
 
-echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} recursively"
-ls $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} -R
+echo "::group::Listing contents of ${REPO_DIR} recursively"
+ls ${REPO_DIR} -R
 echo "::endgroup::"
 echo "-------------------"
 
 # echo "\n\e[32mCreating dox files from example read-me files\e[0m"
-# curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/documentExamples.py -o documentExamples.py
+# curl -SL ${WORKFLOW_DIR}documentExamples.py -o documentExamples.py
 # python -u documentExamples.py
 
 # only continue if these steps fail
@@ -108,20 +114,20 @@ echo "::endgroup::"
 
 echo "-------------------"
 
-echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} recursively"
-ls $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/} -R
+echo "::group::Listing contents of ${REPO_DIR} recursively"
+ls ${REPO_DIR} -R
 echo "::endgroup::"
 
 echo "-------------------"
 
-echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}_Doxygen recursively"
-ls $GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}_Doxygen -R
+echo "::group::Listing contents of ${REPO_DIR}_Doxygen recursively"
+ls ${REPO_DIR}_Doxygen -R
 echo "::endgroup::"
 echo "-------------------"
 
 # Fix up xml sections before running m.css
 echo "\n\e[32mFixing errant xml section names in examples as generated by Doxygen...\e[0m"
-curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/fixSectionsInXml.py -o fixSectionsInXml.py
+curl -SL ${WORKFLOW_DIR}fixSectionsInXml.py -o fixSectionsInXml.py
 python -u fixSectionsInXml.py 2>&1
 
 # echo "\n\e[32mFixing copied function documentation in group documentation\e[0m"
@@ -131,9 +137,9 @@ python -u fixSectionsInXml.py 2>&1
 echo "\n\e[32Running m.css Doxygen post-processor...\e[0m"
 echo "::group::m.css Run Log"
 if [ "$RUNNER_DEBUG" = "1" ]; then
-    python -u $GITHUB_WORKSPACE/code_docs/m.css/documentation/doxygen.py "mcss-conf.py" --no-doxygen --output "$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs/output_mcss.log" --templates "$GITHUB_WORKSPACE/code_docs/m.css/documentation/templates/EnviroDIY" --debug
+    python -u "${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" --debug
 else
-    python -u $GITHUB_WORKSPACE/code_docs/m.css/documentation/doxygen.py "mcss-conf.py" --no-doxygen --output "$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs/output_mcss.log" --templates "$GITHUB_WORKSPACE/code_docs/m.css/documentation/templates/EnviroDIY"
+    python -u" ${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY"
 fi
 
 echo "::endgroup::"
@@ -144,7 +150,7 @@ echo "::endgroup::"
 
 # copy functions so they look right
 echo "\n\e[32mCopying function documentation\e[0m"
-curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/copyFunctions.py -o copyFunctions.py
+curl -SL ${WORKFLOW_DIR}copyFunctions.py -o copyFunctions.py
 python -u copyFunctions.py 2>&1
 
 # # Generate Arduino keywords using doxygen2keywords.xsl and Saxon
