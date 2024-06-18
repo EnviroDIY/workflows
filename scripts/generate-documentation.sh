@@ -35,6 +35,11 @@ cd ${MCSS_DIR}css/EnviroDIY
 # pygmentize -f html -S arduino -a ".m-code-arduino" >pygments-arduino.css
 # pygmentize -f html -S default -a ".m-code-pygments-default" >pygments-default.css
 python -u "${MCSS_DIR}css/postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"
+
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    ls ${MCSS_DIR}css/EnviroDIY/ -R
+fi
+
 cp "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css" "${REPO_DIR}/docs/css"
 cp "${MCSS_DIR}documentation/clipboard.js" "${REPO_DIR}/docs"
 echo "::endgroup::"
@@ -61,18 +66,18 @@ echo "Current directory: $PWD"
 ls
 echo "::endgroup::"
 
-echo "-------------------"
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/"
+    ls $GITHUB_WORKSPACE/code_docs/
+    echo "::endgroup::"
 
-echo "::group::Listing contents of $GITHUB_WORKSPACE/code_docs/"
-ls $GITHUB_WORKSPACE/code_docs/
-echo "::endgroup::"
+    echo "-------------------"
 
-echo "-------------------"
-
-echo "::group::Listing contents of ${REPO_DIR} recursively"
-ls ${REPO_DIR} -R
-echo "::endgroup::"
-echo "-------------------"
+    echo "::group::Listing contents of ${REPO_DIR} recursively"
+    ls ${REPO_DIR} -R
+    echo "::endgroup::"
+    echo "-------------------"
+fi
 
 # echo "\n\e[32mCreating dox files from example read-me files\e[0m"
 # curl -SL ${WORKFLOW_DIR}documentExamples.py -o documentExamples.py
