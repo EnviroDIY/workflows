@@ -136,13 +136,19 @@ python -u fixSectionsInXml.py 2>&1
 # echo "\n\e[32mFixing copied function documentation in group documentation\e[0m"
 # python -u fixFunctionsInGroups.py
 
+# only continue if these steps fail
+# doing this here to print the m.css log if it fails
+set +e
+
 # Run m.css
 echo "\n\e[32Running m.css Doxygen post-processor...\e[0m"
 echo "::group::m.css Run Log"
 if [ "$RUNNER_DEBUG" = "1" ]; then
-    python -u "${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" --debug
+    python -u "${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" --debug | tee output_mcss_run.log
+    result_code=${PIPESTATUS[0]}
 else
-    python -u" ${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY"
+    python -u" ${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" | tee output_mcss_run.log
+    result_code=${PIPESTATUS[0]}
 fi
 
 echo "::endgroup::"
@@ -150,6 +156,11 @@ echo "::group::m.css Output"
 echo "$(<output_mcss.log)"
 
 echo "::endgroup::"
+
+if [[ "$result_code" -ne "0" ]]; then exit $result_code; fi
+
+# go back to immediate exit
+set -e
 
 # copy functions so they look right
 echo "\n\e[32mCopying function documentation\e[0m"
