@@ -60,6 +60,8 @@ cd "%MCSS_DIR%css\EnviroDIY"
 @REM pygmentize -f html -S arduino -a ".m-code-arduino" > pygments-arduino.css
 @REM pygmentize -f html -S default -a ".m-code-pygments-default" > pygments-default.css
 python -u "%MCSS_DIR%css\postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "%MCSS_DIR%css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"  2>&1
+
+mkdir "%REPO_DIR%\docs\css"
 copy "%MCSS_DIR%css\EnviroDIY\m-EnviroDIY+documentation.compiled.css" "%REPO_DIR%\docs\css"
 copy "%MCSS_DIR%documentation\clipboard.js" "%REPO_DIR%\docs"
 
@@ -121,6 +123,7 @@ del "%REPO_DIR%\docs\gp-scrolling-logo.png" /q
 del "%REPO_DIR%\docs\markdown_prefilter.py" /q
 del "%REPO_DIR%\docs\clipboard.js" /q
 del "%REPO_DIR%\docs\css" /q
+rmdir "%REPO_DIR%\docs\css" /q
 
 @REM navigate back to the main directory
 cd "%REPO_DIR%"

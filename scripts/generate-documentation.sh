@@ -40,6 +40,7 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     ls ${MCSS_DIR}css/EnviroDIY/ -R
 fi
 
+mkdir -p "${REPO_DIR}/docs/css"
 cp "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css" "${REPO_DIR}/docs/css"
 cp "${MCSS_DIR}documentation/clipboard.js" "${REPO_DIR}/docs"
 echo "::endgroup::"
@@ -63,7 +64,7 @@ curl -SL ${WORKFLOW_DIR}markdown_prefilter.py -o markdown_prefilter.py
 
 echo "::group::Listing current directory contents"
 echo "Current directory: $PWD"
-ls
+ls -R
 echo "::endgroup::"
 
 if [ "$RUNNER_DEBUG" = "1" ]; then
