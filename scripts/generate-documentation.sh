@@ -22,7 +22,7 @@ WORKFLOW_DIR=https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/
 echo "\n\e[32mCurrent Doxygen version...\e[0m"
 doxygen -v 2>&1
 echo "\n\e[32mCurrent GraphViz (dot) version......\e[0m"
-dot -V
+dot -V || true
 echo "\n\e[32mCurrent TeXLive Version......\e[0m"
 latex --version
 echo "\n\e[32mCurrent Python Version......\e[0m"
