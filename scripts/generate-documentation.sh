@@ -130,9 +130,8 @@ python -u fixSectionsInXml.py 2>&1
 # Run m.css
 echo "\n\e[32Running m.css Doxygen post-processor...\e[0m"
 echo "::group::m.css Run Log"
-if [ "$RUNNER_DEBUG" = "1" ];
-then
-    python -u $GITHUB_WORKSPACE/code_docs/m.css/documentation/doxygen.py "mcss-conf.py" --debug --no-doxygen --output "$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs/output_mcss.log" --templates "$GITHUB_WORKSPACE/code_docs/m.css/documentation/templates/EnviroDIY"
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    python -u $GITHUB_WORKSPACE/code_docs/m.css/documentation/doxygen.py "mcss-conf.py" --no-doxygen --output "$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs/output_mcss.log" --templates "$GITHUB_WORKSPACE/code_docs/m.css/documentation/templates/EnviroDIY" --debug
 else
     python -u $GITHUB_WORKSPACE/code_docs/m.css/documentation/doxygen.py "mcss-conf.py" --no-doxygen --output "$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}/docs/output_mcss.log" --templates "$GITHUB_WORKSPACE/code_docs/m.css/documentation/templates/EnviroDIY"
 fi
