@@ -59,9 +59,7 @@ echo Update the style sheets
 cd "%MCSS_DIR%css\EnviroDIY"
 @REM pygmentize -f html -S arduino -a ".m-code-arduino" > pygments-arduino.css
 @REM pygmentize -f html -S default -a ".m-code-pygments-default" > pygments-default.css
-@REM python -u "%MCSS_DIR%css\postprocess.py" "%MCSS_DIR%css/EnviroDIY/m-EnviroDIY.css"  2>&1
 python -u "%MCSS_DIR%css\postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "%MCSS_DIR%css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"  2>&1
-@REM python -u "%MCSS_DIR%css\postprocess.py" "m-EnviroDIY.css" "m-theme-EnviroDIY.css" "m-documentation.css" --no-import -o "%MCSS_DIR%css/EnviroDIY/m-EnviroDIY.documentation.compiled.css"  2>&1
 copy "%MCSS_DIR%css\EnviroDIY\m-EnviroDIY+documentation.compiled.css" "%REPO_DIR%\docs\css"
 copy "%MCSS_DIR%documentation\clipboard.js" "%REPO_DIR%\docs"
 
@@ -89,9 +87,7 @@ set PLATFORMIO_GLOBALLIB_DIR=../.pio/libdeps/mayfly
 set PLATFORMIO_PACKAGES_DIR=C:/Users/sdamiano/.platformio/PLATFORMIO_PACKAGES_DIR
 
 echo Generating Doxygen code documentation...
-@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d markdown Doxyfile > output_doxygen_run.log 2>&1
 "C:\Program Files\doxygen\bin\doxygen.exe" Doxyfile > output_doxygen_run.log 2>&1
-@REM "C:\Program Files\doxygen\bin\doxygen.exe" Doxyfile
 endlocal
 
 @REM Fix up xml sections before running m.css

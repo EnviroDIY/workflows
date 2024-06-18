@@ -24,8 +24,8 @@ doxygen -v 2>&1
 echo "\n\e[32mCurrent GraphViz (dot) version......\e[0m"
 dot -V
 echo "\n\e[32mCurrent TeXLive Version......\e[0m"
-latex --versionecho
-"\n\e[32mCurrent Python Version......\e[0m"
+latex --version
+echo "\n\e[32mCurrent Python Version......\e[0m"
 python --version
 
 # Update the style sheets
@@ -34,9 +34,7 @@ echo "\n\e[32mUpdate the style sheets\e[0m"
 cd ${MCSS_DIR}css/EnviroDIY
 # pygmentize -f html -S arduino -a ".m-code-arduino" >pygments-arduino.css
 # pygmentize -f html -S default -a ".m-code-pygments-default" >pygments-default.css
-# python -u ${MCSS_DIR}css/postprocess.py "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY.css"
 python -u "${MCSS_DIR}css/postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"
-# python -u ${MCSS_DIR}css/postprocess.py "m-EnviroDIY.css" "m-theme-EnviroDIY.css" "m-documentation.css" --no-import -o "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY.documentation.compiled.css"
 cp "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css" "${REPO_DIR}/docs/css"
 cp "${MCSS_DIR}documentation/clipboard.js" "${REPO_DIR}/docs"
 echo "::endgroup::"
