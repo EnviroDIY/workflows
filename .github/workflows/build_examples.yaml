@@ -1,4 +1,4 @@
-name: Build Examples with PlatformIO and Arduino CLI
+name: Build Examples
 
 on:
   workflow_call:
