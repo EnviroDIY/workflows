@@ -7,8 +7,6 @@ on:
     outputs:
       has_dependencies:
         value: ${{ jobs.check_for_dependencies.outputs.has_dependencies }}
-      consolidated_deps:
-        value: ${{ jobs.check_for_dependencies.outputs.consolidated_deps }}
       dep_hash:
         value: ${{ jobs.check_for_dependencies.outputs.dep_hash }}
 
@@ -18,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       has_dependencies: ${{ steps.check_for_deps.outputs.has_dependencies }}
-      consolidated_deps: ${{ steps.check_for_deps.outputs.consolidated_deps }}
       dep_hash: ${{ steps.check_for_deps.outputs.dep_hash }}
 
     steps:
@@ -64,5 +61,4 @@ jobs:
             echo "No dependencies found!"
           fi
           echo "has_dependencies=${has_dependencies}" >> $GITHUB_OUTPUT
-          echo "consolidated_deps=$(cat consolidated_deps.txt)" >> $GITHUB_OUTPUT
           echo "dep_hash=${{ hashFiles('consolidated_deps.txt') }}" >> $GITHUB_OUTPUT
