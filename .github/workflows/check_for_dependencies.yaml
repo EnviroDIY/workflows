@@ -31,8 +31,8 @@ jobs:
         run: |
           if [ "$RUNNER_DEBUG" = "1" ]; then
             echo "Enabling debugging!"
-            set -v # Prints shell input lines as they are read.
-            set -x # Print command traces before executing command.
+            set -v
+            set -x
           fi
           has_dependencies=false
           cat > consolidated_deps.txt
