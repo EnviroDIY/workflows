@@ -22,7 +22,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Install all the library dependencies!
       - name: Check for Dependency Files
         id: check_for_deps
         run: |
@@ -60,5 +59,9 @@ jobs:
           if [ "$has_dependencies" = "false" ]; then
             echo "No dependencies found!"
           fi
+
+      - name: Store Dependency File Hash
+        id: store_dep_hash
+        run: |
           echo "has_dependencies=${has_dependencies}" >> $GITHUB_OUTPUT
           echo "dep_hash=${{ hashFiles('consolidated_deps.txt') }}" >> $GITHUB_OUTPUT

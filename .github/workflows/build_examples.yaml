@@ -110,6 +110,7 @@ jobs:
           path: |
             home/arduino/data
           key: ${{ hashFiles('install-platforms-arduino-cli.sh') }}
+          save-always: true
 
       # Install cores for the Arduino CLI, iff no cache
       - name: Install the Arduino Platforms
@@ -121,15 +122,16 @@ jobs:
       - name: Restore Arduino libraries
         uses: actions/cache@v4
         id: cache_libraries
-        if: "(needs.check_for_dependencies.outputs.has_dependencies == 'true')"
+        if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
         with:
           path: |
             home/arduino/user
           key: ${{ needs.check_for_dependencies.outputs.dep_hash }}
+          save-always: true
 
       # Install library dependencies for the Arduino CLI, iff no cache
       - name: Install the Arduino libraries
-        if: "(needs.check_for_dependencies.outputs.has_dependencies == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true')"
+        if: ${{ (needs.check_for_dependencies.outputs.has_dependencies == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true') }}
         run: |
           chmod +x continuous_integration/install-libraries-arduino-cli.sh
           sh continuous_integration/install-libraries-arduino-cli.sh
@@ -202,6 +204,7 @@ jobs:
             ~/.platformio/packages
             ~/.platformio/platforms
           key: ${{ hashFiles('./install-platforms-platformio.sh') }}
+          save-always: true
 
       # Install the PlatformIO platforms at global level
       - name: Install PlatformIO platforms
@@ -213,16 +216,17 @@ jobs:
       - name: Restore PlatformIO libraries
         uses: actions/cache@v4
         id: cache_libraries
-        if: "(needs.check_for_dependencies.outputs.has_dependencies == 'true')"
+        if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
         with:
           path: |
             ~/.platformio/lib
             $GITHUB_WORKSPACE/lib
           key: ${{ needs.check_for_dependencies.outputs.dep_hash }}
+          save-always: true
 
       # Install any library dependencies with PlatformIO at the global level
       - name: Install PlatformIO libraries
-        if: "(needs.check_for_dependencies.outputs.has_dependencies == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true')"
+        if: ${{ (needs.check_for_dependencies.outputs.has_dependencies == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true') }}
         run: |
           chmod +x continuous_integration/install-libraries-platformio.sh
           sh continuous_integration/install-libraries-platformio.sh
