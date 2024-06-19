@@ -1,0 +1,118 @@
+name: Build Examples with PlatformIO and Arduino CLI
+
+on:
+  workflow_call:
+    inputs:
+      library_install_git:
+        description: 'The git link to the exact hash of the library to build'
+        required: true
+        type: string
+      pio_job_matrix:
+        description: 'A json string with the job matrix'
+        required: true
+        type: string
+      lib_deps_install_script:
+        description: 'The file path for the script to install any dependencies, relative to the GitHub Workspace'
+        required: false
+        default: 'continuous_integration/install-libraries-platformio.sh'
+        type: string
+
+jobs:
+  build_pio:
+    name: ${{ matrix.job_info.job_name }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        job_info: ${{ fromJSON(inputs.pio_job_matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull the requirements file
+        run: |
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/requirements.txt -o requirements.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      - name: Install python dependencies, including PlatformIO
+        run: |
+          pip install -r requirements.txt
+
+      - name: Download the PlatformIO platform install script
+        run: |
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-platforms-platformio.sh -o install-platforms-platformio.sh
+
+      - name: Restore PlatformIO platforms
+        uses: actions/cache@v4
+        id: cache_platforms
+        with:
+          path: |
+            ~/.platformio/packages
+            ~/.platformio/platforms
+          key: ${{ hashFiles('install-platforms-platformio.sh') }}
+          save-always: true
+
+      # Install the PlatformIO platforms at global level, iff no cache
+      - name: Install PlatformIO platforms
+        if: steps.cache_platforms.outputs.cache-hit != 'true'
+        run: |
+          chmod +x install-platforms-platformio.sh
+          sh install-platforms-platformio.sh
+
+      - name: Verify the library deps install script exists
+        id: check_lib_install
+        if: ${{ inputs.lib_deps_install_script != '' }}
+        run: |
+          if [ -e ${{ inputs.lib_deps_install_script}} ]
+          then
+            echo "Dependency installation script found at ${{ inputs.lib_deps_install_script}}"
+            echo "valid_lib_dep_script=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Restore PlatformIO libraries
+        uses: actions/cache@v4
+        id: cache_libraries
+        if: ${{ steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
+        with:
+          path: |
+            ~/.platformio/lib
+            $GITHUB_WORKSPACE/lib
+          key: ${{ hashFiles(inputs.lib_deps_install_script) }}
+          save-always: true
+
+      # Install any library dependencies with PlatformIO at the global level, iff no cache
+      - name: Install PlatformIO libraries
+        if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true') }}
+        run: |
+          chmod +x ${{ inputs.lib_deps_install_script }}
+          sh ${{ inputs.lib_deps_install_script }}
+          cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/
+
+      # Install the library at the Global level for PlatformIO
+      # Force install to get the right version
+      - name: Install the testing version of the library for PlatformIO
+        run: |
+          pio pkg install -g --library ${{ inputs.library_install_git }}
+          pio pkg list -g --only-libraries
+
+      - name: Download the prepared examples
+        uses: actions/download-artifact@v4
+        with:
+          name: generated_examples
+          path: |
+            continuous_integration_artifacts/
+
+      - name: Include problem matcher
+        uses: ammaraskar/gcc-problem-matcher@master
+
+      # Run the script to compile the examples
+      - name: Compile
+        env:
+          ACTION_RUN_ID: ${{ github.run_id }}
+        run: |
+          chmod +x ${{ matrix.job_info.script }}
+          bash ${{ matrix.job_info.script }}

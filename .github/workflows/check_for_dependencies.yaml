@@ -15,8 +15,8 @@ jobs:
     name: Check if there are any library dependencies
     runs-on: ubuntu-latest
     outputs:
-      has_dependencies: ${{ steps.check_for_deps.outputs.has_dependencies }}
-      dep_hash: ${{ steps.check_for_deps.outputs.dep_hash }}
+      has_dependencies: ${{ steps.store_dep_hash.outputs.has_dependencies }}
+      dep_hash: ${{ steps.store_dep_hash.outputs.dep_hash }}
 
     steps:
       - name: Checkout code
@@ -34,25 +34,25 @@ jobs:
           cat > consolidated_deps.txt
           if [ -e continuous_integration/install-libraries-platformio.sh ]
           then
-            echo "Dependency installation script fount at continuous_integration/install-libraries-platformio.sh"
+            echo "Dependency installation script found at continuous_integration/install-libraries-platformio.sh"
             has_dependencies=true
             cat continuous_integration/install-libraries-platformio.sh >> consolidated_deps.txt
           fi
           if [ -e continuous_integration/install-libraries-arduino-cli.sh ]
           then
-            echo "Dependency installation script fount at continuous_integration/install-libraries-arduino-cli.sh"
+            echo "Dependency installation script found at continuous_integration/install-libraries-arduino-cli.sh"
             has_dependencies=true
             cat continuous_integration/install-libraries-arduino-cli.sh >> consolidated_deps.txt
           fi
           if [ -e ./continuous_integration/dependencies.json ]
           then
-            echo "Dependency installation script fount at ./continuous_integration/dependencies.json"
+            echo "Dependency installation script found at ./continuous_integration/dependencies.json"
             has_dependencies=true
             cat ./continuous_integration/dependencies.json >> consolidated_deps.txt
           fi
           if [ -e ./examples/example_dependencies.json ]
           then
-            echo "Dependency installation script fount at ./examples/example_dependencies.json"
+            echo "Dependency installation script found at ./examples/example_dependencies.json"
             has_dependencies=true
             cat ./examples/example_dependencies.json >> consolidated_deps.txt
           fi

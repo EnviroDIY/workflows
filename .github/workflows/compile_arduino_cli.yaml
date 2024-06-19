@@ -1,0 +1,111 @@
+name: Build Examples with PlatformIO and Arduino CLI
+
+on:
+  workflow_call:
+    inputs:
+      library_install_zip:
+        description: 'The git link to the zip of the library repo at the exact has to build'
+        required: true
+        type: string
+      arduino_job_matrix:
+        description: 'A json string with the job matrix'
+        required: true
+        type: string
+      lib_deps_install_script:
+        description: 'The file path for the script to install any dependencies, relative to the GitHub Workspace'
+        required: false
+        default: 'continuous_integration/install-libraries-arduino-cli.sh'
+        type: string
+
+jobs:
+  build_ex_arduino:
+    name: ${{ matrix.job_info.job_name }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        job_info: ${{ fromJSON(inputs.arduino_job_matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # We use the `arduino/setup-arduino-cli` action to install and
+      # configure the Arduino CLI on the system.
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v1.1.2
+
+      - name: Download the Arduino platform install script and configuration
+        run: |
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o arduino_cli.yaml
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-platforms-arduino-cli.sh -o install-platforms-arduino-cli.sh
+
+      - name: Restore Arduino platforms
+        uses: actions/cache@v4
+        id: cache_platforms
+        with:
+          path: |
+            home/arduino/data
+          key: ${{ hashFiles('install-platforms-arduino-cli.sh') }}
+          save-always: true
+
+      # Install cores for the Arduino CLI, iff no cache
+      - name: Install the Arduino Platforms
+        if: steps.cache_platforms.outputs.cache-hit != 'true'
+        run: |
+          chmod +x install-platforms-arduino-cli.sh
+          sh install-platforms-arduino-cli.sh
+
+      - name: Verify the library deps install script exists
+        id: check_lib_install
+        if: ${{ inputs.lib_deps_install_script != '' }}
+        run: |
+          if [ -e ${{ inputs.lib_deps_install_script}} ]
+          then
+            echo "Dependency installation script found at ${{ inputs.lib_deps_install_script}}"
+            echo "valid_lib_dep_script=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Restore Arduino libraries
+        uses: actions/cache@v4
+        id: cache_libraries
+        if: ${{ steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
+        with:
+          path: |
+            home/arduino/user
+          key: ${{ hashFiles(inputs.lib_deps_install_script) }}
+          save-always: true
+
+      # Install any library dependencies for the Arduino CLI, iff no cache
+      - name: Install the Arduino libraries
+        if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true') }}
+        run: |
+          chmod +x ${{ inputs.lib_deps_install_script }}
+          sh ${{ inputs.lib_deps_install_script }}
+
+      # Install the test library for the Arduino CLI
+      - name: Install the testing version of the library for the Arduino CLI
+        run: |
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-test-version-arduino-cli.sh -o install-test-version-arduino-cli.sh
+          chmod +x install-test-version-arduino-cli.sh
+          sh install-test-version-arduino-cli.sh
+
+      - name: Download the prepared examples
+        uses: actions/download-artifact@v4
+        with:
+          name: generated_examples
+          path: |
+            continuous_integration_artifacts/
+
+      - name: Include problem matcher
+        uses: ammaraskar/gcc-problem-matcher@master
+
+      # Run the script to compile the examples
+      - name: Compile
+        env:
+          ACTION_RUN_ID: ${{ github.run_id }}
+        run: |
+          chmod +x ${{ matrix.job_info.script }}
+          bash ${{ matrix.job_info.script }}
+
+      - name: Uninstall testing version of the library before caching
+        run: |
+          arduino-cli --config-file continuous_integration/arduino_cli.yaml lib uninstall ${GITHUB_REPOSITORY#*/}
