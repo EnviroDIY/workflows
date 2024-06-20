@@ -62,6 +62,12 @@ jobs:
           chmod +x install-platforms-platformio.sh
           sh install-platforms-platformio.sh
 
+      # Upgrade all platforms to the latest version, iff using cache
+      - name: Upgrade the Arduino Platforms
+        if: steps.restore_platforms.outputs.cache-hit == 'true'
+        run: |
+          pio pkg update
+
       - name: Verify the library deps install script exists
         id: check_lib_install
         if: ${{ inputs.lib_deps_install_script != '' }}

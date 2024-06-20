@@ -21,6 +21,8 @@ jobs:
   build_arduino:
     name: ${{ matrix.job_info.job_name }}
     runs-on: ubuntu-latest
+    env:
+      LIBRARY_INSTALL_ZIP: ${{ inputs.library_install_zip }}
     strategy:
       matrix:
         job_info: ${{ fromJSON(inputs.arduino_job_matrix) }}
@@ -53,6 +55,12 @@ jobs:
           chmod +x install-platforms-arduino-cli.sh
           sh install-platforms-arduino-cli.sh
 
+      # Upgrade all cores to the latest version, iff using cache
+      - name: Upgrade the Arduino Platforms
+        if: steps.restore_platforms.outputs.cache-hit == 'true'
+        run: |
+          arduino-cli --config-file arduino_cli.yaml core upgrade
+
       - name: Verify the library deps install script exists
         id: check_lib_install
         if: ${{ inputs.lib_deps_install_script != '' }}
@@ -73,6 +81,7 @@ jobs:
           key: ${{ hashFiles(inputs.lib_deps_install_script) }}
 
       # Install any library dependencies for the Arduino CLI, iff no cache
+      # NOTE: Don't update the dependencies beyond what's in the install script!
       - name: Install the Arduino libraries
         if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
