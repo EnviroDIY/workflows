@@ -47,18 +47,17 @@ jobs:
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-platforms-platformio.sh -o install-platforms-platformio.sh
 
       - name: Restore PlatformIO platforms
-        uses: actions/cache@v4
-        id: cache_platforms
+        uses: actions/cache/restore@v4
+        id: restore_platforms
         with:
           path: |
             ~/.platformio/packages
             ~/.platformio/platforms
           key: ${{ hashFiles('install-platforms-platformio.sh') }}
-          save-always: true
 
       # Install the PlatformIO platforms at global level, iff no cache
       - name: Install PlatformIO platforms
-        if: steps.cache_platforms.outputs.cache-hit != 'true'
+        if: steps.restore_platforms.outputs.cache-hit != 'true'
         run: |
           chmod +x install-platforms-platformio.sh
           sh install-platforms-platformio.sh
@@ -74,19 +73,18 @@ jobs:
           fi
 
       - name: Restore PlatformIO libraries
-        uses: actions/cache@v4
-        id: cache_libraries
+        uses: actions/cache/restore@v4
+        id: restore_libraries
         if: ${{ steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
         with:
           path: |
             ~/.platformio/lib
             $GITHUB_WORKSPACE/lib
           key: ${{ hashFiles(inputs.lib_deps_install_script) }}
-          save-always: true
 
       # Install any library dependencies with PlatformIO at the global level, iff no cache
       - name: Install PlatformIO libraries
-        if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true') }}
+        if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
           chmod +x ${{ inputs.lib_deps_install_script }}
           sh ${{ inputs.lib_deps_install_script }}
@@ -116,3 +114,23 @@ jobs:
         run: |
           chmod +x ${{ matrix.job_info.script }}
           bash ${{ matrix.job_info.script }}
+
+      - name: Cache PlatformIO platforms
+        uses: actions/cache/save@v4
+        id: cache_platforms
+        if: ${{ always() }}
+        with:
+          path: |
+            ~/.platformio/packages
+            ~/.platformio/platforms
+          key: ${{ steps.restore_platforms.outputs.cache-primary-key }}
+
+      - name: Cache PlatformIO libraries
+        uses: actions/cache/save@v4
+        id: cache_libraries
+        if: ${{ always() && steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
+        with:
+          path: |
+            ~/.platformio/lib
+            $GITHUB_WORKSPACE/lib
+          key: ${{ steps.restore_libraries.outputs.cache-primary-key }}

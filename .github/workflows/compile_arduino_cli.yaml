@@ -18,7 +18,7 @@ on:
         type: string
 
 jobs:
-  build_ex_arduino:
+  build_arduino:
     name: ${{ matrix.job_info.job_name }}
     runs-on: ubuntu-latest
     strategy:
@@ -39,17 +39,16 @@ jobs:
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-platforms-arduino-cli.sh -o install-platforms-arduino-cli.sh
 
       - name: Restore Arduino platforms
-        uses: actions/cache@v4
-        id: cache_platforms
+        uses: actions/cache/restore@v4
+        id: restore_platforms
         with:
           path: |
             home/arduino/data
           key: ${{ hashFiles('install-platforms-arduino-cli.sh') }}
-          save-always: true
 
       # Install cores for the Arduino CLI, iff no cache
       - name: Install the Arduino Platforms
-        if: steps.cache_platforms.outputs.cache-hit != 'true'
+        if: steps.restore_platforms.outputs.cache-hit != 'true'
         run: |
           chmod +x install-platforms-arduino-cli.sh
           sh install-platforms-arduino-cli.sh
@@ -65,18 +64,17 @@ jobs:
           fi
 
       - name: Restore Arduino libraries
-        uses: actions/cache@v4
-        id: cache_libraries
+        uses: actions/cache/restore@v4
+        id: restore_libraries
         if: ${{ steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
         with:
           path: |
             home/arduino/user
           key: ${{ hashFiles(inputs.lib_deps_install_script) }}
-          save-always: true
 
       # Install any library dependencies for the Arduino CLI, iff no cache
       - name: Install the Arduino libraries
-        if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.cache_libraries.outputs.cache-hit != 'true') }}
+        if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
           chmod +x ${{ inputs.lib_deps_install_script }}
           sh ${{ inputs.lib_deps_install_script }}
@@ -109,3 +107,21 @@ jobs:
       - name: Uninstall testing version of the library before caching
         run: |
           arduino-cli --config-file continuous_integration/arduino_cli.yaml lib uninstall ${GITHUB_REPOSITORY#*/}
+
+      - name: Cache Arduino platforms
+        uses: actions/cache/save@v4
+        id: cache_platforms
+        if: ${{ always() }}
+        with:
+          path: |
+            home/arduino/data
+          key: ${{ steps.restore_platforms.outputs.cache-primary-key }}
+
+      - name: Cache Arduino libraries
+        uses: actions/cache/save@v4
+        id: cache_libraries
+        if: ${{ always() && steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
+        with:
+          path: |
+            home/arduino/user
+          key: ${{ steps.restore_libraries.outputs.cache-primary-key }}
