@@ -3,3 +3,4 @@ wheel
 
 # use platformio for all of the compiler testing
 platformio
+requests

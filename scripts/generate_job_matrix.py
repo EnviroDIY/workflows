@@ -9,6 +9,7 @@ import re
 import os
 import copy
 from pathlib import Path
+import requests
 
 
 # %%
@@ -128,6 +129,19 @@ elif "BOARDS_TO_BUILD" in os.environ.keys():
 else:
     boards = ["mayfly"]
 
+
+# Download a generic PlatformIO config file if necessary
+if not have_pio_config_file and "GITHUB_WORKSPACE" in os.environ.keys():
+    response = requests.get(
+        "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini"
+    )
+    with open("platformio.ini", "wb") as f:
+        f.write(response.content)
+# verify the downloaded file now exists
+if os.path.isfile(os.path.join(workspace_path, "platformio.ini")):
+    pio_config_file = os.path.join(workspace_path, "platformio.ini")
+    have_pio_config_file = True
+
 # %%
 # Get the examples to build
 if "EXAMPLES_TO_BUILD" in os.environ.keys():
@@ -232,7 +246,8 @@ def create_logged_command(
 ):
     output_commands = []
     lower_compiler = compiler.lower().replace(" ", "").strip()
-    if lower_compiler == "platformio":
+    # NOTE: PlatformIO doesn't yet support the ESP32-C6 with the Arduino framework
+    if lower_compiler == "platformio" and "esp32-c6" not in pio_board:
         build_command = create_pio_ci_command(
             code_subfolder=code_subfolder, pio_env=pio_board, pio_env_file=pio_env_file
         )
