@@ -218,7 +218,7 @@ jobs:
       - name: Create Release with Assets
         if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
         id: create_release_with_zip
-        uses: softprops/action-gh-release@v2.0.5
+        uses: softprops/action-gh-release@v2.0.6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -235,7 +235,7 @@ jobs:
       - name: Create Simple Release
         id: create_bare_release
         if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'false' }}
-        uses: softprops/action-gh-release@v2.0.5
+        uses: softprops/action-gh-release@v2.0.6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
