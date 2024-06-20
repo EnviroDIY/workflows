@@ -10,6 +10,59 @@ import os
 import copy
 from pathlib import Path
 
+
+# %%
+# Translation between board names on PlatformIO and the Arduino CLI
+pio_to_acli = {
+    # EnviroDIY boards
+    "mayfly": {"fqbn": "EnviroDIY:avr:envirodiy_mayfly"},
+    # Official Arduino AVR boards
+    "uno": {"fqbn": "arduino:avr:uno"},
+    "megaatmega2560": {"fqbn": "arduino:avr:mega"},
+    "leonardo": {"fqbn": "arduino:avr:leonardo"},
+    # Official Arduino SAM boards
+    "dueUSB": {"fqbn": "arduino:sam:arduino_due_x"},
+    # Official Arduino SAMD boards
+    "zeroUSB": {"fqbn": "arduino:samd:mzero_bl"},
+    "mkrvidor4000": {"fqbn": "arduino:samd:mkrvidor4000"},
+    # Official Arduino Mega AVR boards
+    "uno_wifi_rev2": {"fqbn": "arduino:megaavr:uno2018"},
+    "nano_every": {"fqbn": "arduino:megaavr:nona4809"},
+    # Official Arduino ESP32 boards
+    "arduino_nano_esp32": {"fqbn": "arduino:esp32:nano_nora"},
+    # Official Arduino Rasberry Pi boards
+    "pico": {"fqbn": "arduino:mbed_rp2040:pico"},
+    # Official Arduino Renesas boards
+    "uno_r4_wifi": {"fqbn": "arduino:renesas_uno:unor4wifi"},
+    # Official Arduino NRF52 boards
+    "nano33ble": {
+        "fqbn": "arduino:nrf52:primo"
+    },  # different boards with the same processor!
+    # Official Arduino STM32 boards
+    "portenta_h7_m7": {"fqbn": "arduino:mbed_portenta:envie_m7"},
+    # Adafruit boards
+    "feather328p": {"fqbn": "adafruit:avr:feather328p"},
+    "feather32u4": {"fqbn": "adafruit:avr:feather32u4"},
+    "adafruit_feather_m0": {"fqbn": "adafruit:samd:adafruit_feather_m0"},
+    "adafruit_feather_m4": {"fqbn": "adafruit:samd:adafruit_feather_m4"},
+    "adafruit_grandcentral_m4": {"fqbn": "adafruit:samd:adafruit_grandcentral_m4"},
+    "adafruit_feather_nrf52840": {"fqbn": "adafruit:nrf52:feather52840"},
+    "huzzah": {"fqbn": "esp8266:esp8266:huzzah"},
+    "featheresp32": {"fqbn": "esp32:esp32:featheresp32"},
+    "feather_f405": {"fqbn": "STMicroelectronics:stm32:GenF4"},
+    # Espressif Boards
+    "nodemcu": {"fqbn": "esp8266:esp8266:nodemcu"},
+    "nodemcuv2": {"fqbn": "esp8266:esp8266:nodemcuv2"},
+    "esp32dev": {"fqbn": "esp32:esp32:esp32"},
+    "esp32-c3-devkitm-1": {"fqbn": "esp32:esp32:esp32c3"},
+    "esp32-c6-devkitm-1": {"fqbn": "esp32:esp32:esp32c6"},
+    "esp32-s3-devkitm-1": {"fqbn": "esp32:esp32:esp32s3"},
+    # Teensy Boards
+    "teensy36": {"fqbn": "teensy:avr:teensy36"},
+    "teensy40": {"fqbn": "teensy:avr:teensy40"},
+}
+
+
 # %%
 # Some working directories
 
@@ -68,7 +121,10 @@ if os.path.isfile(pio_config_file):
         )
     boards = list(board_to_pio_env.values())
 elif "BOARDS_TO_BUILD" in os.environ.keys():
-    boards = os.environ.get("BOARDS_TO_BUILD").split(",")
+    if os.environ.get("BOARDS_TO_BUILD") == "all":
+        boards = list(pio_to_acli.keys())
+    else:
+        boards = os.environ.get("BOARDS_TO_BUILD").split(",")
 else:
     boards = ["mayfly"]
 
@@ -87,57 +143,6 @@ else:
 
 # %%
 # helper functions to create commands
-
-# Translation between board names on PlatformIO and the Arduino CLI
-pio_to_acli = {
-    # EnviroDIY boards
-    "mayfly": {"fqbn": "EnviroDIY:avr:envirodiy_mayfly"},
-    # Official Arduino AVR boards
-    "uno": {"fqbn": "arduino:avr:uno"},
-    "megaatmega2560": {"fqbn": "arduino:avr:mega"},
-    "leonardo": {"fqbn": "arduino:avr:leonardo"},
-    # Official Arduino SAM boards
-    "dueUSB": {"fqbn": "arduino:sam:arduino_due_x"},
-    # Official Arduino SAMD boards
-    "zeroUSB": {"fqbn": "arduino:samd:mzero_bl"},
-    "mkrvidor4000": {"fqbn": "arduino:samd:mkrvidor4000"},
-    # Official Arduino Mega AVR boards
-    "uno_wifi_rev2": {"fqbn": "arduino:megaavr:uno2018"},
-    "nano_every": {"fqbn": "arduino:megaavr:nona4809"},
-    # Official Arduino ESP32 boards
-    "arduino_nano_esp32": {"fqbn": "arduino:esp32:nano_nora"},
-    # Official Arduino Rasberry Pi boards
-    "pico": {"fqbn": "arduino:mbed_rp2040:pico"},
-    # Official Arduino Renesas boards
-    "uno_r4_wifi": {"fqbn": "arduino:renesas_uno:unor4wifi"},
-    # Official Arduino NRF52 boards
-    "nano33ble": {
-        "fqbn": "arduino:nrf52:primo"
-    },  # different boards with the same processor!
-    # Official Arduino STM32 boards
-    "portenta_h7_m7": {"fqbn": "arduino:mbed_portenta:envie_m7"},
-    # Adafruit boards
-    "feather328p": {"fqbn": "adafruit:avr:feather328p"},
-    "feather32u4": {"fqbn": "adafruit:avr:feather32u4"},
-    "adafruit_feather_m0": {"fqbn": "adafruit:samd:adafruit_feather_m0"},
-    "adafruit_feather_m4": {"fqbn": "adafruit:samd:adafruit_feather_m4"},
-    "adafruit_grandcentral_m4": {"fqbn": "adafruit:samd:adafruit_grandcentral_m4"},
-    "adafruit_feather_nrf52840": {"fqbn": "adafruit:nrf52:feather52840"},
-    "huzzah": {"fqbn": "esp8266:esp8266:huzzah"},
-    "featheresp32": {"fqbn": "esp32:esp32:featheresp32"},
-    "feather_f405": {"fqbn": "STMicroelectronics:stm32:GenF4"},
-    # Espressif Boards
-    "nodemcu": {"fqbn": "esp8266:esp8266:nodemcu"},
-    "nodemcuv2": {"fqbn": "esp8266:esp8266:nodemcuv2"},
-    "esp32dev": {"fqbn": "esp32:esp32:esp32"},
-    "esp32-c3-devkitm-1": {"fqbn": "esp32:esp32:esp32c3"},
-    "esp32-c6-devkitm-1": {"fqbn": "esp32:esp32:esp32c6"},
-    "esp32-s3-devkitm-1": {"fqbn": "esp32:esp32:esp32s3"},
-    # Teensy Boards
-    "teensy36": {"fqbn": "teensy:avr:teensy36"},
-    "teensy40": {"fqbn": "teensy:avr:teensy40"},
-}
-
 
 def get_example_folder(subfolder_name):
     return os.path.join(examples_path, subfolder_name)
