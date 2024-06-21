@@ -108,16 +108,23 @@ else:
     arduino_cli_config = os.path.join(ci_dir, "arduino_cli_local.yaml")
 
 # PlatformIO configurations
-pio_config_file = os.path.join(ci_path, "platformio.ini")
-if os.path.isfile(pio_config_file):
-    custom_pio_config_file = True
-    default_pio_config_file = False
+default_pio_config_file = False
+if "BOARDS_TO_BUILD" in os.environ.keys() and os.environ.get("BOARDS_TO_BUILD") not in [
+    "all",
+    "",
+]:
+    boards = os.environ.get("BOARDS_TO_BUILD").split(",")
+    use_pio_config_file = False
 else:
-    pio_config_file = os.path.join(workspace_path, "platformio.ini")
-    custom_pio_config_file = False
-    default_pio_config_file = True
+    pio_config_file = os.path.join(ci_path, "platformio.ini")
+    if not os.path.isfile(pio_config_file):
+        response = requests.get(
+            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini"
+        )
+        with open(os.path.join(ci_path, "platformio.ini"), "wb") as f:
+            f.write(response.content)
+        default_pio_config_file = True
 
-if custom_pio_config_file:
     pio_config = ProjectConfig(pio_config_file)
     board_to_pio_env = {}
     for pio_env_name in pio_config.envs():
@@ -125,13 +132,7 @@ if custom_pio_config_file:
             pio_env_name
         )
     boards = list(board_to_pio_env.values())
-elif "BOARDS_TO_BUILD" in os.environ.keys():
-    if os.environ.get("BOARDS_TO_BUILD") == "all":
-        boards = list(pio_to_acli.keys())
-    else:
-        boards = os.environ.get("BOARDS_TO_BUILD").split(",")
-else:
-    boards = ["mayfly"]
+    use_pio_config_file = True
 
 # %%
 # Get the examples to build
@@ -181,10 +182,10 @@ def create_arduino_cli_command(code_subfolder: str, pio_board: str) -> str:
 def create_pio_ci_command(
     code_subfolder: str,
     pio_env: str,
-    have_pio_config_file: bool,
+    use_pio_config_file: bool = use_pio_config_file,
     pio_env_file: str = pio_config_file,
 ) -> str:
-    if have_pio_config_file:
+    if use_pio_config_file:
         pio_command_args = [
             "pio",
             "ci",
@@ -244,7 +245,7 @@ def create_logged_command(
             code_subfolder=code_subfolder,
             pio_env=pio_board,
             pio_env_file=pio_env_file,
-            have_pio_config_file=True,
+            use_pio_config_file=use_pio_config_file,
         )
     elif lower_compiler == "arduinocli":
         build_command = create_arduino_cli_command(
