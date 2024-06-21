@@ -121,6 +121,7 @@ else:
         response = requests.get(
             "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini"
         )
+        os.makedirs(ci_path, exist_ok=True)
         with open(os.path.join(ci_path, "platformio.ini"), "wb") as f:
             f.write(response.content)
         default_pio_config_file = True
