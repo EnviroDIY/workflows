@@ -3,4 +3,9 @@ wheel
 
 # use platformio for all of the compiler testing
 platformio
+
+# Adafruit NRF-Util is needed for NRF-52 feathers
+adafruit-nrfutil
+
+# Requests for pulling files
 requests

@@ -30,6 +30,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Pull the requirements file
+        run: |
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/requirements.txt -o requirements.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      - name: Install python dependencies, including NRF-Utils needed for Adafruit Feathers
+        run: |
+          pip install -r requirements.txt
+
       # We use the `arduino/setup-arduino-cli` action to install and
       # configure the Arduino CLI on the system.
       - name: Setup Arduino CLI
