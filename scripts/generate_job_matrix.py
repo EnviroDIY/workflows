@@ -48,7 +48,7 @@ pio_to_acli = {
     "adafruit_feather_nrf52840": {"fqbn": "adafruit:nrf52:feather52840"},
     "huzzah": {"fqbn": "esp8266:esp8266:huzzah"},
     "featheresp32": {"fqbn": "esp32:esp32:featheresp32"},
-    "feather_f405": {"fqbn": "STMicroelectronics:stm32:GenF4"},
+    "adafruit_feather_f405": {"fqbn": "STMicroelectronics:stm32:GenF4"},
     # Espressif Boards
     "nodemcu": {"fqbn": "esp8266:esp8266:nodemcu"},
     "nodemcuv2": {"fqbn": "esp8266:esp8266:nodemcuv2"},
@@ -132,8 +132,10 @@ else:
         board_to_pio_env[pio_config.get("env:{}".format(pio_env_name), "board")] = (
             pio_env_name
         )
-    boards = list(board_to_pio_env.values())
+    boards = list(board_to_pio_env.keys())
     use_pio_config_file = True
+
+# print(board_to_pio_env)
 
 # %%
 # Get the examples to build
@@ -284,6 +286,7 @@ for example in examples_to_build:
         for compiler, command_list in zip(
             compilers, [arduino_ex_commands, pio_ex_commands]
         ):
+            # print(f"Creating command for {pio_board} on {compiler}")
             command_list.extend(
                 create_logged_command(
                     compiler=compiler,
@@ -364,8 +367,17 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
 # %%
 if "GITHUB_WORKSPACE" not in os.environ.keys():
     try:
+        print("Deleting artifact directory")
         shutil.rmtree(artifact_dir)
     except:
         pass
+    if default_pio_config_file:
+        try:
+            print("Deleting default_pio_config_file")
+            os.remove(pio_config_file)  # remove downloaded file
+            os.rmdir(ci_path)  # remove dir if empty
+        except:
+            pass
+
 
 # %%
