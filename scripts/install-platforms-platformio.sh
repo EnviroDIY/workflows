@@ -19,7 +19,7 @@ pio pkg install -g --tool tool-avrdude
 pio pkg install -g --tool toolchain-atmelavr
 echo "::endgroup::"
 
-echo "::group::MegaAVR
+echo "::group::MegaAVR"
 echo "\e[32mInstalling Atmel Mega AVR Platform\e\0m"
 pio pkg install -g --platform atmelmegaavr
 pio pkg install -g --tool framework-arduino-megaavr
