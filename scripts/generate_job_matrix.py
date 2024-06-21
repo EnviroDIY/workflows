@@ -325,8 +325,9 @@ for matrix_job in arduino_job_matrix + pio_job_matrix:
     )
     if default_pio_config_file and matrix_job["job_name"].startswith("PlatformIO"):
         bash_out.write("# Download the 'standard' PlatformIO for EnviroDIY libraries\n")
+        bash_out.write(f"mkdir -p {ci_path}\n")
         bash_out.write(
-            f"curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini -o {pio_config_file}\n"
+            f"curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini -o {pio_config_file}\n\n"
         )
     bash_out.write(matrix_job["command"])
     bash_out.close()
