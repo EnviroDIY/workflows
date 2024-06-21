@@ -36,9 +36,7 @@ pio_to_acli = {
     # Official Arduino Renesas boards
     "uno_r4_wifi": {"fqbn": "arduino:renesas_uno:unor4wifi"},
     # Official Arduino NRF52 boards
-    "nano33ble": {
-        "fqbn": "arduino:nrf52:primo"
-    },  # different boards with the same processor!
+    "nano33ble": {"fqbn": "arduino:mbed_nano:nano33ble"},
     # Official Arduino STM32 boards
     "portenta_h7_m7": {"fqbn": "arduino:mbed_portenta:envie_m7"},
     # Adafruit boards
@@ -157,6 +155,7 @@ else:
 
 # %%
 # helper functions to create commands
+
 
 def get_example_folder(subfolder_name):
     return os.path.join(examples_path, subfolder_name)

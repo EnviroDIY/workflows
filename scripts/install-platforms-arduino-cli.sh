@@ -55,9 +55,9 @@ echo "\e[32mInstalling the Arduino Renesas Core\e[0m"
 arduino-cli --config-file arduino_cli.yaml core install arduino:renesas_uno
 echo "::endgroup::"
 
-echo "::group::Arduino NRF52 UNO"
-echo "\e[32mInstalling the Arduino NRF52 Core\e[0m"
-arduino-cli --config-file arduino_cli.yaml core install arduino:nrf52
+echo "::group::Arduino Mbed Nano"
+echo "\e[32mInstalling the Arduino Mbed Nano Core\e[0m"
+arduino-cli --config-file arduino_cli.yaml core install arduino:mbed_nano
 echo "::endgroup::"
 
 echo "::group::Arduino mBed 32"
