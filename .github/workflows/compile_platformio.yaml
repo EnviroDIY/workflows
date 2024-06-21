@@ -63,12 +63,12 @@ jobs:
           sh install-platforms-platformio.sh
 
       # Upgrade all platforms to the latest version, iff using cache
-      - name: Upgrade the Installed Platforms
-        if: steps.restore_platforms.outputs.cache-hit == 'true'
-        run: |
-          sed -i 's/pio pkg install -g/pio pkg update -g/g' install-platforms-platformio.sh
-          chmod +x install-platforms-platformio.sh
-          sh install-platforms-platformio.sh
+      # - name: Upgrade the Installed Platforms
+      #   if: steps.restore_platforms.outputs.cache-hit == 'true'
+      #   run: |
+      #     sed -i 's/pio pkg install -g/pio pkg update -g/g' install-platforms-platformio.sh
+      #     chmod +x install-platforms-platformio.sh
+      #     sh install-platforms-platformio.sh
 
       - name: Verify the library deps install script exists
         id: check_lib_install
