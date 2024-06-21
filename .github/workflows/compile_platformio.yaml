@@ -24,6 +24,8 @@ jobs:
     strategy:
       matrix:
         job_info: ${{ fromJSON(inputs.pio_job_matrix) }}
+    env:
+      PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
 
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +55,7 @@ jobs:
           path: |
             ~/.platformio/packages
             ~/.platformio/platforms
+            ~/.platformio/caches
           key: ${{ hashFiles('install-platforms-platformio.sh') }}
 
       # Install the PlatformIO platforms at global level, iff no cache
@@ -131,6 +134,7 @@ jobs:
           path: |
             ~/.platformio/packages
             ~/.platformio/platforms
+            ~/.platformio/caches
           key: ${{ steps.restore_platforms.outputs.cache-primary-key }}
 
       - name: Cache PlatformIO libraries

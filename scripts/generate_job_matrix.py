@@ -246,7 +246,7 @@ def create_logged_command(
     if lower_compiler == "platformio" and "esp32-c6" not in pio_board:
         build_command = create_pio_ci_command(
             code_subfolder=code_subfolder,
-            pio_env=pio_board,
+            pio_env=board_to_pio_env[pio_board],
             pio_env_file=pio_env_file,
             use_pio_config_file=use_pio_config_file,
         )
