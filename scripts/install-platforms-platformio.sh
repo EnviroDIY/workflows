@@ -97,11 +97,6 @@ pio pkg install -g --tool framework-arduinoteensy
 pio pkg install -g --tool toolchain-gccarmnoneeabi-teensy
 echo "::endgroup::"
 
-echo "::group::Upgrade All Packages"
-echo "\e[32m\nUpgrading all installed packages: \e[0m"
-pio pkg update
-echo "::endgroup::"
-
 echo "::group::Package List"
 echo "\e[32m\nCurrently installed packages:\e[0m"
 pio pkg list -g -v

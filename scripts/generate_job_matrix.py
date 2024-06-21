@@ -109,9 +109,15 @@ else:
 
 # PlatformIO configurations
 pio_config_file = os.path.join(ci_path, "platformio.ini")
-have_pio_config_file = False
 if os.path.isfile(pio_config_file):
-    have_pio_config_file = True
+    custom_pio_config_file = True
+    default_pio_config_file = False
+else:
+    pio_config_file = os.path.join(workspace_path, "platformio.ini")
+    custom_pio_config_file = False
+    default_pio_config_file = True
+
+if custom_pio_config_file:
     pio_config = ProjectConfig(pio_config_file)
     board_to_pio_env = {}
     for pio_env_name in pio_config.envs():
@@ -126,19 +132,6 @@ elif "BOARDS_TO_BUILD" in os.environ.keys():
         boards = os.environ.get("BOARDS_TO_BUILD").split(",")
 else:
     boards = ["mayfly"]
-
-
-# Download a generic PlatformIO config file if necessary
-if not have_pio_config_file and "GITHUB_WORKSPACE" in os.environ.keys():
-    response = requests.get(
-        "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini"
-    )
-    with open("platformio.ini", "wb") as f:
-        f.write(response.content)
-# verify the downloaded file now exists
-if os.path.isfile(os.path.join(workspace_path, "platformio.ini")):
-    pio_config_file = os.path.join(workspace_path, "platformio.ini")
-    have_pio_config_file = True
 
 # %%
 # Get the examples to build
@@ -188,8 +181,8 @@ def create_arduino_cli_command(code_subfolder: str, pio_board: str) -> str:
 def create_pio_ci_command(
     code_subfolder: str,
     pio_env: str,
+    have_pio_config_file: bool,
     pio_env_file: str = pio_config_file,
-    have_pio_config_file: bool = have_pio_config_file,
 ) -> str:
     if have_pio_config_file:
         pio_command_args = [
@@ -248,7 +241,10 @@ def create_logged_command(
     # NOTE: PlatformIO doesn't yet support the ESP32-C6 with the Arduino framework
     if lower_compiler == "platformio" and "esp32-c6" not in pio_board:
         build_command = create_pio_ci_command(
-            code_subfolder=code_subfolder, pio_env=pio_board, pio_env_file=pio_env_file
+            code_subfolder=code_subfolder,
+            pio_env=pio_board,
+            pio_env_file=pio_env_file,
+            have_pio_config_file=True,
         )
     elif lower_compiler == "arduinocli":
         build_command = create_arduino_cli_command(
@@ -303,7 +299,7 @@ for example in examples_to_build:
     )
     pio_job_matrix.append(
         {
-            "job_name": "Platformio - {}".format(example.split("/")[-1]),
+            "job_name": "PlatformIO - {}".format(example.split("/")[-1]),
             "command": "\n".join(pio_ex_commands + [end_job_commands]),
         }
     )
@@ -322,6 +318,11 @@ for matrix_job in arduino_job_matrix + pio_job_matrix:
     bash_out.write(
         "trap '[[ $BASH_COMMAND != echo* ]] && echo $BASH_COMMAND' DEBUG\n\n"
     )
+    if default_pio_config_file and matrix_job["job_name"].startswith("PlatformIO"):
+        bash_out.write("# Download the 'standard' PlatformIO for EnviroDIY libraries\n")
+        bash_out.write(
+            "curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini -o platformio.ini\n"
+        )
     bash_out.write(matrix_job["command"])
     bash_out.close()
     matrix_job["script"] = os.path.join(artifact_path, bash_file_name)
