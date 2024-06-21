@@ -90,9 +90,14 @@ echo "\e[32mInstalling the ESP32 Arduino Core\e[0m"
 arduino-cli --config-file arduino_cli.yaml core install esp32:esp32
 echo "::endgroup::"
 
+echo "::group::Raspberry Pi Pico"
+echo "\e[32mInstalling the Raspberry Pi Pico Core\e[0m"
+arduino-cli --config-file arduino_cli.yaml core install rp2040:rp2040
+echo "::endgroup::"
+
 echo "::group::Teensy"
 echo "\e[32mInstalling the Teensy Core\e[0m"
-arduino-cli --config-file arduino_cli.yaml core install rp2040:rp2040
+arduino-cli --config-file arduino_cli.yaml core install teensy:avr
 echo "::endgroup::"
 
 echo "\e[32mUpdating the core index\e[0m"
