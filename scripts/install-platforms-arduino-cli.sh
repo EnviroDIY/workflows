@@ -80,6 +80,11 @@ echo "\e[32mInstalling the Adafruit NRF52 Core\e[0m"
 arduino-cli --config-file arduino_cli.yaml core install adafruit:nrf52
 echo "::endgroup::"
 
+echo "::group::STM32"
+echo "\e[32mInstalling the Generic STM32 Core\e[0m"
+arduino-cli --config-file arduino_cli.yaml core install STMicroelectronics:stm32
+echo "::endgroup::"
+
 echo "::group::Espressif ESP8266"
 echo "\e[32mInstalling the ESP8266 Arduino Core\e[0m"
 arduino-cli --config-file arduino_cli.yaml core install esp8266:esp8266
