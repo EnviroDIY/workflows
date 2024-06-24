@@ -91,6 +91,7 @@ def create_arduino_cli_command(library: dict) -> str:
         arduino_command_args.append(library["version"])
     else:
         arduino_command_args.append(library["name"])
+    arduino_command_args.append("--no-deps")
     return " ".join(arduino_command_args)
 
 
@@ -101,6 +102,7 @@ def create_pio_ci_command(
         "pio",
         "pkg",
         "install",
+        "--skip-dependencies",
         "-g",
         "--library",
     ]
