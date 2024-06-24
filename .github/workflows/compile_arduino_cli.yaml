@@ -30,9 +30,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pull the requirements file
+      - name: Write the requirements file
         run: |
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/requirements.txt -o requirements.txt
+          echo "wheel" > requirements.txt
+          echo "adafruit-nrfutil" >> requirements.txt
 
       - name: Set up Python
         uses: actions/setup-python@v5
