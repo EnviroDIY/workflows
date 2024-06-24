@@ -30,19 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pull the requirements file
-        run: |
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/requirements.txt -o requirements.txt
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-          cache: 'pip'
-
-      - name: Install python dependencies, including PlatformIO
-        run: |
-          pip install -r requirements.txt
+      - name: Setup PlatformIO
+        uses: EnviroDIY/setup-platformio-action@v1
 
       - name: Download the PlatformIO platform install script
         run: |
