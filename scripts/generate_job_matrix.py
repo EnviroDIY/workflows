@@ -13,11 +13,6 @@ import requests
 
 
 # %%
-# Translation between board names on PlatformIO and the Arduino CLI
-pio_to_acli = json.load("platformio_to_arduino_boards.json")
-
-
-# %%
 # Some working directories
 
 # The workspace directory
@@ -52,6 +47,18 @@ if not os.path.exists(artifact_dir):
     os.makedirs(artifact_dir)
 
 compilers = ["Arduino CLI", "PlatformIO"]
+
+
+# %%
+os.makedirs(ci_path, exist_ok=True)
+response = requests.get(
+    "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio_to_arduino_boards.json"
+)
+with open(os.path.join(ci_path, "platformio_to_arduino_boards.json"), "wb") as f:
+    f.write(response.content)
+# Translation between board names on PlatformIO and the Arduino CLI
+with open(os.path.join(ci_path, "platformio_to_arduino_boards.json")) as f:
+    pio_to_acli = json.load(f)
 
 # %%
 # read configurations based on existing files and environment variables
