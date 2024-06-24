@@ -63,7 +63,11 @@ if os.path.isfile(os.path.join(examples_path, "example_dependencies.json")):
 else:
     example_specs = {"dependencies": []}
 
-dependencies = library_specs["dependencies"] + example_specs["dependencies"]
+dependencies=[]
+if "dependencies" in library_specs.keys():
+    dependencies.extend(library_specs["dependencies"])
+if "dependencies" in example_specs.keys():
+    dependencies.extend(example_specs["dependencies"])
 
 if len(dependencies) ==0:
     print("No dependencies to install!")
