@@ -162,7 +162,7 @@ def add_log_to_command(command: str, group_title: str) -> List:
 
 # %%
 # write the bash file for the ArduinoCLI
-bash_file_name = "install-platforms-arduino-cli_test.sh"
+bash_file_name = "install-platforms-arduino-cli.sh"
 print(f"Wrinting bash file to {os.path.join(artifact_path, bash_file_name)}")
 bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
 bash_out.write("#!/bin/bash\n\n")
@@ -210,7 +210,7 @@ bash_out.close()
 
 # %%
 # write the bash file for PlatformIO
-bash_file_name = "install-platforms-platformio_test.sh"
+bash_file_name = "install-platforms-platformio.sh"
 print(f"Wrinting bash file to {os.path.join(artifact_path, bash_file_name)}")
 bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
 bash_out.write("#!/bin/bash\n\n")
