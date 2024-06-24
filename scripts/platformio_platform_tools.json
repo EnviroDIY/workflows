@@ -1,0 +1,73 @@
+{
+  "atmelavr": {
+    "name": "Atmel AVR",
+    "tools": ["framework-arduino-avr", "tool-avrdude", "toolchain-atmelavr"]
+  },
+  "atmelmegaavr": {
+    "name": "Atmel Mega AVR",
+    "tools": ["framework-arduino-megaavr", "toolchain-atmelavr"]
+  },
+
+  "atmelsam": {
+    "name": "Atmel SAM/SAMD",
+    "tools": [
+      "framework-arduino-sam",
+      "framework-arduino-samd",
+      "framework-arduino-samd-adafruit",
+      "framework-arduino-samd-sodaq",
+      "framework-cmsis",
+      "framework-cmsis-atmel",
+      "toolchain-gccarmnoneeabi"
+    ]
+  },
+
+  "espressif8266": {
+    "name": "Espressif ESP8266",
+    "tools": ["tool-esptool", "tool-esptoolpy", "toolchain-xtensa"]
+  },
+
+  "espressif32": {
+    "name": "Espressif ESP32",
+    "tools": [
+      "tool-esptool",
+      "tool-esptoolpy",
+      "toolchain-riscv32-esp",
+      "toolchain-xtensa-esp32"
+    ]
+  },
+
+  "raspberrypi": {
+    "name": "Raspberry Pi Pico",
+    "tools": ["framework-arduino-mbed", "tool-rp2040tools", "toolchain-gccarmnoneeabi"]
+  },
+
+  "renesas-ra": {
+    "name": "Renesas-RA",
+    "tools": ["framework-arduinorenesas-uno", "tool-bossac", "toolchain-gccarmnoneeabi"]
+  },
+
+  "nordicnrf52": {
+    "name": "Nordic NRF52",
+    "tools": [
+      "framework-cmsis",
+      "tool-adafruit-nrfutil",
+      "tool-sreccat",
+      "toolchain-gccarmnoneeabi"
+    ]
+  },
+
+  "ststm32": {
+    "name": "STM32",
+    "tools": [
+      "framework-arduino-mbed",
+      "framework-arduinoststm32",
+      "framework-cmsis",
+      "toolchain-gccarmnoneeabi"
+    ]
+  },
+
+  "teensy": {
+    "name": "Teensy",
+    "tools": ["framework-arduinoteensy", "toolchain-gccarmnoneeabi-teensy"]
+  }
+}

@@ -1,4 +1,4 @@
-name: Build Examples with PlatformIO and Arduino CLI
+name: Build Examples with PlatformIO
 
 on:
   workflow_call:
@@ -10,11 +10,6 @@ on:
       pio_job_matrix:
         description: 'A json string with the job matrix'
         required: true
-        type: string
-      lib_deps_install_script:
-        description: 'The file path for the script to install any dependencies, relative to the GitHub Workspace'
-        required: false
-        default: 'continuous_integration/install-libraries-platformio.sh'
         type: string
 
 jobs:
@@ -28,14 +23,26 @@ jobs:
       PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup PlatformIO
         uses: EnviroDIY/setup-platformio-action@v1
 
+      - name: Download the prepared examples
+        uses: actions/download-artifact@v4
+        with:
+          name: generated_examples
+          path: |
+            continuous_integration_artifacts/
+
       - name: Download the PlatformIO platform install script
         run: |
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-platforms-platformio.sh -o install-platforms-platformio.sh
+          mv continuous_integration_artifacts/install-platforms-platformio.sh install-platforms-platformio.sh
+          if [ ! -e continuous_integration/install-libraries-platformio.py ] && [ -e continuous_integration_artifacts/install-libraries-platformio.py ]
+          then
+            mv continuous_integration_artifacts/install-libraries-platformio.py continuous_integration/install-libraries-platformio.sh
+          fi
 
       - name: Restore PlatformIO platforms
         uses: actions/cache/restore@v4
@@ -64,11 +71,10 @@ jobs:
 
       - name: Verify the library deps install script exists
         id: check_lib_install
-        if: ${{ inputs.lib_deps_install_script != '' }}
         run: |
-          if [ -e ${{ inputs.lib_deps_install_script}} ]
+          if [ -e continuous_integration/install-libraries-platformio.sh ]
           then
-            echo "Dependency installation script found at ${{ inputs.lib_deps_install_script}}"
+            echo "Dependency installation script found at continuous_integration/install-libraries-platformio.sh"
             echo "valid_lib_dep_script=true" >> $GITHUB_OUTPUT
           fi
 
@@ -80,14 +86,14 @@ jobs:
           path: |
             ~/.platformio/lib
             $GITHUB_WORKSPACE/lib
-          key: ${{ hashFiles(inputs.lib_deps_install_script) }}
+          key: ${{ hashFiles('continuous_integration/install-libraries-platformio.sh') }}
 
       # Install any library dependencies with PlatformIO at the global level, iff no cache
       - name: Install PlatformIO libraries
         if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
-          chmod +x ${{ inputs.lib_deps_install_script }}
-          sh ${{ inputs.lib_deps_install_script }}
+          chmod +x continuous_integration/install-libraries-platformio.sh
+          sh continuous_integration/install-libraries-platformio.sh
           cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/
 
       # Install the library at the Global level for PlatformIO
@@ -96,13 +102,6 @@ jobs:
         run: |
           pio pkg install -g --library ${{ inputs.library_install_git }}
           pio pkg list -g --only-libraries
-
-      - name: Download the prepared examples
-        uses: actions/download-artifact@v4
-        with:
-          name: generated_examples
-          path: |
-            continuous_integration_artifacts/
 
       - name: Include problem matcher
         uses: ammaraskar/gcc-problem-matcher@master

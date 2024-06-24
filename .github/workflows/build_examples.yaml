@@ -32,7 +32,24 @@ jobs:
       - name: Setup PlatformIO
         uses: EnviroDIY/setup-platformio-action@v1
 
-      - name: Generate Matrices
+      - name: Generate Platform Installation Script
+        id: py_platforms
+        run: |
+            echo "Generating script to install Platforms"
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_platform_installation_script.py -o generate_platform_installation_script.py
+            python -u generate_platform_installation_script.py
+
+      - name: Generate Library Installation Script
+        id: py_libraries
+        run: |
+          if [ ! -e continuous_integration/install-libraries-arduino-cli.py ] && [ ! -e continuous_integration/install-libraries-platformio.py ]
+          then
+            echo "Generating dependency library installation script"
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_library_installation_script.py -o generate_library_installation_script.py
+            python -u generate_library_installation_script.py
+          fi
+
+      - name: Generate Example Build Matrices
         id: py_matrix
         run: |
           if [ -e continuous_integration/generate_job_matrix.py ]

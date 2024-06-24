@@ -5,43 +5,47 @@ on:
     inputs:
       library-manager:
         description: 'Configure the rules for libraries in the Arduino Library Manager index. Can be {submit|update|false}.'
-        required: true
         type: string
+        required: false
+        default: update
       library-compliance:
         description: 'Configure how strict the tool is. Can be {strict|specification|permissive}.'
-        required: false
         type: string
+        required: false
         default: 'strict'
+
   # Also give a manual trigger
   workflow_dispatch:
     inputs:
       library-manager:
         description: 'Configure the rules for libraries in the Arduino Library Manager index. Can be {submit|update|false}.'
-        required: true
         type: string
+        required: false
+        default: update
       library-compliance:
         description: 'Configure how strict the tool is. Can be {strict|specification|permissive}.'
-        required: false
         type: string
+        required: false
         default: 'strict'
 
 env:
   PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
 
 jobs:
+
   check_version_number:
     name: Check Version Number
     runs-on: ubuntu-latest
     outputs:
-      current_version: ${{ steps.set_vesion.outputs.version }}
-      zip_name: ${{ steps.set_vesion.outputs.zip_name }}
+      current_version: ${{ steps.set_version.outputs.version }}
+      zip_name: ${{ steps.set_version.outputs.zip_name }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Output the Version Numbers
-        id: set_vesion
+        id: set_version
         run: |
           echo "::debug::Get the current version number"
           VER=$(cat VERSION)
@@ -51,24 +55,12 @@ jobs:
           echo "version=${VER}" >> $GITHUB_OUTPUT
           echo "zip_name=${ZIP_FILE}" >> $GITHUB_OUTPUT
 
-  verify_library_structure:
-    name: Validate library structure
-    uses: ./.github/workflows/verify_library_structure.yaml
-    with:
-      library-manager: ${{ inputs.library-manager }}
-      library-compliance: ${{ inputs.library-compliance }}
-    needs: check_version_number
-
-  check_for_dependencies:
-    name: Check For Library Dependencies
-    uses: ./.github/workflows/check_for_dependencies.yaml
-    needs: verify_library_structure
-
   prepare_assets:
     name: Prepare Release Assets
     runs-on: ubuntu-latest
-    needs: [check_for_dependencies, check_version_number]
-    if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
+    needs: [check_version_number]
+    outputs:
+      valid_lib_dep_script: ${{ steps.check_lib_install.outputs.valid_lib_dep_script }}
 
     steps:
       - name: Checkout code
@@ -77,59 +69,50 @@ jobs:
       - name: Setup PlatformIO
         uses: EnviroDIY/setup-platformio-action@v1
 
-      # Install all the library dependencies!
-      - name: Install the library dependencies to zip up for the release
-        id: install_release_deps
+      - name: Generate Library Installation Script
+        id: py_libraries
+        run: |
+          if [ ! -e continuous_integration/install-libraries-arduino-cli.py ] && [ ! -e continuous_integration/install-libraries-platformio.py ]
+          then
+            echo "Generating dependency library installation script"
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_library_installation_script.py -o generate_library_installation_script.py
+            python -u generate_library_installation_script.py
+              if [ -e continuous_integration_artifacts/install-libraries-platformio.py ]
+              then
+                mv continuous_integration_artifacts/install-libraries-platformio.py continuous_integration/install-libraries-platformio.sh
+              fi
+          fi
+
+      - name: Verify the library deps install script exists
+        id: check_lib_install
+        run: |
+          if [ -e continuous_integration/install-libraries-platformio.sh ]
+          then
+            echo "Dependency installation script found at continuous_integration/install-libraries-platformio.sh"
+            echo "valid_lib_dep_script=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Restore PlatformIO libraries
+        uses: actions/cache/restore@v4
+        id: restore_libraries
+        if: ${{ steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
+        with:
+          path: |
+            ~/.platformio/lib
+            $GITHUB_WORKSPACE/lib
+          key: ${{ hashFiles('continuous_integration/install-libraries-platformio.sh') }}
+
+      # Install any library dependencies with PlatformIO at the global level, iff no cache
+      - name: Install PlatformIO libraries
+        if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
           chmod +x continuous_integration/install-libraries-platformio.sh
           sh continuous_integration/install-libraries-platformio.sh
+          cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/
 
       - name: Install the library from the master branch
         run: |
           pio pkg install -g -l https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
-
-      # Uninstall graphics libraries from Adafruit
-      - name: Uninstall Adafruit GFX Library library
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing Adafruit GFX Library"
-          pio pkg uninstall -g -l "adafruit/Adafruit GFX Library"
-
-      - name: Uninstall Adafruit NeoPixel library
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing Adafruit NeoPixel"
-          pio pkg uninstall -g -l "adafruit/Adafruit NeoPixel"
-
-      - name: Uninstall Adafruit SSD1306 library
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing Adafruit SSD1306"
-          pio pkg uninstall -g -l "adafruit/Adafruit SSD1306"
-
-      - name: Uninstall Adafruit ADXL343 library
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing Adafruit ADXL343"
-          pio pkg uninstall -g -l "adafruit/Adafruit ADXL343"
-
-      - name: Uninstall Adafruit STMPE610 library
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing Adafruit STMPE610"
-          pio pkg uninstall -g -l "adafruit/Adafruit STMPE610"
-
-      - name: Uninstall Adafruit TouchScreen library
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing Adafruit TouchScreen"
-          pio pkg uninstall -g -l "adafruit/Adafruit TouchScreen"
-
-      - name: Uninstall Adafruit ILI9341 library
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing Adafruit ILI9341"
-          pio pkg uninstall -g -l "adafruit/Adafruit ILI9341"
 
       # zip up all the installed libraries
       # need to cd into the pio directory so we don't get extra junk directories
@@ -151,26 +134,6 @@ jobs:
           echo "::debug::Deleting extra files to decrease size of zip"
           echo "::debug::Removing Git folders"
           zip -d -q ${{ needs.check_version_number.outputs.zip_name }} "*/.gitattributes" "*/.gitignore" "*/.gitmodules" "*/.github/*" "*.sh"  "*/Doxyfile" "*/.travis.yml"
-      - name: Remove other pdfs from the zip
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing other pdfs"
-          zip -d -q libraries "*/doc/*.pdf"
-      - name: Remove TinyGSM extras from the zip
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing TinyGSM extras"
-          zip -d -q libraries "*/TinyGSM/extras/*"
-      - name: Remove YosemitechModbus extras from the zip
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing YosemitechModbus extras"
-          zip -d -q libraries "*/YosemitechModbus/doc/*"
-      - name: Remove SDFat extras from the zip
-        continue-on-error: true
-        run: |
-          echo "::debug::Removing SDFat extras"
-          zip -d -q libraries "*/SdFat/extras/*"
 
       - name: Store generated dependency zip
         uses: actions/upload-artifact@v4
@@ -179,11 +142,11 @@ jobs:
           path: |
             ${{ needs.check_version_number.outputs.zip_name }}.zip
 
-  release:
-    name: Prepare a new release
+  release_with_assets:
+    name: Create a Release with Assets
     runs-on: ubuntu-latest
-    needs: [check_for_dependencies, check_version_number, prepare_assets]
-    if: ${{ ! failure() && ! cancelled() }}
+    needs: [check_version_number, prepare_assets]
+    if: ${{ ! failure() && ! cancelled() && needs.prepare_assets.outputs.valid_lib_dep_script == 'true' }}
 
     steps:
       - name: Checkout code
@@ -198,14 +161,14 @@ jobs:
           validation_level: warn
 
       - name: Download any Dependency Zip
-        if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
         uses: actions/download-artifact@v4
         with:
           name: dependency_zip
+          path: |
+            ${{ needs.check_version_number.outputs.zip_name }}.zip
 
       # Create a new release with zipped dependencies
       - name: Create Release with Assets
-        if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
         id: create_release_with_zip
         uses: softprops/action-gh-release@v2.0.6
         env:
@@ -219,6 +182,24 @@ jobs:
           generate_release_notes: false
           files: ${{ format('./{0}.zip', needs.check_version_number.outputs.zip_name) }}
           fail_on_unmatched_files: true
+
+  release_simple:
+    name: Create a New Release
+    runs-on: ubuntu-latest
+    needs: [check_version_number]
+    if: ${{ ! failure() && ! cancelled() && needs.prepare_assets.outputs.valid_lib_dep_script != 'true' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get change log entry for release notes
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          path: ChangeLog.md
+          version: ${{ needs.check_version_number.outputs.current_version }}
+          validation_level: warn
 
       # Create a new release with no zip
       - name: Create Simple Release
@@ -234,6 +215,23 @@ jobs:
           prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
           body: ${{ steps.changelog_reader.outputs.changes }}
           generate_release_notes: false
+
+  publish:
+    name: Publish to PlaformIO
+    runs-on: ubuntu-latest
+    needs: [release_with_assets, release_simple]
+    if: |
+      always() &&
+      (needs.release_with_assets.result == 'success' || needs.release_with_assets.result == 'skipped') &&
+      (needs.release_simple.result == 'success' || needs.release_simple.result == 'skipped') &&
+      ! (needs.release_with_assets.result == 'skipped' && needs.release_simple.result == 'skipped')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PlatformIO
+        uses: EnviroDIY/setup-platformio-action@v1
 
       # Publish the new release to the PlatformIO package manager
       - name: Publish release to the PlatformIO package manager

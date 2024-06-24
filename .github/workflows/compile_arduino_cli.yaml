@@ -1,4 +1,4 @@
-name: Build Examples with PlatformIO and Arduino CLI
+name: Build Examples with Arduino CLI
 
 on:
   workflow_call:
@@ -10,11 +10,6 @@ on:
       arduino_job_matrix:
         description: 'A json string with the job matrix'
         required: true
-        type: string
-      lib_deps_install_script:
-        description: 'The file path for the script to install any dependencies, relative to the GitHub Workspace'
-        required: false
-        default: 'continuous_integration/install-libraries-arduino-cli.sh'
         type: string
 
 jobs:
@@ -50,10 +45,21 @@ jobs:
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v1.1.2
 
+      - name: Download the prepared examples
+        uses: actions/download-artifact@v4
+        with:
+          name: generated_examples
+          path: |
+            continuous_integration_artifacts/
+
       - name: Download the Arduino platform install script and configuration
         run: |
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o arduino_cli.yaml
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-platforms-arduino-cli.sh -o install-platforms-arduino-cli.sh
+          mv continuous_integration_artifacts/install-platforms-arduino-cli.sh install-platforms-arduino-cli.sh
+          if [ ! -e continuous_integration/install-libraries-arduino-cli.py ] && [ -e continuous_integration_artifacts/install-libraries-arduino-cli.py ]
+          then
+            mv continuous_integration_artifacts/install-libraries-arduino-cli.py continuous_integration/install-libraries-arduino-cli.sh
+          fi
 
       - name: Restore Arduino platforms
         uses: actions/cache/restore@v4
@@ -70,19 +76,18 @@ jobs:
           chmod +x install-platforms-arduino-cli.sh
           sh install-platforms-arduino-cli.sh
 
-      # Upgrade all cores to the latest version, iff using cache
-      - name: Upgrade the Arduino Platforms
-        if: steps.restore_platforms.outputs.cache-hit == 'true'
-        run: |
-          arduino-cli --config-file arduino_cli.yaml core upgrade
+      # # Upgrade all cores to the latest version, iff using cache
+      # - name: Upgrade the Arduino Platforms
+      #   if: steps.restore_platforms.outputs.cache-hit == 'true'
+      #   run: |
+      #     arduino-cli --config-file arduino_cli.yaml core upgrade
 
       - name: Verify the library deps install script exists
         id: check_lib_install
-        if: ${{ inputs.lib_deps_install_script != '' }}
         run: |
-          if [ -e ${{ inputs.lib_deps_install_script}} ]
+          if [ -e continuous_integration/install-libraries-arduino-cli.sh ]
           then
-            echo "Dependency installation script found at ${{ inputs.lib_deps_install_script}}"
+            echo "Dependency installation script found at continuous_integration/install-libraries-arduino-cli.sh"
             echo "valid_lib_dep_script=true" >> $GITHUB_OUTPUT
           fi
 
@@ -93,15 +98,15 @@ jobs:
         with:
           path: |
             home/arduino/user
-          key: ${{ hashFiles(inputs.lib_deps_install_script) }}
+          key: ${{ hashFiles('continuous_integration/install-libraries-arduino-cli.sh') }}
 
       # Install any library dependencies for the Arduino CLI, iff no cache
       # NOTE: Don't update the dependencies beyond what's in the install script!
       - name: Install the Arduino libraries
         if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
-          chmod +x ${{ inputs.lib_deps_install_script }}
-          sh ${{ inputs.lib_deps_install_script }}
+          chmod +x continuous_integration/install-libraries-arduino-cli.sh
+          sh continuous_integration/install-libraries-arduino-cli.sh
 
       # Install the test library for the Arduino CLI
       - name: Install the testing version of the library for the Arduino CLI
@@ -109,13 +114,6 @@ jobs:
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-test-version-arduino-cli.sh -o install-test-version-arduino-cli.sh
           chmod +x install-test-version-arduino-cli.sh
           sh install-test-version-arduino-cli.sh
-
-      - name: Download the prepared examples
-        uses: actions/download-artifact@v4
-        with:
-          name: generated_examples
-          path: |
-            continuous_integration_artifacts/
 
       - name: Include problem matcher
         uses: ammaraskar/gcc-problem-matcher@master
