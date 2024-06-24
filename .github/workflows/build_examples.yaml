@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup PlatformIO
-        uses: EnviroDIY/setup-platformio-action@v1
+        uses: EnviroDIY/setup-platformio-action@v1.0.2
 
       - name: Generate Platform Installation Script
         id: py_platforms

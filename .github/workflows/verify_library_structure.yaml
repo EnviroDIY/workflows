@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup PlatformIO
-        uses: EnviroDIY/setup-platformio-action@v1
+        uses: EnviroDIY/setup-platformio-action@v1.0.2
 
       - name: Run python script to verify structure of library.json for PlatformIO
         id: validate_manifest

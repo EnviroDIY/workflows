@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup PlatformIO
-        uses: EnviroDIY/setup-platformio-action@v1
+        uses: EnviroDIY/setup-platformio-action@v1.0.2
 
       - name: Generate Library Installation Script
         id: py_libraries
@@ -231,7 +231,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup PlatformIO
-        uses: EnviroDIY/setup-platformio-action@v1
+        uses: EnviroDIY/setup-platformio-action@v1.0.2
 
       # Publish the new release to the PlatformIO package manager
       - name: Publish release to the PlatformIO package manager
