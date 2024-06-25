@@ -22,6 +22,6 @@ echo GitHub Orgs Directory: %GIBHUB_BASE_DIR%
 @REM Generate Arduino keywords using doxygen2keywords.xsl and Saxon
 echo Converting the Doxygen output to an Arudino keywords file
 java -jar "C:\Users\sdamiano\Downloads\SaxonHE12-4J\saxon-he-12.4.jar" -o:"%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\keywords.txt" -s:"%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%_Doxygen\xml\index.xml" -xsl:"%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\doxygen2keywords.xsl"
-perl -i -ne 'print if ! $x{$_}++' "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\keywords.txt"
+@REM perl -i -ne 'print if ! $x{$_}++' "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\keywords.txt"
 
 cd "%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%"

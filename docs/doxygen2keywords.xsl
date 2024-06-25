@@ -16,7 +16,6 @@ https://github.com/bengtmartensson/KeywordsTxtGenerator
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     version="1.0">
     <xsl:output method="text" />
-
     <xsl:template match="/doxygenindex">
         <xsl:text>#######################################
 # Syntax Coloring Map For the current project.
@@ -28,6 +27,7 @@ https://github.com/bengtmartensson/KeywordsTxtGenerator
 #######################################
 
 </xsl:text>
+<!-- If the current element is compound that is a class or struct, apply the template for the header (the xsl:text above)  -->
     <xsl:apply-templates select="compound[@kind='class' or @kind='struct' ]"/>
 
     <xsl:text>
@@ -36,7 +36,8 @@ https://github.com/bengtmartensson/KeywordsTxtGenerator
 #######################################
 
 </xsl:text>
-    <xsl:apply-templates select="compound/member[@kind='function']"/>
+<!-- If the current element is a function member of a class or struct, apply the template for the keyword 2 header (the xsl:text above)  -->
+    <xsl:apply-templates select="compound[@kind='class' or @kind='struct']/member[@kind='function']"/>
 
     <xsl:text>
 #######################################
@@ -44,19 +45,23 @@ https://github.com/bengtmartensson/KeywordsTxtGenerator
 #######################################
 
 </xsl:text>
+<!-- If the current elemenet is a compound that is an define or enum value, apply the template for the literal header (the xsl:text above)  -->
     <xsl:apply-templates select="compound/member[@kind='define' or @kind='enumvalue']"/>
     </xsl:template>
 
-    <xsl:template match="compound[@kind='class' or @kind='struct' ]">
+<!-- If the current element is compound that is a class or struct, write the name of the class/struct followed by the text KEYWORD1  -->
+<xsl:template match="compound[@kind='class' or @kind='struct']">
         <xsl:value-of select="name"/>
         <xsl:text>&#x9;KEYWORD1&#xA;</xsl:text>
     </xsl:template>
 
-    <xsl:template match="member[@kind='function']">
+<!-- If the current element is member and a function, write the name of the function followed by the text KEYWORD2  -->
+    <xsl:template match="compound[@kind='class' or @kind='struct']/member[@kind='function']">
         <xsl:value-of select="name"/>
         <xsl:text>&#x9;KEYWORD2&#xA;</xsl:text>
     </xsl:template>
 
+<!-- If the current element is member and a define or enum value, write the name of the define or enum followed by the text LITERAL1  -->
     <xsl:template match="member[@kind='define' or @kind='enumvalue']">
         <xsl:value-of select="name"/>
         <xsl:text>&#x9;LITERAL1&#xA;</xsl:text>
