@@ -153,15 +153,22 @@ pio_envs_to_build = [
     env
     for env in pio_config.envs()
     if pio_config.get("env:{}".format(pio_env_name), "board") in boards
+    and pio_config.get("env:{}".format(pio_env_name), "board") != "esp32-c6-devkitm-1"
 ]
-pio_bare_boards = [board for board in boards if board not in board_to_pio_env.keys()]
+pio_bare_boards = [
+    board
+    for board in boards
+    if board not in board_to_pio_env.keys() and board != "esp32-c6-devkitm-1"
+]
 
 # print out what will be built
 if use_verbose:
     print("::debug::==========================================================")
     print("::debug::Building the following Arduino FQBNs:")
     for board in boards:
-        print(f"::debug::Requested Board: {board} -- FQBN: {pio_to_acli[board]["fqbn"]}")
+        print(
+            f"::debug::Requested Board: {board} -- FQBN: {pio_to_acli[board]['fqbn']}"
+        )
     print("::debug::==========================================================")
 
     print("::debug::Building the following PlatformIO environments and boards:")
