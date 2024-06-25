@@ -148,7 +148,7 @@ Please check the spelling of your board name or add an entry to your platformio.
         )
 
 # convert the list of boards into list of FQBNs, PIO environments, and PIO bare boards
-fqbns_to_build = [pio_to_acli[board] for board in boards]
+fqbns_to_build = [pio_to_acli[board]["fqbn"] for board in boards]
 pio_envs_to_build = [
     env
     for env in pio_config.envs()
@@ -161,7 +161,7 @@ if use_verbose:
     print("::debug::==========================================================")
     print("::debug::Building the following Arduino FQBNs:")
     for board in boards:
-        print(f"::debug::Requested Board: {board} -- FQBN: {pio_to_acli[board]}")
+        print(f"::debug::Requested Board: {board} -- FQBN: {pio_to_acli[board]["fqbn"]}")
     print("::debug::==========================================================")
 
     print("::debug::Building the following PlatformIO environments and boards:")
