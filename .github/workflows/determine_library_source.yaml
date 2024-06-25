@@ -14,7 +14,7 @@ on:
 
 jobs:
   determine_library_source:
-    name: determine_library_source
+    name: Determine Library Source
     runs-on: ubuntu-latest
     if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
     outputs:
@@ -52,7 +52,7 @@ jobs:
           echo "library_install_git=${{ env.LIBRARY_INSTALL_GIT }}" >> $GITHUB_OUTPUT
 
   print_library_source:
-    name: print_library_source
+    name: Print Library Source
     runs-on: ubuntu-latest
     needs: determine_library_source
     steps:
