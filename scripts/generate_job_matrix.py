@@ -152,8 +152,8 @@ fqbns_to_build = [pio_to_acli[board]["fqbn"] for board in boards]
 pio_envs_to_build = [
     env
     for env in pio_config.envs()
-    if pio_config.get("env:{}".format(pio_env_name), "board") in boards
-    and pio_config.get("env:{}".format(pio_env_name), "board") != "esp32-c6-devkitm-1"
+    if pio_config.get("env:{}".format(env), "board") in boards
+    and pio_config.get("env:{}".format(env), "board") != "esp32-c6-devkitm-1"
 ]
 pio_bare_boards = [
     board
