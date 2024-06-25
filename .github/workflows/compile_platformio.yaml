@@ -29,19 +29,29 @@ jobs:
       - name: Setup PlatformIO
         uses: EnviroDIY/setup-platformio-action@v1.0.2
 
-      - name: Download the prepared examples
+      - name: Download the prepared scripts
         uses: actions/download-artifact@v4
         with:
           name: generated_examples
           path: |
             continuous_integration_artifacts/
 
-      - name: Download the PlatformIO platform install script
+      - name: Copy scrips into working directory, if needed
         run: |
-          mv continuous_integration_artifacts/install-platforms-platformio.sh install-platforms-platformio.sh
-          if [ ! -e continuous_integration/install-libraries-platformio.py ] && [ -e continuous_integration_artifacts/install-libraries-platformio.py ]
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+          if [ ! -e continuous_integration/platformio.ini ] && [ -e continuous_integration_artifacts/platformio.ini ]
           then
-            mv continuous_integration_artifacts/install-libraries-platformio.py continuous_integration/install-libraries-platformio.sh
+            mv continuous_integration_artifacts/platformio.ini continuous_integration/platformio.ini
+          fi
+          mv continuous_integration_artifacts/install-platforms-platformio.sh install-platforms-platformio.sh
+          if [ ! -e continuous_integration/install-libraries-platformio.sh ] && [ -e continuous_integration_artifacts/install-libraries-platformio.sh ]
+          then
+            mv continuous_integration_artifacts/install-libraries-platformio.sh continuous_integration/install-libraries-platformio.sh
           fi
 
       - name: Restore PlatformIO platforms

@@ -3,14 +3,17 @@
 from collections import OrderedDict
 import json
 import shutil
-import re
 from typing import List
 from platformio.project.config import ProjectConfig
-import re
 import os
-import copy
-from pathlib import Path
 import requests
+
+# %%
+# set verbose
+if (
+    "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1"
+) or "RUNNER_DEBUG" not in os.environ.keys():
+    use_verbose = True
 
 
 # %%
@@ -29,6 +32,9 @@ ci_dir = "./continuous_integration/"
 ci_path = os.path.join(workspace_dir, ci_dir)
 ci_path = os.path.abspath(os.path.realpath(ci_path))
 print(f"Continuous Integration Path: {ci_path}")
+if not os.path.exists(ci_path):
+    print(f"Creating the directory for CI: {ci_path}")
+    os.makedirs(ci_path, exist_ok=True)
 
 # A directory of files to save and upload as artifacts to use in future jobs
 artifact_dir = os.path.join(
@@ -36,17 +42,13 @@ artifact_dir = os.path.join(
 )
 artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
 print(f"Artifact Path: {artifact_path}")
-
 if not os.path.exists(artifact_dir):
     print(f"Creating the directory for artifacts: {artifact_path}")
     os.makedirs(artifact_dir)
 
-compilers = ["Arduino CLI", "PlatformIO"]
-
 
 # %%
-# Get files linking boards and enviroments
-os.makedirs(ci_path, exist_ok=True)
+# Pull files to convert between boards and platforms and FQBNs
 response = requests.get(
     "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio_to_arduino_boards.json"
 )
@@ -69,22 +71,45 @@ with open(os.path.join(ci_path, "platformio_platform_tools.json")) as f:
 # %%
 # read configurations based on existing files and environment variables
 
-# Arduino CLI configurations - always use the standard one here
+# Arduino CLI configuration
+# Always use the generic one from the shared workflow repository
 if "GITHUB_WORKSPACE" in os.environ.keys():
-    arduino_cli_config = os.path.join(workspace_dir, "arduino_cli.yaml")
+    arduino_cli_config = os.path.join(ci_path, "arduino_cli.yaml")
+    if not os.path.isfile(arduino_cli_config):
+        # download the default file
+        response = requests.get(
+            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml"
+        )
+        # copy to the CI directory
+        with open(os.path.join(ci_path, "arduino_cli.yaml"), "wb") as f:
+            f.write(response.content)
+        # also copy to the artifacts directory
+        shutil.copyfile(
+            os.path.join(ci_path, "arduino_cli.yaml"),
+            os.path.join(artifact_path, "arduino_cli.yaml"),
+        )
 else:
     arduino_cli_config = os.path.join(ci_dir, "arduino_cli_local.yaml")
 
-# PlatformIO configurations - either the standard one or a found one
+# PlatformIO configuration
+# If one exists in a "continuous_integration" subfolder of the repository, use it.
+# Otherwise, use the generic one from the shared workflow repository
 default_pio_config_file = False
 pio_config_file = os.path.join(ci_path, "platformio.ini")
 if not os.path.isfile(pio_config_file):
+    # download the default file
     response = requests.get(
         "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini"
     )
-    os.makedirs(ci_path, exist_ok=True)
+    # make a directory for it and copy it there
     with open(os.path.join(ci_path, "platformio.ini"), "wb") as f:
         f.write(response.content)
+    # also copy to the artifacts directory
+    shutil.copyfile(
+        os.path.join(ci_path, "platformio.ini"),
+        os.path.join(artifact_path, "platformio.ini"),
+    )
+    # mark we're using default
     default_pio_config_file = True
 
 pio_config = ProjectConfig(pio_config_file)
@@ -99,16 +124,32 @@ for pio_env_name in pio_config.envs():
     )
 
 # %%
-
+# Parse the boards to build
 if "BOARDS_TO_BUILD" in os.environ.keys() and os.environ.get("BOARDS_TO_BUILD") not in [
     "all",
     "",
 ]:
     boards = os.environ.get("BOARDS_TO_BUILD").split(",")
-    use_pio_config_file = False
 else:
     boards = list(board_to_pio_env.keys())
-    use_pio_config_file = True
+
+# Make sure we have an equivalent Arduino FQBN (and thus core) or PlatformIO environment for all requested boards
+for board in boards:
+    if board not in pio_to_acli.keys():
+        print(
+            f"""::error:: file=platformio_to_arduino_boards.json,title=No matching Arduino board::
+Cannot find matching Arduino FQBN for {board}.
+No core will be installed or cached for this board.
+Please check the spelling of your board name or add an entry to the Arduino/PlatformIO board conversion file."""
+        )
+        boards.remove(board)
+    if board not in board_to_pio_platform.keys():
+        print(
+            f"""::warning file=platformio.ini,title=No PlatformIO Environment::
+No matching environment was found in the platformio.ini file for {board}.
+No platforms or tools will be installed or cached for this board.
+Please check the spelling of your board name or add an entry to your platformio.ini if this is not your expected behavior."""
+        )
 
 arduino_cli_cores = list(
     OrderedDict.fromkeys(
@@ -122,8 +163,6 @@ pio_platforms = list(
 
 # %%
 # helper functions to create commands
-
-
 def create_arduino_cli_command(core_name: str) -> str:
     arduino_command_args = [
         "arduino-cli",
@@ -257,13 +296,19 @@ if "GITHUB_WORKSPACE" not in os.environ.keys():
     except:
         pass
     try:
-        print("Deleting default_pio_config_file")
+        print("Deleting downloaded jsons")
         os.remove(
             os.path.join(ci_path, "platformio_platform_tools.json")
         )  # remove downloaded file
         os.remove(
             os.path.join(ci_path, "platformio_to_arduino_boards.json")
         )  # remove downloaded file
+        os.rmdir(ci_path)  # remove dir if empty
+    except:
+        pass
+    try:
+        print("Deleting default Arduino CLI file")
+        os.remove(arduino_cli_config)  # remove downloaded file
         os.rmdir(ci_path)  # remove dir if empty
     except:
         pass

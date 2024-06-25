@@ -2,14 +2,17 @@
 # %%
 import json
 import shutil
-import re
 from typing import List
 from platformio.project.config import ProjectConfig
-import re
 import os
-import copy
-from pathlib import Path
 import requests
+
+# %%
+# set verbose
+if (
+    "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1"
+) or "RUNNER_DEBUG" not in os.environ.keys():
+    use_verbose = True
 
 
 # %%
@@ -34,6 +37,9 @@ ci_dir = "./continuous_integration/"
 ci_path = os.path.join(workspace_dir, ci_dir)
 ci_path = os.path.abspath(os.path.realpath(ci_path))
 print(f"Continuous Integration Path: {ci_path}")
+if not os.path.exists(ci_path):
+    print(f"Creating the directory for CI: {ci_path}")
+    os.makedirs(ci_path, exist_ok=True)
 
 # A directory of files to save and upload as artifacts to use in future jobs
 artifact_dir = os.path.join(
@@ -41,16 +47,13 @@ artifact_dir = os.path.join(
 )
 artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
 print(f"Artifact Path: {artifact_path}")
-
 if not os.path.exists(artifact_dir):
     print(f"Creating the directory for artifacts: {artifact_path}")
     os.makedirs(artifact_dir)
 
-compilers = ["Arduino CLI", "PlatformIO"]
-
 
 # %%
-os.makedirs(ci_path, exist_ok=True)
+# Pull files to convert between boards and platforms and FQBNs
 response = requests.get(
     "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio_to_arduino_boards.json"
 )
@@ -63,41 +66,112 @@ with open(os.path.join(ci_path, "platformio_to_arduino_boards.json")) as f:
 # %%
 # read configurations based on existing files and environment variables
 
-# Arduino CLI configurations
+# Arduino CLI configuration
+# Always use the generic one from the shared workflow repository
 if "GITHUB_WORKSPACE" in os.environ.keys():
-    arduino_cli_config = os.path.join(workspace_dir, "arduino_cli.yaml")
+    arduino_cli_config = os.path.join(ci_path, "arduino_cli.yaml")
+    if not os.path.isfile(arduino_cli_config):
+        # download the default file
+        response = requests.get(
+            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml"
+        )
+        # copy to the CI directory
+        with open(os.path.join(ci_path, "arduino_cli.yaml"), "wb") as f:
+            f.write(response.content)
+        # also copy to the artifacts directory
+        shutil.copyfile(
+            os.path.join(ci_path, "arduino_cli.yaml"),
+            os.path.join(artifact_path, "arduino_cli.yaml"),
+        )
 else:
     arduino_cli_config = os.path.join(ci_dir, "arduino_cli_local.yaml")
 
-# PlatformIO configurations
+# PlatformIO configuration
+# If one exists in a "continuous_integration" subfolder of the repository, use it.
+# Otherwise, use the generic one from the shared workflow repository
 default_pio_config_file = False
+pio_config_file = os.path.join(ci_path, "platformio.ini")
+if not os.path.isfile(pio_config_file):
+    # download the default file
+    response = requests.get(
+        "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini"
+    )
+    # make a directory for it and copy it there
+    with open(os.path.join(ci_path, "platformio.ini"), "wb") as f:
+        f.write(response.content)
+    # also copy to the artifacts directory
+    shutil.copyfile(
+        os.path.join(ci_path, "platformio.ini"),
+        os.path.join(artifact_path, "platformio.ini"),
+    )
+    # mark we're using default
+    default_pio_config_file = True
+
+pio_config = ProjectConfig(pio_config_file)
+board_to_pio_env = {}
+pio_env_to_board = {}
+for pio_env_name in pio_config.envs():
+    board_to_pio_env[pio_config.get("env:{}".format(pio_env_name), "board")] = (
+        pio_env_name
+    )
+    pio_env_to_board[pio_env_name] = pio_config.get(
+        "env:{}".format(pio_env_name), "board"
+    )
+
+
+# %%
+# Parse the boards to build
 if "BOARDS_TO_BUILD" in os.environ.keys() and os.environ.get("BOARDS_TO_BUILD") not in [
     "all",
     "",
 ]:
     boards = os.environ.get("BOARDS_TO_BUILD").split(",")
-    use_pio_config_file = False
 else:
-    pio_config_file = os.path.join(ci_path, "platformio.ini")
-    if not os.path.isfile(pio_config_file):
-        response = requests.get(
-            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini"
-        )
-        os.makedirs(ci_path, exist_ok=True)
-        with open(os.path.join(ci_path, "platformio.ini"), "wb") as f:
-            f.write(response.content)
-        default_pio_config_file = True
-
-    pio_config = ProjectConfig(pio_config_file)
-    board_to_pio_env = {}
-    for pio_env_name in pio_config.envs():
-        board_to_pio_env[pio_config.get("env:{}".format(pio_env_name), "board")] = (
-            pio_env_name
-        )
     boards = list(board_to_pio_env.keys())
-    use_pio_config_file = True
 
-# print(board_to_pio_env)
+# Make sure we have an equivalent Arduino FQBN or PlatformIO environment for all requested boards
+for board in boards:
+    if board not in pio_to_acli.keys():
+        print(
+            f"""::error:: file=platformio_to_arduino_boards.json,title=No matching Arduino board::
+Cannot find matching Arduino FQBN for {board}.
+This board will not be compiled with the Arduino CLI
+Please check the spelling of your board name or add an entry to the Arduino/PlatformIO board conversion file."""
+        )
+        boards.remove(board)
+    if board not in board_to_pio_env.keys():
+        print(
+            f"""::warning file=platformio.ini,title=No PlatformIO Environment::
+No matching environment was found in the platformio.ini file for {board}.
+This board will be compiled with no reference to a specific environment.
+Please check the spelling of your board name or add an entry to your platformio.ini if this is not your expected behavior."""
+        )
+
+# convert the list of boards into list of FQBNs, PIO environments, and PIO bare boards
+fqbns_to_build = [pio_to_acli[board] for board in boards]
+pio_envs_to_build = [
+    env
+    for env in pio_config.envs()
+    if pio_config.get("env:{}".format(pio_env_name), "board") in boards
+]
+pio_bare_boards = [board for board in boards if board not in board_to_pio_env.keys()]
+
+# print out what will be built
+if use_verbose:
+    print("::debug::==========================================================")
+    print("::debug::Building the following Arduino FQBNs:")
+    for board in boards:
+        print(f"::debug::Requested Board: {board} -- FQBN: {pio_to_acli[board]}")
+    print("::debug::==========================================================")
+
+    print("::debug::Building the following PlatformIO environments and boards:")
+    for env in pio_envs_to_build:
+        print(
+            f"::debug::Requested Board: {pio_env_to_board[env]} -- Enviroment Name: {env} -- platformio.ini source: {'workflow default' if default_pio_config_file else 'repository CI directory'}"
+        )
+    for board in pio_bare_boards:
+        print(f"::debug::Requested Board: {board} -- NO ENVIRONMENT CONFIGURATION")
+    print("::debug::==========================================================")
 
 # %%
 # Get the examples to build
@@ -112,25 +186,24 @@ else:
         and f not in [".history", "logger_test", "menu_a_la_carte"]
     ]
 
+if use_verbose:
+    print("::debug::==========================================================")
+    print("::debug::Building the following Examples:")
+    for example in examples_to_build:
+        print(f"::debug::Example Name: {example}")
+    print("::debug::==========================================================")
+
+
 # %%
 # helper functions to create commands
-
-
-def get_example_folder(subfolder_name):
-    return os.path.join(examples_path, subfolder_name)
-
-
-def get_example_filepath(subfolder_name):
-    ex_folder = get_example_folder(subfolder_name)
-    ex_file = os.path.join(ex_folder, subfolder_name + ".ino")
-    return ex_file
-
-
-def create_arduino_cli_command(code_subfolder: str, pio_board: str) -> str:
+def create_arduino_cli_command(code_subfolder: str, fqbn: str) -> str:
     arduino_command_args = [
         "arduino-cli",
         "compile",
-        # "--verbose",
+    ]
+    if use_verbose:
+        arduino_command_args += ["--verbose"]
+    arduino_command_args += [
         "--warnings",
         "more",
         "--config-file",
@@ -138,36 +211,39 @@ def create_arduino_cli_command(code_subfolder: str, pio_board: str) -> str:
         "--format",
         "text",
         "--fqbn",
-        pio_to_acli[pio_board]["fqbn"],
+        fqbn,
         os.path.join(workspace_path, code_subfolder),
     ]
     return " ".join(arduino_command_args)
 
 
 def create_pio_ci_command(
-    code_subfolder: str,
-    pio_env: str,
-    use_pio_config_file: bool = use_pio_config_file,
-    pio_env_file: str = pio_config_file,
+    code_subfolder: str, pio_board_or_env: str, use_pio_config_file: bool
 ) -> str:
     if use_pio_config_file:
         pio_command_args = [
             "pio",
             "ci",
-            # "--verbose",
+        ]
+        if use_verbose:
+            pio_command_args += ["--verbose"]
+        pio_command_args += [
             "--project-conf",
-            pio_env_file,
+            pio_config_file,
             "--environment",
-            pio_env,
+            pio_board_or_env,
             os.path.join(workspace_path, code_subfolder),
         ]
     else:
         pio_command_args = [
             "pio",
             "ci",
-            # "--verbose",
+        ]
+        if use_verbose:
+            pio_command_args += ["--verbose"]
+        pio_command_args += [
             "--board",
-            pio_env,
+            pio_board_or_env,
             os.path.join(workspace_path, code_subfolder),
         ]
     return " ".join(pio_command_args)
@@ -195,37 +271,6 @@ def add_log_to_command(command: str, group_title: str) -> List:
     return command_list
 
 
-def create_logged_command(
-    compiler: str,
-    group_title: str,
-    code_subfolder: str,
-    pio_board: str,
-    pio_env_file: str = pio_config_file,
-):
-    output_commands = []
-    lower_compiler = compiler.lower().replace(" ", "").strip()
-    # NOTE: PlatformIO doesn't yet support the ESP32-C6 with the Arduino framework
-    if lower_compiler == "platformio" and "esp32-c6" not in pio_board:
-        build_command = create_pio_ci_command(
-            code_subfolder=code_subfolder,
-            pio_env=board_to_pio_env[pio_board],
-            pio_env_file=pio_env_file,
-            use_pio_config_file=use_pio_config_file,
-        )
-    elif lower_compiler == "arduinocli":
-        build_command = create_arduino_cli_command(
-            code_subfolder=code_subfolder,
-            pio_board=pio_board,
-        )
-    else:
-        build_command = ""
-
-    command_with_log = add_log_to_command(build_command, group_title)
-    output_commands.extend(command_with_log)
-
-    return copy.deepcopy(output_commands)
-
-
 # %%
 # set up outputs
 arduino_job_matrix = []
@@ -244,19 +289,33 @@ for example in examples_to_build:
         start_job_commands,
     ]
 
-    for pio_board in boards:
-        for compiler, command_list in zip(
-            compilers, [arduino_ex_commands, pio_ex_commands]
-        ):
-            # print(f"Creating command for {pio_board} on {compiler}")
-            command_list.extend(
-                create_logged_command(
-                    compiler=compiler,
-                    group_title=pio_board,
-                    code_subfolder=example,
-                    pio_board=pio_board,
-                )
-            )
+    # create commands for the Arduino CLI
+    # can only specify FQBN, so each board can only be built one way
+    for fqbn in fqbns_to_build:
+        build_command = create_arduino_cli_command(
+            code_subfolder=example,
+            fqbn=fqbn,
+        )
+        command_with_log = add_log_to_command(command=build_command, group_title=board)
+        arduino_ex_commands.extend(command_with_log)
+
+    # create commands for PlatformIO
+    # use the enviroments list to catch all environments - even those using the same board
+    for env in pio_envs_to_build:
+        build_command = create_pio_ci_command(
+            code_subfolder=example, pio_board_or_env=env, use_pio_config_file=True
+        )
+        command_with_log = add_log_to_command(command=build_command, group_title=board)
+        pio_ex_commands.extend(command_with_log)
+    # use the bare board list to catch boards requested in the inputs but not in the platformio.ini file
+    for pio_board in pio_bare_boards:
+        build_command = create_pio_ci_command(
+            code_subfolder=example,
+            pio_board_or_env=pio_board,
+            use_pio_config_file=False,
+        )
+        command_with_log = add_log_to_command(command=build_command, group_title=board)
+        pio_ex_commands.extend(command_with_log)
 
     arduino_job_matrix.append(
         {
@@ -280,17 +339,16 @@ for matrix_job in arduino_job_matrix + pio_job_matrix:
     bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
     bash_out.write("#!/bin/bash\n\n")
     bash_out.write(
-        "# Makes the bash script print out every command before it is executed, except echo\n"
+        """
+set -e # Exit with nonzero exit code if anything fails
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    echo "Enabling debugging!"
+    set -v # Prints shell input lines as they are read.
+    set -x # Print command traces before executing command.
+fi
+
+"""
     )
-    bash_out.write(
-        "trap '[[ $BASH_COMMAND != echo* ]] && echo $BASH_COMMAND' DEBUG\n\n"
-    )
-    if default_pio_config_file and matrix_job["job_name"].startswith("PlatformIO"):
-        bash_out.write("# Download the 'standard' PlatformIO for EnviroDIY libraries\n")
-        bash_out.write(f"mkdir -p {ci_path}\n")
-        bash_out.write(
-            f"curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini -o {pio_config_file}\n\n"
-        )
     bash_out.write(matrix_job["command"])
     bash_out.close()
     matrix_job["script"] = os.path.join(artifact_path, bash_file_name)
@@ -332,6 +390,20 @@ if "GITHUB_WORKSPACE" not in os.environ.keys():
     try:
         print("Deleting artifact directory")
         shutil.rmtree(artifact_dir)
+    except:
+        pass
+    try:
+        print("Deleting downloaded jsons")
+        os.remove(
+            os.path.join(ci_path, "platformio_to_arduino_boards.json")
+        )  # remove downloaded file
+        os.rmdir(ci_path)  # remove dir if empty
+    except:
+        pass
+    try:
+        print("Deleting default Arduino CLI file")
+        os.remove(arduino_cli_config)  # remove downloaded file
+        os.rmdir(ci_path)  # remove dir if empty
     except:
         pass
     if default_pio_config_file:

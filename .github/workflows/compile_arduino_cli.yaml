@@ -23,7 +23,8 @@ jobs:
         job_info: ${{ fromJSON(inputs.arduino_job_matrix) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Write the requirements file
         run: |
@@ -45,16 +46,22 @@ jobs:
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v1.1.2
 
-      - name: Download the prepared examples
+      - name: Download the prepared scripts
         uses: actions/download-artifact@v4
         with:
           name: generated_examples
           path: |
             continuous_integration_artifacts/
 
-      - name: Download the Arduino platform install script and configuration
+      - name: Copy scrips into working directory, if needed
         run: |
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o arduino_cli.yaml
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+          mv continuous_integration_artifacts/arduino_cli.yaml arduino_cli.yaml
           mv continuous_integration_artifacts/install-platforms-arduino-cli.sh install-platforms-arduino-cli.sh
           if [ ! -e continuous_integration/install-libraries-arduino-cli.py ] && [ -e continuous_integration_artifacts/install-libraries-arduino-cli.py ]
           then

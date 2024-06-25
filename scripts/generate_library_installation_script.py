@@ -7,6 +7,13 @@ from typing import List
 import os
 import requests
 
+# %%
+# set verbose
+if (
+    "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1"
+) or "RUNNER_DEBUG" not in os.environ.keys():
+    use_verbose = True
+
 
 # %%
 # Some working directories
@@ -30,6 +37,9 @@ ci_dir = "./continuous_integration/"
 ci_path = os.path.join(workspace_dir, ci_dir)
 ci_path = os.path.abspath(os.path.realpath(ci_path))
 print(f"Continuous Integration Path: {ci_path}")
+if not os.path.exists(ci_path):
+    print(f"Creating the directory for CI: {ci_path}")
+    os.makedirs(ci_path, exist_ok=True)
 
 # A directory of files to save and upload as artifacts to use in future jobs
 artifact_dir = os.path.join(
@@ -37,24 +47,40 @@ artifact_dir = os.path.join(
 )
 artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
 print(f"Artifact Path: {artifact_path}")
-
 if not os.path.exists(artifact_dir):
     print(f"Creating the directory for artifacts: {artifact_path}")
     os.makedirs(artifact_dir)
 
-compilers = ["Arduino CLI", "PlatformIO"]
 
 # %%
 # read configurations based on existing files and environment variables
 
-# Arduino CLI configurations - always use the standard one here
+# Arduino CLI configuration
+# Always use the generic one from the shared workflow repository
 if "GITHUB_WORKSPACE" in os.environ.keys():
-    arduino_cli_config = os.path.join(workspace_dir, "arduino_cli.yaml")
+    arduino_cli_config = os.path.join(ci_path, "arduino_cli.yaml")
+    if not os.path.isfile(arduino_cli_config):
+        # download the default file
+        response = requests.get(
+            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml"
+        )
+        # copy to the CI directory
+        with open(os.path.join(ci_path, "arduino_cli.yaml"), "wb") as f:
+            f.write(response.content)
+        # also copy to the artifacts directory
+        shutil.copyfile(
+            os.path.join(ci_path, "arduino_cli.yaml"),
+            os.path.join(artifact_path, "arduino_cli.yaml"),
+        )
 else:
     arduino_cli_config = os.path.join(ci_dir, "arduino_cli_local.yaml")
 
+# PlatformIO configuration
+#NOTE: No PlatformIO config file is needed to install libraries
+
+
 # %%
-# find dependencies
+# find dependencies based on the library specification and listings of example dependencies
 with open(os.path.join(workspace_dir, "library.json")) as f:
     library_specs = json.load(f)
 if os.path.isfile(os.path.join(examples_path, "example_dependencies.json")):
@@ -69,6 +95,7 @@ if "dependencies" in library_specs.keys():
 if "dependencies" in example_specs.keys():
     dependencies.extend(example_specs["dependencies"])
 
+# quit if there are no dependencies
 if len(dependencies) ==0:
     print("No dependencies to install!")
     sys.exit()
@@ -76,8 +103,6 @@ if len(dependencies) ==0:
 
 # %%
 # helper functions to create commands
-
-
 def create_arduino_cli_command(library: dict) -> str:
     arduino_command_args = [
         "arduino-cli",
@@ -219,6 +244,12 @@ if "GITHUB_WORKSPACE" not in os.environ.keys():
     try:
         print("Deleting artifact directory")
         shutil.rmtree(artifact_dir)
+    except:
+        pass
+    try:
+        print("Deleting default Arduino CLI file")
+        os.remove(arduino_cli_config)  # remove downloaded file
+        os.rmdir(ci_path)  # remove dir if empty
     except:
         pass
 
