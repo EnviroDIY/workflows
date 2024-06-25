@@ -36,7 +36,7 @@ jobs:
           path: |
             continuous_integration_artifacts/
 
-      - name: Copy scrips into working directory, if needed
+      - name: copy scripts into working directory, if needed
         run: |
           set -e
           if [ "$RUNNER_DEBUG" = "1" ]; then
@@ -44,7 +44,6 @@ jobs:
               set -v
               set -x
           fi
-          ls -R continuous_integration_artifacts
           mkdir -p continuous_integration
           if [ ! -e continuous_integration/platformio.ini ] && [ -e continuous_integration_artifacts/platformio.ini ]
           then

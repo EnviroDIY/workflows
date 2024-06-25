@@ -53,7 +53,7 @@ jobs:
           path: |
             continuous_integration_artifacts/
 
-      - name: Copy scrips into working directory, if needed
+      - name: copy scripts into working directory, if needed
         run: |
           set -e
           if [ "$RUNNER_DEBUG" = "1" ]; then
@@ -61,13 +61,12 @@ jobs:
               set -v
               set -x
           fi
-          ls -R continuous_integration_artifacts
           mkdir -p continuous_integration
           mv continuous_integration_artifacts/arduino_cli.yaml continuous_integration/arduino_cli.yaml
           mv continuous_integration_artifacts/install-platforms-arduino-cli.sh install-platforms-arduino-cli.sh
-          if [ ! -e continuous_integration/install-libraries-arduino-cli.py ] && [ -e continuous_integration_artifacts/install-libraries-arduino-cli.py ]
+          if [ ! -e continuous_integration/install-libraries-arduino-cli.sh ] && [ -e continuous_integration_artifacts/install-libraries-arduino-cli.sh ]
           then
-            mv continuous_integration_artifacts/install-libraries-arduino-cli.py continuous_integration/install-libraries-arduino-cli.sh
+            mv continuous_integration_artifacts/install-libraries-arduino-cli.sh continuous_integration/install-libraries-arduino-cli.sh
           fi
 
       - name: Restore Arduino platforms
