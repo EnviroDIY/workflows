@@ -9,9 +9,7 @@ import requests
 
 # %%
 # set verbose
-if (
-    "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1"
-) or "RUNNER_DEBUG" not in os.environ.keys():
+if "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1":
     use_verbose = True
 
 
@@ -125,7 +123,7 @@ if "BOARDS_TO_BUILD" in os.environ.keys() and os.environ.get("BOARDS_TO_BUILD") 
     "all",
     "",
 ]:
-    boards = os.environ.get("BOARDS_TO_BUILD").split(",")
+    boards = [board.strip() for board in os.environ.get("BOARDS_TO_BUILD").split(",")]
 else:
     boards = list(board_to_pio_env.keys())
 
@@ -183,7 +181,9 @@ if use_verbose:
 # %%
 # Get the examples to build
 if "EXAMPLES_TO_BUILD" in os.environ.keys():
-    examples_to_build = os.environ.get("EXAMPLES_TO_BUILD").split(",")
+    examples_to_build = [
+        example.strip() for example in os.environ.get("EXAMPLES_TO_BUILD").split(",")
+    ]
 else:
     # Find all of the examples in the examples folder, append the path "examples" to it
     examples_to_build = [
@@ -214,12 +214,12 @@ def create_arduino_cli_command(code_subfolder: str, fqbn: str) -> str:
         "--warnings",
         "more",
         "--config-file",
-        arduino_cli_config,
+        f'"{arduino_cli_config}"',
         "--format",
         "text",
         "--fqbn",
         fqbn,
-        os.path.join(workspace_path, code_subfolder),
+        f'"{os.path.join(workspace_path, code_subfolder)}"',
     ]
     return " ".join(arduino_command_args)
 
@@ -236,10 +236,10 @@ def create_pio_ci_command(
             pio_command_args += ["--verbose"]
         pio_command_args += [
             "--project-conf",
-            pio_config_file,
+            f'"{pio_config_file}"',
             "--environment",
             pio_board_or_env,
-            os.path.join(workspace_path, code_subfolder),
+            f'"{os.path.join(workspace_path, code_subfolder)}"',
         ]
     else:
         pio_command_args = [
@@ -251,7 +251,7 @@ def create_pio_ci_command(
         pio_command_args += [
             "--board",
             pio_board_or_env,
-            os.path.join(workspace_path, code_subfolder),
+            f'"{os.path.join(workspace_path, code_subfolder)}"',
         ]
     return " ".join(pio_command_args)
 
