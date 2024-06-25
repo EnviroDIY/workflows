@@ -296,7 +296,7 @@ for example in examples_to_build:
             code_subfolder=example,
             fqbn=fqbn,
         )
-        command_with_log = add_log_to_command(command=build_command, group_title=board)
+        command_with_log = add_log_to_command(command=build_command, group_title=fqbn)
         arduino_ex_commands.extend(command_with_log)
 
     # create commands for PlatformIO
@@ -305,7 +305,7 @@ for example in examples_to_build:
         build_command = create_pio_ci_command(
             code_subfolder=example, pio_board_or_env=env, use_pio_config_file=True
         )
-        command_with_log = add_log_to_command(command=build_command, group_title=board)
+        command_with_log = add_log_to_command(command=build_command, group_title=env)
         pio_ex_commands.extend(command_with_log)
     # use the bare board list to catch boards requested in the inputs but not in the platformio.ini file
     for pio_board in pio_bare_boards:
@@ -314,7 +314,7 @@ for example in examples_to_build:
             pio_board_or_env=pio_board,
             use_pio_config_file=False,
         )
-        command_with_log = add_log_to_command(command=build_command, group_title=board)
+        command_with_log = add_log_to_command(command=build_command, group_title=pio_board)
         pio_ex_commands.extend(command_with_log)
 
     arduino_job_matrix.append(
