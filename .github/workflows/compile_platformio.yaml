@@ -32,7 +32,7 @@ jobs:
       - name: Download the prepared scripts
         uses: actions/download-artifact@v4
         with:
-          name: generated_examples
+          name: generated_scripts
           path: |
             continuous_integration_artifacts/
 
@@ -44,6 +44,8 @@ jobs:
               set -v
               set -x
           fi
+          ls -R continuous_integration_artifacts
+          mkdir -p continuous_integration
           if [ ! -e continuous_integration/platformio.ini ] && [ -e continuous_integration_artifacts/platformio.ini ]
           then
             mv continuous_integration_artifacts/platformio.ini continuous_integration/platformio.ini

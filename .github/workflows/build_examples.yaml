@@ -65,7 +65,7 @@ jobs:
       - name: Store generated examples
         uses: actions/upload-artifact@v4
         with:
-          name: generated_examples
+          name: generated_scripts
           path: |
             continuous_integration_artifacts/
 

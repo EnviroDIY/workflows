@@ -49,7 +49,7 @@ jobs:
       - name: Download the prepared scripts
         uses: actions/download-artifact@v4
         with:
-          name: generated_examples
+          name: generated_scripts
           path: |
             continuous_integration_artifacts/
 
@@ -61,7 +61,9 @@ jobs:
               set -v
               set -x
           fi
-          mv continuous_integration_artifacts/arduino_cli.yaml arduino_cli.yaml
+          ls -R continuous_integration_artifacts
+          mkdir -p continuous_integration
+          mv continuous_integration_artifacts/arduino_cli.yaml continuous_integration/arduino_cli.yaml
           mv continuous_integration_artifacts/install-platforms-arduino-cli.sh install-platforms-arduino-cli.sh
           if [ ! -e continuous_integration/install-libraries-arduino-cli.py ] && [ -e continuous_integration_artifacts/install-libraries-arduino-cli.py ]
           then
