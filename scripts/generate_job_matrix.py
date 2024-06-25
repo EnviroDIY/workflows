@@ -9,6 +9,7 @@ import requests
 
 # %%
 # set verbose
+use_verbose = False
 if "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1":
     use_verbose = True
 
