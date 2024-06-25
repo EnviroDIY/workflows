@@ -90,6 +90,8 @@ jobs:
           then
             echo "Dependency installation script found at continuous_integration/install-libraries-platformio.sh"
             echo "valid_lib_dep_script=true" >> $GITHUB_OUTPUT
+          else
+            echo "valid_lib_dep_script=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Restore PlatformIO libraries
@@ -204,7 +206,6 @@ jobs:
       # Create a new release with no zip
       - name: Create Simple Release
         id: create_bare_release
-        if: ${{ needs.check_for_dependencies.outputs.has_dependencies == 'false' }}
         uses: softprops/action-gh-release@v2.0.6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
