@@ -75,7 +75,9 @@ def create_logo(logo_type: str, library_name: str, library_version: str):
     center_x = int(logo_width / 2)
     center_y = int(logo_height / 2)
     # calculate the max font size
-    font_size = get_font_size(library_name, library_version, logo_width, logo_height)
+    font_size = get_font_size(
+        library_name, library_version, logo_width, (logo_height / 2)
+    )
     # create a new image with a black background
     img = Image.new(mode="RGBA", size=(logo_width, logo_height), color=ediy_header_bkgd)
     # prepare to draw on the image
@@ -89,8 +91,9 @@ def create_logo(logo_type: str, library_name: str, library_version: str):
         text=library_name,
         fill=ediy_green,
         font=font,
-        anchor="md",  # anchor x to the center an y to the descender
+        anchor="mb",  # anchor x to the center an y to the bottom
         # (bottom of the lowest letters)
+        # NOTE: not descender
     )
     # add the library version
     draw.text(
@@ -98,8 +101,9 @@ def create_logo(logo_type: str, library_name: str, library_version: str):
         text=library_version,
         fill=ediy_orange,
         font=font,
-        anchor="ma",  # anchor x to the center an y to the ascender
+        anchor="mt",  # anchor x to the center an y to the top
         # (top of the tallest letters)
+        # NOTE: not ascender
     )
     # display(img)
     img.save(f"docs/{logo_type}.png")
@@ -108,3 +112,5 @@ def create_logo(logo_type: str, library_name: str, library_version: str):
 # %%
 for logo_size in logo_sizes.keys():
     create_logo(logo_size, library_name, library_version)
+
+# %%
