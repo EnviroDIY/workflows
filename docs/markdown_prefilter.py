@@ -38,23 +38,17 @@ def github_slugify(name):
         .replace(" ", "-")
     )
 
-
-# Add a start comment to make the entire markdown file function as a comment block
-# Without this doxygen sometimes recognizes its own special commands, but mostly doesn't
-# Not needed anymore with doxygen 1.9.3?
-# try:
-#     sys.stdout.buffer.write("\n/**\n".encode("utf-8"))
-# except Exception as e:
-#     print("\n*/\n\n")
-
 # %%
 print_me = True
 skip_me = False
+in_fence = False
+fence_language = ""
 i = 1
 
 # when testing use:
-# with fileinput.FileInput("..\\ChangeLog.md",
-#     openhook=fileinput.hook_encoded("utf-8", "surrogateescape")
+# with fileinput.FileInput(
+#     "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\Arduino-SDI-12\\docs\\CreatingACharacter.md",
+#     openhook=fileinput.hook_encoded("utf-8", "surrogateescape"),
 # ) as input:
 
 with fileinput.FileInput(
@@ -84,7 +78,7 @@ with fileinput.FileInput(
             if "examples" in file_dir and file_name == "ReadMe":
                 file_name = "example_" + file_dir.rsplit(sep=seper, maxsplit=1)[-1]
 
-        # print(i, print_me, skip_me, line)
+        # print(i, print_me, skip_me, in_fence, fence_language, line)
 
         # I'm using these comments to fence off content that is only intended for
         # github mardown rendering
@@ -97,76 +91,7 @@ with fileinput.FileInput(
         massaged_line = re.sub(r"\[//\]: # \( @(\w+?.*) \)", r"@\1", massaged_line)
         # allow thank you tags
         massaged_line = massaged_line.replace("thanks to @", r"thanks to \@")
-
-        # Convert GitHub pages url's to refs
-        # I'm putting the long URL in the markdown because I want the links there to
-        # work and go to the pages.  But when feeding it to Doxygen, I want them to be
-        # ref's so Doxygen will both check the existence of the refs and create new
-        # links for them.
-
-        # For links to sections, doxygen cuts off the first letter of the section name
-        # in the examples (UGH), so some acrobatics to find them
-        massaged_line = re.sub(
-            r"https://envirodiy.github.io/ModularSensors/[\w/-]+\.html#enu_walk_(?P<section_name>[\w/-]+)",
-            r"@ref menu_walk_\g<section_name>",
-            massaged_line,
-        )
-        # for classes, we need to switch camel and snake cases
-        class_link = re.search(
-            r"https://envirodiy.github.io/ModularSensors/(?:class)(?P<class_link>[\w/-]+)\.html",
-            massaged_line,
-        )
-        if class_link is not None:
-            camel_link = snake_to_camel(class_link.group("class_link"))
-            massaged_line = re.sub(
-                r"https://envirodiy.github.io/ModularSensors/(?:class)(?P<class_link>[\w/-]+)\.html",
-                r"@ref #" + camel_link,
-                massaged_line,
-            )
-        # for groups, we need to clean out extra underscores
-        group_link = re.search(
-            r"https://envirodiy.github.io/ModularSensors/(?:group__)(?P<group_link>[\w/-]+)\.html",
-            massaged_line,
-        )
-        if group_link is not None:
-            camel_link = group_link.group("group_link").replace("__", "_")
-            massaged_line = re.sub(
-                r"https://envirodiy.github.io/ModularSensors/(?:group__)(?P<group_link>[\w/-]+)\.html",
-                r"@ref #" + camel_link,
-                massaged_line,
-            )
-        # for examples, we need to clean out extra underscores
-        example_link = re.search(
-            r"https://envirodiy.github.io/ModularSensors/(?P<example_name>[\w/-]+)_8ino-example\.html",
-            massaged_line,
-        )
-        if example_link is not None:
-            camel_link = snake_to_camel(example_link.group("example_name"))
-            massaged_line = re.sub(
-                r"https://envirodiy.github.io/ModularSensors/(?P<example_name>[\w/-]+)_8ino-example\.html",
-                "@ref " + snake_to_camel(example_link.group("example_name")) + ".ino",
-                massaged_line,
-            )
-
-        # If it's the index itself, we want to replace with a reference to the mainpage
-        massaged_line = re.sub(
-            r"https://envirodiy.github.io/ModularSensors/index.html#(?P<section_name>[\w/-]+)",
-            r"@ref \g<section_name>",
-            massaged_line,
-        )
-        massaged_line = re.sub(
-            r"https://envirodiy.github.io/ModularSensors/index.html",
-            "@ref mainpage",
-            massaged_line,
-        )
-
-        # for anything other link to the docs, we the text as it is and hope it
-        # lines up with a real reference
-        massaged_line = re.sub(
-            r"https://envirodiy.github.io/ModularSensors/(?P<section_name>[\w/-]+)\.html",
-            r"@ref \g<section_name>",
-            massaged_line,
-        )
+        massaged_line = massaged_line.replace("courtesy of @", r"courtesy of \@")
 
         # Add a PHP Markdown Extra style header id to the end of header sections
         # use the GitHub anchor plus the file name as the section id.
@@ -238,7 +163,7 @@ with fileinput.FileInput(
 
         # Special work-arounds for the change log
         if file_name is not None and file_name == "ChangeLog":
-            if line.startswith("# ChangeLog"):
+            if line.lower().startswith("# changelog"):
                 massaged_line = "# ChangeLog {#change_log}\n"
             version_re = re.match(
                 r"#{2}\s+(?P<changelog_link>\[(?P<version_number>[^\{\}\#]+?)\])(?P<version_info>.*)",
@@ -294,12 +219,31 @@ with fileinput.FileInput(
                 massaged_line,
             )
 
-        # finally replace code blocks with doxygen's prefered code block
-        massaged_line = (
-            massaged_line.replace("```ini", "@code{.ini}")
-            .replace("```cpp", "@code{.cpp}")
-            .replace("```", "@endcode")
-        )
+        # finally, replace code blocks with doxygen's prefered code block
+        # also replace mermaid diagram blocks with pre/post tags
+        # GitHub can render graphs in mermaid directly, but Doxygen needs extra tags and a script to do so.
+        if "```" in line and not in_fence:
+            in_fence = True
+            language = re.search(r"```(?P<language>\w+)", massaged_line)
+            if language is not None and language.group("language") == "mermaid":
+                fence_language = "mermaid"
+                massaged_line = massaged_line.replace(
+                    "```mermaid", '<pre class="mermaid">'
+                )
+            elif language is not None:
+                massaged_line = re.sub(
+                    r"^```(?P<language>\w+)$", r"@code{\g<language>}", massaged_line
+                )
+                fence_language = language.group("language")
+            else:
+                massaged_line = massaged_line.replace("```", "@code")
+                fence_language = ""
+        elif "```" in line and in_fence:
+            in_fence = False
+            if fence_language == "mermaid":
+                massaged_line = massaged_line.replace("```", "</pre>")
+            else:
+                massaged_line = massaged_line.replace("```", "@endcode")
 
         # hide lines that are not printed or skipped
         # write out an empty comment line to keep the line numbers identical
@@ -351,11 +295,3 @@ with fileinput.FileInput(
             print_me = True
 
         i += 1
-
-# %%
-# Close the comment for doxygen
-# Not needed anymore with doxygen 1.9.3?
-# try:
-#     sys.stdout.buffer.write("\n*/\n\n".encode("utf-8"))
-# except Exception as e:
-#     print("\n*/\n\n")

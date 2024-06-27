@@ -32,7 +32,7 @@ all_files = [
     )  # and f.endswith("8ino-example.xml")
 ]
 
-compound_def = r"<compounddef id=\"(?P<doxygen_compound_id>.+?)\" kind=\"\w+?\">"
+compound_def = r"<compounddef id=\"(?P<doxygen_compound_id>.+?)\" kind=\"\w+?\""
 section_header = r"<sect(?P<section_number>[123456]) id=\"(?P<doxygen_sect_id>.+)\">"
 doxy_file_location = r"<location file=\"(?P<file_location>.+)\"/>"
 
