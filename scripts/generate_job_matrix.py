@@ -343,7 +343,7 @@ for example in examples_to_build:
 # Convert commands in the matrix into bash scripts
 for matrix_job in arduino_job_matrix + pio_job_matrix:
     bash_file_name = matrix_job["job_name"].replace(" ", "") + ".sh"
-    print(f"Wrinting bash file to {os.path.join(artifact_path, bash_file_name)}")
+    print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
     bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
     bash_out.write("#!/bin/bash\n\n")
     bash_out.write(
