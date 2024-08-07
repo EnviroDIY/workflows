@@ -4,3 +4,4 @@ __pycache__/
 home/
 .github/workflows/build_examples_matrix.yaml
 scripts/arduino_cli.log
+docs/markdown_prefilter_archive.py

@@ -81,7 +81,7 @@ cd "%REPO_DIR%\docs"
 copy "%WORKFLOW_DIR%markdown_prefilter.py" "%REPO_DIR%\docs"
 
 @REM echo Creating dox files from example read-me files
-@REM python -u documentExamples.py > output_documentExamples.log 2>&1
+python -u "%WORKFLOW_DIR%documentExamples.py" > output_documentExamples.log 2>&1
 
 @REM Set global vars for local work, then run Doxygen
 setlocal
@@ -121,6 +121,7 @@ del "%REPO_DIR%\docs\gp-desktop-logo.png" /q
 del "%REPO_DIR%\docs\gp-mobile-logo.png" /q
 del "%REPO_DIR%\docs\gp-scrolling-logo.png" /q
 del "%REPO_DIR%\docs\markdown_prefilter.py" /q
+del "%REPO_DIR%\docs\examples.dox" /q
 del "%REPO_DIR%\docs\clipboard.js" /q
 del "%REPO_DIR%\docs\css" /q
 rmdir "%REPO_DIR%\docs\css" /q
