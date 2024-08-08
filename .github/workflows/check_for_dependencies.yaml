@@ -1,4 +1,4 @@
-name: Build Examples with PlatformIO and Arduino CLI
+name: Check for Arduino Library Dependencies
 
 on:
   workflow_dispatch:

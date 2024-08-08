@@ -70,27 +70,45 @@ jobs:
         uses: EnviroDIY/setup-platformio-action@v1.0.2
 
       - name: Generate Library Installation Script
-        id: py_libraries
+        id: make_dep_install_script
         run: |
-          if [ ! -e continuous_integration/install-libraries-arduino-cli.py ] && [ ! -e continuous_integration/install-libraries-platformio.py ]
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+          if [ ! -e continuous_integration/install-libraries-platformio.sh ]
           then
             echo "Generating dependency library installation script"
             curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_library_installation_script.py -o generate_library_installation_script.py
             python -u generate_library_installation_script.py
-              if [ -e continuous_integration_artifacts/install-libraries-platformio.py ]
+              if [ -e continuous_integration_artifacts/install-libraries-platformio.sh ]
               then
-                mv continuous_integration_artifacts/install-libraries-platformio.py continuous_integration/install-libraries-platformio.sh
+                echo "Copying generated installation"
+                mv continuous_integration_artifacts/install-libraries-platformio.sh continuous_integration/install-libraries-platformio.sh
+              else
+                echo "No library dependencies to install"
               fi
+          else
+            echo "Dependency installation script found at continuous_integration/install-libraries-platformio.sh"
           fi
 
       - name: Verify the library deps install script exists
         id: check_lib_install
         run: |
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
           if [ -e continuous_integration/install-libraries-platformio.sh ]
           then
             echo "Dependency installation script found at continuous_integration/install-libraries-platformio.sh"
             echo "valid_lib_dep_script=true" >> $GITHUB_OUTPUT
           else
+            echo "No dependecy installation script found!"
             echo "valid_lib_dep_script=false" >> $GITHUB_OUTPUT
           fi
 
@@ -106,6 +124,7 @@ jobs:
 
       # Install any library dependencies with PlatformIO at the global level, iff no cache
       - name: Install PlatformIO libraries
+        id: install_libraries
         if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
           chmod +x continuous_integration/install-libraries-platformio.sh
@@ -114,7 +133,7 @@ jobs:
 
       - name: Install the library from the master branch
         run: |
-          pio pkg install -g -l https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
+          pio pkg install -g --library https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
 
       # zip up all the installed libraries
       # need to cd into the pio directory so we don't get extra junk directories

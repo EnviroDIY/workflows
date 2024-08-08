@@ -1,4 +1,4 @@
-name: Build Examples
+name: Build Arduino Library Examples
 
 on:
   workflow_call:

@@ -1,4 +1,4 @@
-name: Build Documentation
+name: Build Documentation with Doxygen
 
 on:
   workflow_call:
