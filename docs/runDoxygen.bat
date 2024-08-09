@@ -80,7 +80,8 @@ cd "%REPO_DIR%\docs"
 @REM  download the markdown pre-filter
 copy "%WORKFLOW_DIR%markdown_prefilter.py" "%REPO_DIR%\docs"
 
-@REM echo Creating dox files from example read-me files
+@REM Document the examples from the header of each example
+echo Creating dox files from example file headers
 python -u "%WORKFLOW_DIR%documentExamples.py" > output_documentExamples.log 2>&1
 
 @REM Set global vars for local work, then run Doxygen

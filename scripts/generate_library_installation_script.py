@@ -23,12 +23,14 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
 else:
     workspace_dir = os.getcwd()
 workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
+library_json_file = os.path.join(workspace_dir, "library.json")
 print(f"Workspace Path: {workspace_path}")
 
 # The examples directory
 examples_dir = "./examples/"
 examples_path = os.path.join(workspace_dir, examples_dir)
 examples_path = os.path.abspath(os.path.realpath(examples_path))
+examples_deps_file = os.path.join(examples_path, "example_dependencies.json")
 print(f"Examples Path: {examples_path}")
 
 # The continuous integration directory
@@ -75,27 +77,58 @@ else:
     arduino_cli_config = os.path.join(ci_dir, "arduino_cli_local.yaml")
 
 # PlatformIO configuration
-#NOTE: No PlatformIO config file is needed to install libraries
+# NOTE: No PlatformIO config file is needed to install libraries
 
 
 # %%
-# find dependencies based on the library specification and listings of example dependencies
-with open(os.path.join(workspace_dir, "library.json")) as f:
-    library_specs = json.load(f)
-if os.path.isfile(os.path.join(examples_path, "example_dependencies.json")):
-    with open(os.path.join(examples_path, "example_dependencies.json")) as f:
+# find dependencies based on the library specification
+if os.path.isfile(library_json_file):
+    with open(library_json_file) as f:
+        library_specs = json.load(f)
+else:
+    library_specs = {"dependencies": []}
+# find dependencies based on the examples dependency specs
+if os.path.isfile(examples_deps_file):
+    with open(examples_deps_file) as f:
         example_specs = json.load(f)
 else:
     example_specs = {"dependencies": []}
 
-dependencies=[]
+
+def convert_dep_dict_to_str(dependency: dict, include_version: bool = True) -> str:
+    install_str = ""
+    if "owner" in dependency.keys() and "github" in dependency["version"]:
+        if "name" in dependency.keys():
+            install_str += f"{dependency['name']}="
+        install_str += dependency["version"]
+    elif (
+        "owner" in dependency.keys()
+        and "name" in dependency.keys()
+        and "version" in dependency.keys()
+    ):
+        lib_dep = f"{dependency['owner']}/{dependency['name']}"
+        if include_version:
+            lib_dep += f"@{dependency['version']}"
+        install_str += lib_dep
+    elif "name" in dependency.keys() and "version" in dependency.keys():
+        lib_dep = f"{dependency['name']}"
+        if include_version:
+            lib_dep += f"@{dependency['version']}"
+        install_str += lib_dep
+    else:
+        install_str += dependency["name"]
+
+    return install_str
+
+
+dependencies = []
 if "dependencies" in library_specs.keys():
     dependencies.extend(library_specs["dependencies"])
 if "dependencies" in example_specs.keys():
     dependencies.extend(example_specs["dependencies"])
 
 # quit if there are no dependencies
-if len(dependencies) ==0:
+if len(dependencies) == 0:
     print("No dependencies to install!")
     sys.exit()
 
@@ -130,29 +163,14 @@ def create_pio_ci_command(
         "-g",
         "--library",
     ]
-    if "owner" in library.keys() and "github" in library["version"]:
-        pio_command_args.append(library["version"])
-    elif (
-        "owner" in library.keys()
-        and "name" in library.keys()
-        and "version" in library.keys()
-    ):
-        lib_dep = f"{library['owner']}/{library['name']}"
-        lib_dep += f"@{library['version']}"
-        pio_command_args.append(lib_dep)
-    elif "name" in library.keys() and "version" in library.keys():
-        lib_dep = f"{library['name']}"
-        lib_dep += f"@{library['version']}"
-        pio_command_args.append(lib_dep)
-    else:
-        pio_command_args.append(library["name"])
+    pio_command_args.append(convert_dep_dict_to_str(library))
     return " ".join(pio_command_args)
 
 
 def add_log_to_command(command: str, group_title: str) -> List:
     command_list = []
     command_list.append(f'\necho "\\e[32m{group_title}\\e[0m"')
-    command_list.append(command+"\n")
+    command_list.append(command + "\n")
     return command_list
 
 
@@ -183,7 +201,9 @@ for library in dependencies:
     install_command = create_arduino_cli_command(
         library=library,
     )
-    command_with_log = add_log_to_command(install_command, f"Installing {library["name"]}")
+    command_with_log = add_log_to_command(
+        install_command, f"Installing {library['name']}"
+    )
     bash_out.write("\n".join(command_with_log))
 bash_out.write(
     """
@@ -224,7 +244,9 @@ pio pkg list -g -v --only-libraries
 )
 for library in dependencies:
     install_command = create_pio_ci_command(library=library)
-    command_with_log = add_log_to_command(install_command, f"Installing {library["name"]}")
+    command_with_log = add_log_to_command(
+        install_command, f"Installing {library['name']}"
+    )
     bash_out.write("\n".join(command_with_log))
 bash_out.write(
     """

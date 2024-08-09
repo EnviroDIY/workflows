@@ -78,7 +78,7 @@ jobs:
           python-version: '3.x'
           cache: 'pip'
 
-      - name: Install python dependencies, including PlatformIO
+      - name: Install python dependencies for m.css
         run: |
           pip install --upgrade --upgrade-strategy only-if-needed -r requirements.txt
 

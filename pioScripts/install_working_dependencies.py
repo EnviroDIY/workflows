@@ -14,6 +14,7 @@ from platformio.package.meta import PackageSpec
 
 
 # %%
+# Some working directories
 try:
     # Import the current working construction
     # environment to the `env` variable.

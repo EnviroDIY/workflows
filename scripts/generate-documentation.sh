@@ -36,6 +36,7 @@ cd ${MCSS_DIR}css/EnviroDIY
 # pygmentize -f html -S default -a ".m-code-pygments-default" >pygments-default.css
 python -u "${MCSS_DIR}css/postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"
 
+#list the directory contents if GitHub actions debugging is on
 if [ "$RUNNER_DEBUG" = "1" ]; then
     ls ${MCSS_DIR}css/EnviroDIY/ -R
 fi
@@ -80,9 +81,11 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     echo "-------------------"
 fi
 
-# echo "\e[32mCreating dox files from example read-me files\e[0m"
-# curl -SL ${WORKFLOW_DIR}documentExamples.py -o documentExamples.py
-# python -u documentExamples.py
+echo "\e[32mCreating dox files from example file headers\e[0m"
+echo "::group::Example Header Lines Parsed"
+curl -SL ${WORKFLOW_DIR}documentExamples.py -o documentExamples.py
+python -u documentExamples.py
+echo "::endgroup::"
 
 # only continue if these steps fail
 # doing this here to print the Doxygen log if it fails
