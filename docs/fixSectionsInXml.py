@@ -7,6 +7,8 @@ import glob
 import xml.etree.ElementTree as ET
 
 # %%
+# Some working directories
+
 # The workspace directory
 if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
@@ -35,6 +37,7 @@ all_files = [
 compound_def = r"<compounddef id=\"(?P<doxygen_compound_id>.+?)\" kind=\"\w+?\""
 section_header = r"<sect(?P<section_number>[123456]) id=\"(?P<doxygen_sect_id>.+)\">"
 doxy_file_location = r"<location file=\"(?P<file_location>.+)\"/>"
+
 
 # %%
 for filename in all_files:

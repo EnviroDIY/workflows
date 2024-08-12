@@ -8,31 +8,36 @@ import glob
 # Some working directories
 
 # The workspace directory
-if "GITHUB_WORKSPACE" in os.environ.keys():
-    workspace_dir = os.environ.get("GITHUB_WORKSPACE")
+if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
+    docbuild_dir = os.environ.get("DOC_ROOT")
+    repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]
 else:
-    workspace_dir = os.getcwd()
-workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
-print(f"Workspace Path: {workspace_path}")
+    docbuild_dir = os.getcwd()
+    repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
 
 # where to write the file
 output_file = "../docs/examples.dox"
-output_file = os.path.join(workspace_dir, output_file)
+output_file = os.path.join(docbuild_dir, output_file)
 output_file = os.path.abspath(os.path.realpath(output_file))
 
 # The examples directory
 examples_dir = "../examples/"
-examples_path = os.path.join(workspace_dir, examples_dir)
+examples_path = os.path.join(docbuild_dir, examples_dir)
 examples_path = os.path.abspath(os.path.realpath(examples_path))
-print(f"Examples Path: {examples_path}")
 
 # The extras directory
 extras_dir = "../extras/"
-extras_path = os.path.join(workspace_dir, extras_dir)
+extras_path = os.path.join(docbuild_dir, extras_dir)
 extras_path = os.path.abspath(os.path.realpath(extras_path))
+
+print(f"Repository Name: {repo_name}")
+print(f"Documentation Building Directory: {docbuild_dir}")
+print(f"Examples Path: {examples_path}")
 print(f"Extras Path: {extras_path}")
+print(f"DOX Output Path: {output_file}")
 
 
+# %%
 # Find all of the examples in the examples folder, append the path "examples" to it
 examples_to_doc = [
     f"{examples_path}\\{f}\\{f}.ino"
