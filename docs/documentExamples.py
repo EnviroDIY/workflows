@@ -42,13 +42,13 @@ print(f"DOX Output Path: {output_file}")
 # %%
 # Find all of the examples in the examples folder, append the path "examples" to it
 examples_to_doc = [
-    os.path.abspath(os.path.realpath(f"{examples_path}\\{f}\\{f}.ino"))
+    os.path.abspath(os.path.realpath(f"{examples_path}/{f}/{f}.ino"))
     for f in os.listdir(examples_path)
     if os.path.isdir(os.path.join(examples_path, f))
     and f not in [".history", "logger_test", "menu_a_la_carte"]
 ]
 examples_to_doc += [
-    os.path.abspath(os.path.realpath(f"{extras_path}\\{f}\\{f}.ino"))
+    os.path.abspath(os.path.realpath(f"{extras_path}/{f}/{f}.ino"))
     for f in os.listdir(extras_path)
     if os.path.isdir(os.path.join(extras_path, f))
     and f not in [".history", "logger_test", "menu_a_la_carte"]
