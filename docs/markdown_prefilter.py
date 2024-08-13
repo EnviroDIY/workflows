@@ -38,6 +38,7 @@ def github_slugify(name):
         .replace(" ", "-")
     )
 
+
 # %%
 print_me = True
 skip_me = False
@@ -63,15 +64,15 @@ with fileinput.FileInput(
                 seper = "\\"
             else:
                 seper = "/"
-            # sys.stdout.buffer.write("Separator: '{}'\n".format(seper).encode("utf-8"))
+            # print("Separator: '{}'\n".format(seper))
             file_dir = file_name_dir.rsplit(sep=seper, maxsplit=1)[0]
             file_name_ext = file_name_dir.rsplit(sep=seper, maxsplit=1)[1]
             file_name = file_name_ext.rsplit(sep=".", maxsplit=1)[0]
             file_ext = file_name_ext.rsplit(sep=".", maxsplit=1)[1]
-            # sys.stdout.buffer.write(
+            # print(
             #     "File Directory: {}, File Name: {}, File Extension: {}\n".format(
             #         file_dir, file_name, file_ext
-            #     ).encode("utf-8")
+            #     )
             # )
             # For the example walk-throughs, written in the ReadMe files,
             # we want the example name, which is part of the directory.
