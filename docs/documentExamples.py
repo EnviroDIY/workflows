@@ -42,22 +42,25 @@ print(f"DOX Output Path: {output_file}")
 # %%
 # Find all of the examples in the examples folder, append the path "examples" to it
 examples_to_doc = [
-    f"{examples_path}\\{f}\\{f}.ino"
+    os.path.abspath(os.path.realpath(f"{examples_path}\\{f}\\{f}.ino"))
     for f in os.listdir(examples_path)
     if os.path.isdir(os.path.join(examples_path, f))
     and f not in [".history", "logger_test", "menu_a_la_carte"]
 ]
 examples_to_doc += [
-    f"{extras_path}\\{f}\\{f}.ino"
+    os.path.abspath(os.path.realpath(f"{extras_path}\\{f}\\{f}.ino"))
     for f in os.listdir(extras_path)
     if os.path.isdir(os.path.join(extras_path, f))
     and f not in [".history", "logger_test", "menu_a_la_carte"]
 ]
+print("Examples to document:")
+print("    ", end="")
+print("\n    ".join(examples_to_doc))
 
 # %%
 with open(output_file, "w+") as out_file:
     for filename in examples_to_doc:
-        print(filename)
+        print(f"\nCurrent example: {filename}")
         with open(filename, "r") as in_file:  # open in readonly mode
             i = 1
             got_start_comment = False
@@ -65,7 +68,7 @@ with open(output_file, "w+") as out_file:
             for line in lines:
                 if i < 3 and line.startswith("/**"):
                     got_start_comment = True
-                    print(i)
+                    print(f"  First line of doc block: {i}")
                 if got_start_comment and (
                     line.startswith("*/") or line.startswith(" */")
                 ):
@@ -73,7 +76,7 @@ with open(output_file, "w+") as out_file:
                     out_file.write(" * @m_examplenavigation{examples_page,}\n")
                     out_file.write(" * @m_footernavigation\n")
                     out_file.write(line)
-                    print(i)
+                    print(f"  Last line of doc block: {i}")
                     got_start_comment = False
                 if got_start_comment:
                     out_file.write(line)

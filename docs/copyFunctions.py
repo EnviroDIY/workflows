@@ -9,6 +9,8 @@ from html.parser import HTMLParser
 from bs4 import BeautifulSoup
 
 # %%
+# Some working directories
+
 # The workspace directory
 if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
