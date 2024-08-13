@@ -11,22 +11,24 @@ import glob
 if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]
+    relative_dir = f"../../../../{repo_name}/"
 else:
     docbuild_dir = os.getcwd()
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
+    relative_dir = f"../../{repo_name}/"
 
 # where to write the file
-output_file = "../docs/examples.dox"
+output_file = relative_dir + "docs/examples.dox"
 output_file = os.path.join(docbuild_dir, output_file)
 output_file = os.path.abspath(os.path.realpath(output_file))
 
 # The examples directory
-examples_dir = "../examples/"
+examples_dir = relative_dir + "examples/"
 examples_path = os.path.join(docbuild_dir, examples_dir)
 examples_path = os.path.abspath(os.path.realpath(examples_path))
 
 # The extras directory
-extras_dir = "../extras/"
+extras_dir = relative_dir + "extras/"
 extras_path = os.path.join(docbuild_dir, extras_dir)
 extras_path = os.path.abspath(os.path.realpath(extras_path))
 

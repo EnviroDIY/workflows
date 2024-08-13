@@ -7,6 +7,8 @@ import glob
 import xml.etree.ElementTree as ET
 
 # %%
+# Some working directories
+
 # The workspace directory
 if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
