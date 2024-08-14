@@ -146,8 +146,9 @@ jobs:
           cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/
 
       - name: Install the library from the master branch
+        id: install_master_library
         run: |
-          pio pkg install -g --library https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
+          pio pkg install -g --library --skip-dependencies https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
           pio pkg list -g --only-libraries
 
       # zip up all the installed libraries
@@ -163,20 +164,31 @@ jobs:
           cd $GITHUB_WORKSPACE
           ls
 
-      # Remove some extras from the zip
-      - name: Remove git files from the zip
-        continue-on-error: true
-        run: |
-          echo "::debug::Deleting extra files to decrease size of zip"
-          echo "::debug::Removing Git folders"
-          zip -d -q ${{ needs.check_version_number.outputs.zip_name }} "*/.gitattributes" "*/.gitignore" "*/.gitmodules" "*/.github/*" "*.sh"  "*/Doxyfile" "*/.travis.yml"
-
       - name: Store generated dependency zip
         uses: actions/upload-artifact@v4
         with:
           name: dependency_zip
           path: |
             ${{ needs.check_version_number.outputs.zip_name }}.zip
+
+      # Uninstall the master library so it's not cached
+      # if it's cached, we could end up with multiple versions of the same file
+      - name: Uninstall the Master Library
+        id: uninstall_master_library
+        run: |
+          pio pkg uninstall -g --skip-dependencies --library https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
+          pio pkg list -g --only-libraries
+
+      - name: Cache PlatformIO libraries
+        uses: actions/cache/save@v4
+        id: cache_libraries
+        if: ${{ always() && steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
+        with:
+          path: |
+            ~/.platformio/lib
+            $GITHUB_WORKSPACE/lib
+          key: ${{ steps.restore_libraries.outputs.cache-primary-key }}
+
 
   release_with_assets:
     name: Create a Release with Assets
