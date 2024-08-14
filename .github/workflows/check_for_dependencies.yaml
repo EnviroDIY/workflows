@@ -59,9 +59,10 @@ jobs:
           if [ "$has_dependencies" = "false" ]; then
             echo "No dependencies found!"
           fi
+          echo "HAS_DEPENDENCIES=${has_dependencies}" >> $GITHUB_ENV
 
       - name: Store Dependency File Hash
         id: store_dep_hash
         run: |
-          echo "has_dependencies=${has_dependencies}" >> $GITHUB_OUTPUT
+          echo "has_dependencies=${{ env.HAS_DEPENDENCIES }}" >> $GITHUB_OUTPUT
           echo "dep_hash=${{ hashFiles('consolidated_deps.txt') }}" >> $GITHUB_OUTPUT
