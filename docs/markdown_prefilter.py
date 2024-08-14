@@ -45,10 +45,11 @@ skip_me = False
 in_fence = False
 fence_language = ""
 i = 1
+local_testing = False
 
 # when testing use:
 # with fileinput.FileInput(
-#     "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\Arduino-SDI-12\\docs\\CreatingACharacter.md",
+#     "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\Arduino-SDI-12\\ChangeLog.md",
 #     openhook=fileinput.hook_encoded("utf-8", "surrogateescape"),
 # ) as input:
 
@@ -64,22 +65,25 @@ with fileinput.FileInput(
                 seper = "\\"
             else:
                 seper = "/"
-            # print("Separator: '{}'\n".format(seper))
+            if local_testing:
+                print("Separator: '{}'\n".format(seper))
             file_dir = file_name_dir.rsplit(sep=seper, maxsplit=1)[0]
             file_name_ext = file_name_dir.rsplit(sep=seper, maxsplit=1)[1]
             file_name = file_name_ext.rsplit(sep=".", maxsplit=1)[0]
             file_ext = file_name_ext.rsplit(sep=".", maxsplit=1)[1]
-            # print(
-            #     "File Directory: {}, File Name: {}, File Extension: {}\n".format(
-            #         file_dir, file_name, file_ext
-            #     )
-            # )
+            if local_testing:
+                print(
+                    "File Directory: {}, File Name: {}, File Extension: {}\n".format(
+                        file_dir, file_name, file_ext
+                    )
+                )
             # For the example walk-throughs, written in the ReadMe files,
             # we want the example name, which is part of the directory.
             if "examples" in file_dir and file_name == "ReadMe":
                 file_name = "example_" + file_dir.rsplit(sep=seper, maxsplit=1)[-1]
 
-        # print(i, print_me, skip_me, in_fence, fence_language, line)
+        if local_testing:
+            print(i, print_me, skip_me, in_fence, fence_language, line)
 
         # I'm using these comments to fence off content that is only intended for
         # github mardown rendering
