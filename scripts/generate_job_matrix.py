@@ -181,7 +181,10 @@ if use_verbose:
 
 # %%
 # Get the examples to build
-if "EXAMPLES_TO_BUILD" in os.environ.keys():
+if (
+    "EXAMPLES_TO_BUILD" in os.environ.keys()
+    and len(os.environ.get("EXAMPLES_TO_BUILD")) > 0
+):
     examples_to_build = [
         example.strip() for example in os.environ.get("EXAMPLES_TO_BUILD").split(",")
     ]
