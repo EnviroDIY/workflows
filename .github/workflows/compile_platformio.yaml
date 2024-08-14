@@ -56,6 +56,8 @@ jobs:
           then
             echo "No dependecy installation script found, copying script from artifact"
             mv continuous_integration_artifacts/install-libraries-platformio.sh continuous_integration/install-libraries-platformio.sh
+          else
+            echo "No library dependencies to install"
           fi
 
       - name: Restore PlatformIO platforms

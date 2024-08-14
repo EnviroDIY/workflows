@@ -15,8 +15,8 @@ on:
         type: string
 
 jobs:
-  generate_matrix:
-    name: Generate Build Scripts
+  generate_scripts:
+    name: Generate Install and Build Scripts
     runs-on: ubuntu-latest
     if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
     outputs:
@@ -27,6 +27,7 @@ jobs:
       EXAMPLES_TO_BUILD: ${{ inputs.examples_to_build }}
 
     steps:
+      - name: Checkout code
       - uses: actions/checkout@v4
 
       - name: Setup PlatformIO
@@ -42,11 +43,19 @@ jobs:
       - name: Generate Library Installation Script
         id: py_libraries
         run: |
-          if [ ! -e continuous_integration/install-libraries-arduino-cli.py ] && [ ! -e continuous_integration/install-libraries-platformio.py ]
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+          if [ ! -e continuous_integration/install-libraries-platformio.sh ] && [ ! -e continuous_integration/install-libraries-arduino-cli.sh ]
           then
             echo "Generating dependency library installation script"
             curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_library_installation_script.py -o generate_library_installation_script.py
             python -u generate_library_installation_script.py
+          else
+            echo "Dependency installation script found"
           fi
 
       - name: Generate Example Build Matrices
@@ -75,16 +84,16 @@ jobs:
 
   build_ex_arduino:
     name: Build Examples with Arduino CLI
-    needs: [determine_library_source, generate_matrix]
+    needs: [determine_library_source, generate_scripts]
     uses: ./.github/workflows/compile_arduino_cli.yaml
     with:
       library_install_zip: ${{ needs.determine_library_source.outputs.library_install_zip }}
-      arduino_job_matrix: ${{ needs.generate_matrix.outputs.arduino_job_matrix }}
+      arduino_job_matrix: ${{ needs.generate_scripts.outputs.arduino_job_matrix }}
 
   build_pio:
     name: Build Examples with PlatformIO
-    needs: [determine_library_source, generate_matrix]
+    needs: [determine_library_source, generate_scripts]
     uses: ./.github/workflows/compile_platformio.yaml
     with:
       library_install_git: ${{ needs.determine_library_source.outputs.library_install_git }}
-      pio_job_matrix: ${{ needs.generate_matrix.outputs.pio_job_matrix }}
+      pio_job_matrix: ${{ needs.generate_scripts.outputs.pio_job_matrix }}
