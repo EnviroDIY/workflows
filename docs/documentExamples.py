@@ -63,24 +63,38 @@ with open(output_file, "w+") as out_file:
         print(f"\nCurrent example: {filename}")
         with open(filename, "r") as in_file:  # open in readonly mode
             i = 1
+            lines_copied = 0
             got_start_comment = False
+            got_example_nav = False
+            got_footer_nav = False
             lines = in_file.readlines()
             for line in lines:
                 if i < 3 and line.startswith("/**"):
                     got_start_comment = True
                     print(f"  First line of doc block: {i}")
-                if got_start_comment and (
-                    line.startswith("*/") or line.startswith(" */")
-                ):
+                if got_start_comment and "@m_examplenavigation" in line:
+                    got_example_nav = True
+                    print(f"  Got example nav command in line: {i}")
+                if got_start_comment and "@m_footernavigation" in line:
+                    got_footer_nav = True
+                    print(f"  Got footer nav command in line: {i}")
+                if got_start_comment and "*/" in line:
                     out_file.write(" *\n")
-                    out_file.write(" * @m_examplenavigation{examples_page,}\n")
-                    out_file.write(" * @m_footernavigation\n")
+                    if not got_example_nav:
+                        out_file.write(" * @m_examplenavigation{examples_page,}\n")
+                    if not got_footer_nav:
+                        out_file.write(" * @m_footernavigation\n")
                     out_file.write(line)
                     print(f"  Last line of doc block: {i}")
                     got_start_comment = False
+                    got_example_nav = False
+                    got_footer_nav = False
                 if got_start_comment:
                     out_file.write(line)
+                    lines_copied += 1
                 i += 1
+            if lines_copied == 0:
+                print(f"  No doc block detected in file")
 
             out_file.write("\n\n")
 
