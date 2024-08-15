@@ -148,7 +148,7 @@ jobs:
       - name: Install the library from the master branch
         id: install_master_library
         run: |
-          pio pkg install -g --library --skip-dependencies https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
+          pio pkg install --skip-dependencies -g --library https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
           pio pkg list -g --only-libraries
 
       # zip up all the installed libraries
@@ -176,7 +176,7 @@ jobs:
       - name: Uninstall the Master Library
         id: uninstall_master_library
         run: |
-          pio pkg uninstall -g --skip-dependencies --library https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
+          pio pkg uninstall --skip-dependencies -g --library https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
           pio pkg list -g --only-libraries
 
       - name: Cache PlatformIO libraries

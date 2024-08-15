@@ -127,7 +127,7 @@ jobs:
       - name: Install the testing version of the library for PlatformIO
         id: install_test_library
         run: |
-          pio pkg install -g --library --skip-dependencies ${{ inputs.library_install_git }}
+          pio pkg install --skip-dependencies -g --library ${{ inputs.library_install_git }}
           pio pkg list -g --only-libraries
 
       - name: Include problem matcher
