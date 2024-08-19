@@ -26,6 +26,8 @@ workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
 library_json_file = os.path.join(workspace_dir, "library.json")
 print(f"Workspace Path: {workspace_path}")
 
+
+# %%
 # The examples directory
 examples_dir = "./examples/"
 examples_path = os.path.join(workspace_dir, examples_dir)

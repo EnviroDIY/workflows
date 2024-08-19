@@ -3,30 +3,11 @@ name: Prepare a new release and add release assets
 on:
   workflow_call:
     inputs:
-      library-manager:
-        description: 'Configure the rules for libraries in the Arduino Library Manager index. Can be {submit|update|false}.'
-        type: string
+      include_dependencies:
+        description: 'True to include a zip file with dependencies in the release'
         required: false
-        default: update
-      library-compliance:
-        description: 'Configure how strict the tool is. Can be {strict|specification|permissive}.'
-        type: string
-        required: false
-        default: 'strict'
-
-  # Also give a manual trigger
-  workflow_dispatch:
-    inputs:
-      library-manager:
-        description: 'Configure the rules for libraries in the Arduino Library Manager index. Can be {submit|update|false}.'
-        type: string
-        required: false
-        default: update
-      library-compliance:
-        description: 'Configure how strict the tool is. Can be {strict|specification|permissive}.'
-        type: string
-        required: false
-        default: 'strict'
+        type: boolean
+        default: true
 
 env:
   PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
@@ -58,12 +39,13 @@ jobs:
   check_for_dependencies:
     name: Check for any library dependencies
     uses: ./.github/workflows/check_for_dependencies.yaml
+    if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies }}
 
   prepare_assets:
     name: Prepare Release Assets
     runs-on: ubuntu-latest
     needs: [check_version_number, check_for_dependencies]
-    if: ${{ ! failure() && ! cancelled() && needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
+    if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies && needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
 
     steps:
       - name: Checkout code
@@ -194,7 +176,7 @@ jobs:
     name: Create a Release with Assets
     runs-on: ubuntu-latest
     needs: [check_version_number, prepare_assets]
-    if: ${{ ! failure() && ! cancelled() && needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
+    if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies && needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
 
     steps:
       - name: Checkout code
@@ -235,7 +217,7 @@ jobs:
     name: Create a New Release
     runs-on: ubuntu-latest
     needs: [check_version_number]
-    if: ${{ ! failure() && ! cancelled() && needs.check_for_dependencies.outputs.has_dependencies == 'false' }}
+    if: ${{ ! failure() && ! cancelled() && (! inputs.include_dependencies || needs.check_for_dependencies.outputs.has_dependencies == 'false') }}
 
     steps:
       - name: Checkout code

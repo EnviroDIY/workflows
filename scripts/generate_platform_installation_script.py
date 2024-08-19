@@ -26,6 +26,8 @@ else:
 workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
 print(f"Workspace Path: {workspace_path}")
 
+
+# %%
 # The continuous integration directory
 ci_dir = "./continuous_integration/"
 ci_path = os.path.join(workspace_dir, ci_dir)
@@ -243,8 +245,6 @@ arduino-cli --config-file arduino_cli.yaml core list
 """
 )
 bash_out.close()
-
-# %%
 
 # %%
 # write the bash file for PlatformIO
