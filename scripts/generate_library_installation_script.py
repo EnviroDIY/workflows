@@ -244,7 +244,7 @@ def create_arduino_cli_command(
     if "github" in library["version"]:
         arduino_command_args.append("--git-url")
         arduino_command_args.append(library["version"])
-    elif library["name"] in ["MS5803"]:
+    elif library["name"] in ["MS5803", "DallasTemperature"]:
         arduino_command_args.append("--git-url")
         arduino_command_args.append(library["url"])
     elif include_version:
