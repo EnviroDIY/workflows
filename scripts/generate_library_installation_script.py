@@ -71,6 +71,8 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
     workspace_dir = os.environ.get("GITHUB_WORKSPACE")
 else:
     workspace_dir = os.getcwd()
+
+    #%%
 workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
 library_json_file = os.path.join(workspace_dir, "library.json")
 print(f"Workspace Path: {workspace_path}")
@@ -213,9 +215,12 @@ def create_arduino_cli_command(library: dict) -> str:
         "lib",
         "install",
     ]
-    if "owner" in library.keys() and "github" in library["version"]:
+    if "github" in library["version"]:
         arduino_command_args.append("--git-url")
         arduino_command_args.append(library["version"])
+    elif library["name"]=="MS5803":
+        arduino_command_args.append("--git-url")
+        arduino_command_args.append(library["url"])
     else:
         arduino_command_args.append(f"\"{library["name"]}\"")
     arduino_command_args.append("--no-deps")
