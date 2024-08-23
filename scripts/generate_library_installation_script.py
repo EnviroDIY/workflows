@@ -62,30 +62,25 @@ pio pkg list -g -v --only-libraries
 echo "::endgroup::"
 """
 
-install_sdi12_ext_acli = """
-
-echo "\n\e[32mDownloading External Interrupt version of the SDI-12 library as a zip\e[0m"
+install_sdi12_ext_acli = """echo "\\e[32mDownloading External Interrupt version of the SDI-12 library as a zip\\e[0m"
 # The "external interrupt" version needs to be installed from a zip because the Arduino CLI cannot pull from a branch
 curl -L  --retry 15 --retry-delay 0 https://github.com/EnviroDIY/Arduino-SDI-12/archive/refs/heads/ExtInts.zip --create-dirs -o home/arduino/downloads/EnviroDIY_SDI12_ExtInts.zip
-echo "\e[32mDecompressing EnviroDIY_SDI12_ExtInts\e[0m"
+echo "\\e[32mDecompressing EnviroDIY_SDI12_ExtInts\\e[0m"
 unzip -q -o home/arduino/downloads/EnviroDIY_SDI12_ExtInts.zip -d home/arduino/downloads/
-echo "\e[32mMoving EnviroDIY_SDI12_ExtInts to the libraries folder\e[0m"
+echo "\\e[32mMoving EnviroDIY_SDI12_ExtInts to the libraries folder\\e[0m"
 mkdir -p home/arduino/user/libraries/EnviroDIY_SDI12_ExtInts
 mv home/arduino/downloads/Arduino-SDI-12-ExtInts/* home/arduino/user/libraries/EnviroDIY_SDI12_ExtInts
 
 """
 
-install_ss_ext_acli = """
-
-echo "\n\e[32mDownloading SoftwareSerial with External Interrupts as a zip\e[0m"
+install_ss_ext_acli = """echo "\\e[32mDownloading SoftwareSerial with External Interrupts as a zip\\e[0m"
 # SoftwareSerial with External Interrupts needs to be manually unzipped and moved because the CLI chokes on the library name not matching the h file
 curl -L  --retry 15 --retry-delay 0 https://github.com/EnviroDIY/SoftwareSerial_ExternalInts/archive/master.zip --create-dirs -o home/arduino/downloads/SoftwareSerial_ExternalInts.zip
-echo "\e[32mDecompressing SoftwareSerial_ExternalInts\e[0m"
+echo "\\e[32mDecompressing SoftwareSerial_ExternalInts\\e[0m"
 unzip -q -o home/arduino/downloads/SoftwareSerial_ExternalInts.zip -d home/arduino/downloads/
-echo "\e[32mMoving SoftwareSerial_ExternalInts to the libraries folder\e[0m"
+echo "\\e[32mMoving SoftwareSerial_ExternalInts to the libraries folder\\e[0m"
 mkdir -p home/arduino/user/libraries/SoftwareSerial_ExternalInts
 mv home/arduino/downloads/SoftwareSerial_ExtInts-master/* home/arduino/user/libraries/SoftwareSerial_ExternalInts
-echo "::endgroup::"
 
 """
 
@@ -99,7 +94,7 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
 else:
     workspace_dir = os.getcwd()
 
-    #%%
+# %%
 workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
 library_json_file = os.path.join(workspace_dir, "library.json")
 print(f"Workspace Path: {workspace_path}")
@@ -251,9 +246,9 @@ def create_arduino_cli_command(library: dict) -> str:
     else:
         arduino_command_args.append(f"\"{library['name']}\"")
     arduino_command_args.append("--no-deps")
-    if library["name"] == "SDI12_ExtInts":
+    if library["name"] == "SDI-12_ExtInts":
         return install_sdi12_ext_acli
-    elif library["name"] == "SoftwareSerial_ExtInts":
+    elif library["name"] == "SoftwareSerial_ExternalInts":
         return install_ss_ext_acli
     else:
         return " ".join(arduino_command_args)
