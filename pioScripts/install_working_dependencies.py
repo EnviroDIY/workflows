@@ -51,55 +51,51 @@ try:
     library_json_file = f"{env['PROJECT_DIR']}\\library.json"
     examples_deps_file = f"{env['PROJECT_DIR']}\\examples\\example_dependencies.json"
     proj_config = env.GetProjectConfig()
-    env_name = env["PIOENV"]
+    active_env_name = env["PIOENV"]
 except:
-    shared_lib_dir = f"{os.getcwd()}\\..\\lib"
+    cwd = os.getcwd()
+    shared_lib_dir = f"{cwd}\\lib"
     shared_lib_abbr = "lib"
-    project_ini_file = f"{os.getcwd()}\\..\\platformio.ini"
-    libdeps_ini_file = f"{os.getcwd()}\\pio_common_libdeps.ini"
-    library_json_file = f"{os.getcwd()}\\..\\library.json"
-    examples_deps_file = f"{os.getcwd()}\\..\\examples\\example_dependencies.json"
+    project_ini_file = f"{cwd}\\platformio.ini"
+    libdeps_ini_file = f"{cwd}\\pio_common_libdeps.ini"
+    library_json_file = f"{cwd}\\library.json"
+    examples_deps_file = f"{cwd}\\examples\\example_dependencies.json"
     proj_config = ProjectConfig.get_instance(path=project_ini_file)
-    env_name = proj_config.get_default_env()
+    default_env_name = proj_config.get_default_env()
 
 envs = proj_config.envs()
+common_env_name = "env"
 
 
 # %%
-# find dependencies in the platformio.ini file
+# functions to find dependencies in the platformio.ini file
 def get_shared_lib_deps(env):
     # Get lib_deps in the custom shared_lib_deps folder
-    raw_lib_deps = proj_config.get(
+    raw_lib_deps_custom = proj_config.get(
         section=f"env:{env}", option="custom_shared_lib_deps", default=""
     )
-    lib_deps = proj_config.parse_multi_values(raw_lib_deps)
+    lib_deps_custom = proj_config.parse_multi_values(raw_lib_deps_custom)
+    # Get lib_deps in the custom shared_lib_deps folder
+    raw_lib_deps_std = proj_config.get(
+        section=f"env:{env}", option="lib_deps", default=""
+    )
+    lib_deps_std = proj_config.parse_multi_values(raw_lib_deps_std)
 
     # convert each custom lib_dep to a PlatformIO PackageSpec
     lib_deps_specs = []
-    for lib_deps in lib_deps:
+    for lib_deps in lib_deps_custom + lib_deps_std:
         spec = PackageSpec(lib_deps)
         lib_deps_specs.append(copy.deepcopy(spec))
     return lib_deps_specs
 
 
 def get_ignored_lib_deps(env):
-    return proj_config.get(section=f"env:{env}", option="lib_ignore", default=[])
+    return proj_config.parse_multi_values(
+        proj_config.get(section=f"env:{env}", option="lib_ignore", default=[])
+    )
 
-
-# find dependencies based on the library specification
-if os.path.isfile(library_json_file):
-    with open(library_json_file) as f:
-        library_specs = json.load(f)
-else:
-    library_specs = {"dependencies": []}
-# find dependencies based on the examples dependency specs
-if os.path.isfile(examples_deps_file):
-    with open(examples_deps_file) as f:
-        example_specs = json.load(f)
-else:
-    example_specs = {"dependencies": []}
-
-
+# %%
+# functions for parsing libraries
 def get_package_spec(dependency: dict):
     spec = PackageSpec(
         id=dependency.get("id"),
@@ -136,7 +132,23 @@ def convert_dep_dict_to_str(dependency: dict, include_version: bool = True) -> s
     return install_str
 
 
-dependencies = get_shared_lib_deps(env_name)
+# %%
+# find dependencies based on the library specification
+if os.path.isfile(library_json_file):
+    with open(library_json_file) as f:
+        library_specs = json.load(f)
+else:
+    library_specs = {"dependencies": []}
+# find dependencies based on the examples dependency specs
+if os.path.isfile(examples_deps_file):
+    with open(examples_deps_file) as f:
+        example_specs = json.load(f)
+else:
+    example_specs = {"dependencies": []}
+
+# %%
+# find dependencies of the various environments
+dependencies = get_shared_lib_deps(common_env_name)
 if "dependencies" in library_specs.keys():
     dependencies.extend(
         [get_package_spec(dependency) for dependency in library_specs["dependencies"]]
@@ -148,6 +160,7 @@ if "dependencies" in example_specs.keys():
 
 humanized_deps = [dep.as_dependency() for dep in dependencies]
 
+# %%
 # quit if there are no dependencies
 if len(dependencies) == 0:
     print("No dependencies to install!")
@@ -192,12 +205,19 @@ def parse_global_installs(verbose: bool = False):
                 print("Library Version: {}".format(match.group("lib_version")))
                 print("Library Req: {}".format(match.group("lib_req")))
                 print("Library Storage Dir: {}".format(match.group("lib_dir")))
-            req_entry = list(
+            req_entry_by_owner = list(
                 filter(
                     lambda x: match.group("lib_req").lower() in x.lower(),
                     humanized_deps,
                 )
             )
+            eq_entry_by_name = list(
+                filter(
+                    lambda x: match.group("lib_name").lower() in x.lower(),
+                    humanized_deps,
+                )
+            )
+            req_entry = req_entry_by_owner + eq_entry_by_name
             is_in_reqs = len(req_entry) > 0
             if is_in_reqs:
                 req_position = humanized_deps.index(req_entry[0])
@@ -230,17 +250,18 @@ libs_to_install = []
 libs_to_update = []
 for dep_spec in dependencies:
     print()
-    if f"{dep_spec.owner}/{dep_spec.name}".lower() not in [
+    if f"{dep_spec.owner}/{dep_spec.name}".lower() in [
         lib["lib_req"].lower() for lib in lib_list
-    ]:
-        libs_to_install.append(dep_spec)
-    else:
+    ] or (
+        dep_spec.owner is None
+        and f"{dep_spec.name}".lower() in [lib["lib_name"].lower() for lib in lib_list]
+    ):
         libs_to_update.append(dep_spec)
+    else:
+        libs_to_install.append(dep_spec)
 
 
 # %%
-print(f"\nInstalling and updating common libraries in {shared_lib_dir}")
-
 # Create shared_lib_dir if it does not exist
 if not isdir(shared_lib_dir):
     makedirs(shared_lib_dir)
@@ -273,6 +294,8 @@ def create_pio_ci_command(
 
 
 # %%
+print(f"\nInstalling new common libraries in {shared_lib_dir}")
+
 def install_shared_dependencies(verbose):
     if int(verbose) >= 1:
         print("\nInstalling libraries")
@@ -297,6 +320,8 @@ install_shared_dependencies(True)
 
 
 # %%
+print(f"\nInstalling existing common libraries in {shared_lib_dir}")
+
 def update_shared_dependencies(verbose):
     if int(verbose) >= 1:
         print("\nUpdating libraries")
