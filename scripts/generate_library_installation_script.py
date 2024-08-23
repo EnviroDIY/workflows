@@ -229,7 +229,11 @@ if len(dependencies) == 0:
 
 # %%
 # helper functions to create commands
-def create_arduino_cli_command(library: dict) -> str:
+def create_arduino_cli_command(
+    library: dict,
+    update: bool = True,
+    include_version: bool = True,
+) -> str:
     arduino_command_args = [
         "arduino-cli",
         "--config-file",
@@ -243,6 +247,15 @@ def create_arduino_cli_command(library: dict) -> str:
     elif library["name"] in ["MS5803"]:
         arduino_command_args.append("--git-url")
         arduino_command_args.append(library["url"])
+    elif include_version:
+        clean_version = (
+            library["version"]
+            .replace("~", "")
+            .replace(">", "")
+            .replace("<", "")
+            .replace("=", "")
+        )
+        arduino_command_args.append(f"\"{library['name']}@{clean_version}\"")
     else:
         arduino_command_args.append(f"\"{library['name']}\"")
     arduino_command_args.append("--no-deps")
