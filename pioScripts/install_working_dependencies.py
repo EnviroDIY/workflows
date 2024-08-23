@@ -149,6 +149,8 @@ else:
 # %%
 # find dependencies of the various environments
 dependencies = get_shared_lib_deps(common_env_name)
+
+# %% Combine dependencies
 if "dependencies" in library_specs.keys():
     dependencies.extend(
         [get_package_spec(dependency) for dependency in library_specs["dependencies"]]
@@ -286,7 +288,7 @@ def create_pio_ci_command(
         pio_command_args.append(library.as_dependency())
         return pio_command_args
     elif isinstance(library, dict):
-        pio_command_args.append(convert_dep_dict_to_str(library))
+        pio_command_args.append(f'"{convert_dep_dict_to_str(library)}"')
         return pio_command_args
     elif isinstance(library, str):
         pio_command_args.append(library)

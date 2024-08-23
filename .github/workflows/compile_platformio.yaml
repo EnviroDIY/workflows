@@ -36,7 +36,7 @@ jobs:
           path: |
             continuous_integration_artifacts/
 
-      - name: copy scripts into working directory, if needed
+      - name: copy scripts into working directory
         id: copy_scripts
         run: |
           set -e
@@ -46,19 +46,9 @@ jobs:
               set -x
           fi
           mkdir -p continuous_integration
-          if [ ! -e continuous_integration/platformio.ini ] && [ -e continuous_integration_artifacts/platformio.ini ]
-          then
-            echo "No platformio configuration file found, copying ini from artifact"
-            mv continuous_integration_artifacts/platformio.ini continuous_integration/platformio.ini
-          fi
           mv continuous_integration_artifacts/install-platforms-platformio.sh install-platforms-platformio.sh
-          if [ ! -e continuous_integration/install-libraries-platformio.sh ] && [ -e continuous_integration_artifacts/install-libraries-platformio.sh ]
-          then
-            echo "No dependecy installation script found, copying script from artifact"
-            mv continuous_integration_artifacts/install-libraries-platformio.sh continuous_integration/install-libraries-platformio.sh
-          else
-            echo "No library dependencies to install"
-          fi
+          mv continuous_integration_artifacts/install-library-libdeps-platformio.sh continuous_integration/install-library-libdeps-platformio.sh
+          mv continuous_integration_artifacts/install-example-libdeps-platformio.sh continuous_integration/install-example-libdeps-platformio.sh
 
       - name: Restore PlatformIO platforms
         uses: actions/cache/restore@v4
@@ -86,41 +76,24 @@ jobs:
       #     chmod +x install-platforms-platformio.sh
       #     sh install-platforms-platformio.sh
 
-      - name: Verify the library deps install script exists
-        id: check_lib_install
-        run: |
-          set -e
-          if [ "$RUNNER_DEBUG" = "1" ]; then
-              echo "Enabling debugging!"
-              set -v
-              set -x
-          fi
-          if [ -e continuous_integration/install-libraries-platformio.sh ]
-          then
-            echo "Dependency installation script found at continuous_integration/install-libraries-platformio.sh"
-            echo "valid_lib_dep_script=true" >> $GITHUB_OUTPUT
-          else
-            echo "No dependecy installation script found!"
-            echo "valid_lib_dep_script=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Restore PlatformIO libraries
         uses: actions/cache/restore@v4
         id: restore_libraries
-        if: ${{ steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
         with:
           path: |
             ~/.platformio/lib
             $GITHUB_WORKSPACE/lib
-          key: ${{ hashFiles('continuous_integration/install-libraries-platformio.sh') }}
+          key: ${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
 
       # Install any library dependencies with PlatformIO at the global level, iff no cache
       - name: Install PlatformIO libraries
         id: install_libraries
-        if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.restore_libraries.outputs.cache-hit != 'true') }}
+        if: ${{ (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
-          chmod +x continuous_integration/install-libraries-platformio.sh
-          sh continuous_integration/install-libraries-platformio.sh
+          chmod +x continuous_integration/install-library-libdeps-platformio.sh
+          sh continuous_integration/install-library-libdeps-platformio.sh
+          chmod +x continuous_integration/install-example-libdeps-platformio.sh
+          sh continuous_integration/install-example-libdeps-platformio.sh
           cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/
 
       # Install the library at the Global level for PlatformIO
@@ -156,7 +129,7 @@ jobs:
       - name: Cache PlatformIO libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: ${{ always() && steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
+        if: ${{ always() }}
         with:
           path: |
             ~/.platformio/lib

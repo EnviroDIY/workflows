@@ -49,14 +49,9 @@ jobs:
               set -v
               set -x
           fi
-          if [ ! -e continuous_integration/install-libraries-platformio.sh ] && [ ! -e continuous_integration/install-libraries-arduino-cli.sh ]
-          then
-            echo "Generating dependency library installation script"
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_library_installation_script.py -o generate_library_installation_script.py
-            python -u generate_library_installation_script.py
-          else
-            echo "Dependency installation script found"
-          fi
+          echo "Generating dependency library installation scripts"
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_library_installation_script.py -o generate_library_installation_script.py
+          python -u generate_library_installation_script.py
 
       - name: Generate Example Build Matrices
         id: py_matrix

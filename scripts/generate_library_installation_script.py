@@ -13,6 +13,52 @@ use_verbose = False
 if "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1":
     use_verbose = True
 
+debug_text = """
+set -e # Exit with nonzero exit code if anything fails
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    echo "Enabling debugging!"
+    set -v # Prints shell input lines as they are read.
+    set -x # Print command traces before executing command.
+fi
+
+"""
+
+acli_start_text = """
+
+echo "\\e[32mCurrent Arduino CLI version:\\e[0m"
+arduino-cli version
+
+echo "\\e[32mUpdating the library index\\e[0m"
+arduino-cli --config-file arduino_cli.yaml lib update-index
+"""
+
+acli_end_text = """
+
+echo "::group::Current globally installed libraries"
+echo "\\e[32mCurrently installed libraries:\\e[0m"
+arduino-cli --config-file arduino_cli.yaml lib update-index
+arduino-cli --config-file arduino_cli.yaml lib list
+echo "::endgroup::"
+"""
+
+pio_start_text = """
+
+echo "\\e[32mCurrent PlatformIO version:\\e[0m"
+pio --version
+
+echo "\\e[32mCurrently installed libraries:\\e[0m"
+pio pkg list -g -v --only-libraries
+
+"""
+
+pio_end_text = """
+
+echo "::group::Current globally installed libraries"
+echo "\\e[32mCurrently installed packages:\\e[0m"
+pio pkg list -g -v --only-libraries
+echo "::endgroup::"
+"""
+
 
 # %%
 # Some working directories
@@ -82,21 +128,6 @@ else:
 # NOTE: No PlatformIO config file is needed to install libraries
 
 
-# %%
-# find dependencies based on the library specification
-if os.path.isfile(library_json_file):
-    with open(library_json_file) as f:
-        library_specs = json.load(f)
-else:
-    library_specs = {"dependencies": []}
-# find dependencies based on the examples dependency specs
-if os.path.isfile(examples_deps_file):
-    with open(examples_deps_file) as f:
-        example_specs = json.load(f)
-else:
-    example_specs = {"dependencies": []}
-
-
 def convert_dep_dict_to_str(dependency: dict, include_version: bool = True) -> str:
     install_str = ""
     if "owner" in dependency.keys() and "github" in dependency["version"]:
@@ -123,6 +154,21 @@ def convert_dep_dict_to_str(dependency: dict, include_version: bool = True) -> s
     return install_str
 
 
+# %%
+# find dependencies based on the library specification
+if os.path.isfile(library_json_file):
+    with open(library_json_file) as f:
+        library_specs = json.load(f)
+else:
+    library_specs = {"dependencies": []}
+# find dependencies based on the examples dependency specs
+if os.path.isfile(examples_deps_file):
+    with open(examples_deps_file) as f:
+        example_specs = json.load(f)
+else:
+    example_specs = {"dependencies": []}
+
+# %% Combine dependencies
 dependencies = []
 if "dependencies" in library_specs.keys():
     dependencies.extend(library_specs["dependencies"])
@@ -132,7 +178,7 @@ if "dependencies" in example_specs.keys():
 # quit if there are no dependencies
 if len(dependencies) == 0:
     print("No dependencies to install!")
-    sys.exit()
+    # sys.exit()
 
 
 # %%
@@ -165,7 +211,7 @@ def create_pio_ci_command(
         "-g",
         "--library",
     ]
-    pio_command_args.append(convert_dep_dict_to_str(library))
+    pio_command_args.append(f'"{convert_dep_dict_to_str(library)}"')
     return " ".join(pio_command_args)
 
 
@@ -177,29 +223,16 @@ def add_log_to_command(command: str, group_title: str) -> List:
 
 
 # %%
-# write the bash file for the ArduinoCLI
-bash_file_name = "install-libraries-arduino-cli.sh"
+# write the bash files for the ArduinoCLI
+
+# write bash to install library dependencies
+bash_file_name = "install-library-libdeps-arduino-cli.sh"
 print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
 bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
 bash_out.write("#!/bin/bash\n\n")
-bash_out.write(
-    """
-set -e # Exit with nonzero exit code if anything fails
-if [ "$RUNNER_DEBUG" = "1" ]; then
-    echo "Enabling debugging!"
-    set -v # Prints shell input lines as they are read.
-    set -x # Print command traces before executing command.
-fi
-
-echo "\\e[32mCurrent Arduino CLI version:\\e[0m"
-arduino-cli version
-
-echo "\\e[32mUpdating the library index\\e[0m"
-arduino-cli --config-file arduino_cli.yaml lib update-index
-"""
-)
-
-for library in dependencies:
+bash_out.write(debug_text)
+bash_out.write(acli_start_text)
+for library in library_specs["dependencies"]:
     install_command = create_arduino_cli_command(
         library=library,
     )
@@ -207,58 +240,62 @@ for library in dependencies:
         install_command, f"Installing {library['name']}"
     )
     bash_out.write("\n".join(command_with_log))
-bash_out.write(
-    """
-
-echo "::group::Current globally installed libraries"
-echo "\\e[32mCurrently installed libraries:\\e[0m"
-arduino-cli --config-file arduino_cli.yaml lib update-index
-arduino-cli --config-file arduino_cli.yaml lib list
-echo "::endgroup::"
-"""
-)
+bash_out.write(acli_end_text)
 bash_out.close()
 
-# %%
 
-# %%
-# write the bash file for PlatformIO
-bash_file_name = "install-libraries-platformio.sh"
+# write bash to install additional example dependencies
+bash_file_name = "install-example-libdeps-arduino-cli.sh"
 print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
 bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
 bash_out.write("#!/bin/bash\n\n")
-bash_out.write(
-    """
-set -e # Exit with nonzero exit code if anything fails
-if [ "$RUNNER_DEBUG" = "1" ]; then
-    echo "Enabling debugging!"
-    set -v # Prints shell input lines as they are read.
-    set -x # Print command traces before executing command.
-fi
+bash_out.write(debug_text)
+bash_out.write(acli_start_text)
+for library in example_specs["dependencies"]:
+    install_command = create_arduino_cli_command(
+        library=library,
+    )
+    command_with_log = add_log_to_command(
+        install_command, f"Installing {library['name']}"
+    )
+    bash_out.write("\n".join(command_with_log))
+bash_out.write(acli_end_text)
+bash_out.close()
 
-echo "\\e[32mCurrent PlatformIO version:\\e[0m"
-pio --version
+# %%
+# write the bash file for PlatformIO
 
-echo "\\e[32mCurrently installed libraries:\\e[0m"
-pio pkg list -g -v --only-libraries
-
-"""
-)
-for library in dependencies:
+# write bash to install library dependencies
+bash_file_name = "install-library-libdeps-platformio.sh"
+print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
+bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
+bash_out.write("#!/bin/bash\n\n")
+bash_out.write(debug_text)
+bash_out.write(pio_start_text)
+for library in library_specs["dependencies"]:
     install_command = create_pio_ci_command(library=library)
     command_with_log = add_log_to_command(
         install_command, f"Installing {library['name']}"
     )
     bash_out.write("\n".join(command_with_log))
-bash_out.write(
-    """
+bash_out.write(pio_end_text)
+bash_out.close()
 
-echo "::group::Current globally installed libraries"
-echo "\\e[32mCurrently installed packages:\\e[0m"
-pio pkg list -g -v --only-libraries
-echo "::endgroup::"
-"""
-)
+
+# write bash to install additional example dependencies
+bash_file_name = "install-example-libdeps-platformio.sh"
+print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
+bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
+bash_out.write("#!/bin/bash\n\n")
+bash_out.write(debug_text)
+bash_out.write(pio_start_text)
+for library in library_specs["dependencies"]:
+    install_command = create_pio_ci_command(library=library)
+    command_with_log = add_log_to_command(
+        install_command, f"Installing {library['name']}"
+    )
+    bash_out.write("\n".join(command_with_log))
+bash_out.write(pio_end_text)
 bash_out.close()
 
 

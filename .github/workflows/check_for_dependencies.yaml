@@ -5,17 +5,20 @@ on:
   workflow_call:
     # Map the workflow outputs to job outputs
     outputs:
-      has_dependencies:
-        value: ${{ jobs.check_for_dependencies.outputs.has_dependencies }}
+      has_library_dependencies:
+        value: ${{ jobs.check_for_dependencies.outputs.has_library_dependencies }}
+      has_example_dependencies:
+        value: ${{ jobs.check_for_dependencies.outputs.has_example_dependencies }}
       dep_hash:
         value: ${{ jobs.check_for_dependencies.outputs.dep_hash }}
 
 jobs:
   check_for_dependencies:
-    name: Check if there are any library dependencies
+    name: Check if there are any library or example dependencies
     runs-on: ubuntu-latest
     outputs:
-      has_dependencies: ${{ steps.store_dep_hash.outputs.has_dependencies }}
+      has_library_dependencies: ${{ steps.store_dep_hash.outputs.has_library_dependencies }}
+      has_example_dependencies: ${{ steps.store_dep_hash.outputs.has_example_dependencies }}
       dep_hash: ${{ steps.store_dep_hash.outputs.dep_hash }}
 
     steps:
@@ -30,39 +33,26 @@ jobs:
             set -v
             set -x
           fi
-          has_dependencies=false
-          cat > consolidated_deps.txt
-          if [ -e continuous_integration/install-libraries-platformio.sh ]
-          then
-            echo "Dependency installation script found at continuous_integration/install-libraries-platformio.sh"
-            has_dependencies=true
-            cat continuous_integration/install-libraries-platformio.sh >> consolidated_deps.txt
-          fi
-          if [ -e continuous_integration/install-libraries-arduino-cli.sh ]
-          then
-            echo "Dependency installation script found at continuous_integration/install-libraries-arduino-cli.sh"
-            has_dependencies=true
-            cat continuous_integration/install-libraries-arduino-cli.sh >> consolidated_deps.txt
-          fi
+          has_library_dependencies=false
+          has_example_dependencies=false
           if [ -e ./continuous_integration/dependencies.json ]
           then
             echo "Dependency installation script found at ./continuous_integration/dependencies.json"
-            has_dependencies=true
+            has_library_dependencies=true
             cat ./continuous_integration/dependencies.json >> consolidated_deps.txt
           fi
           if [ -e ./examples/example_dependencies.json ]
           then
             echo "Dependency installation script found at ./examples/example_dependencies.json"
-            has_dependencies=true
+            has_example_dependencies=true
             cat ./examples/example_dependencies.json >> consolidated_deps.txt
           fi
-          if [ "$has_dependencies" = "false" ]; then
-            echo "No dependencies found!"
-          fi
-          echo "HAS_DEPENDENCIES=${has_dependencies}" >> $GITHUB_ENV
+          echo "has_library_dependencies=${has_library_dependencies}" >> $GITHUB_ENV
+          echo "has_example_dependencies=${has_example_dependencies}" >> $GITHUB_ENV
 
       - name: Store Dependency File Hash
         id: store_dep_hash
         run: |
-          echo "has_dependencies=${{ env.HAS_DEPENDENCIES }}" >> $GITHUB_OUTPUT
+          echo "has_library_dependencies=${{ env.has_library_dependencies }}" >> $GITHUB_OUTPUT
+          echo "has_example_dependencies=${{ env.has_example_dependencies }}" >> $GITHUB_OUTPUT
           echo "dep_hash=${{ hashFiles('consolidated_deps.txt') }}" >> $GITHUB_OUTPUT
