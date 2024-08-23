@@ -45,14 +45,31 @@ jobs:
     name: Prepare Release Assets
     runs-on: ubuntu-latest
     needs: [check_version_number, check_for_dependencies]
-    if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies && needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
+    if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies && needs.check_for_dependencies.outputs.has_library_dependencies == 'true' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PlatformIO
-        uses: EnviroDIY/setup-platformio-action@v1.0.2
+      - name: Write the requirements file
+        run: |
+          echo "wheel" > requirements.txt
+          echo "adafruit-nrfutil" >> requirements.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      - name: Install python dependencies, including NRF-Utils needed for Adafruit Feathers
+        run: |
+          pip install -r requirements.txt
+
+      # We use the `arduino/setup-arduino-cli` action to install and
+      # configure the Arduino CLI on the system.
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v2.0.0
 
       - name: Generate Library Installation Script
         id: py_libraries
@@ -63,14 +80,9 @@ jobs:
               set -v
               set -x
           fi
-          if [ ! -e continuous_integration/install-libraries-platformio.sh ]
-          then
-            echo "Generating dependency library installation script"
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_library_installation_script.py -o generate_library_installation_script.py
-            python -u generate_library_installation_script.py
-          else
-            echo "Dependency installation script found"
-          fi
+          echo "Generating dependency library installation script"
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_library_installation_script.py -o generate_library_installation_script.py
+          python -u generate_library_installation_script.py
 
       - name: copy scripts into working directory, if needed
         id: copy_scripts
@@ -82,56 +94,46 @@ jobs:
               set -x
           fi
           mkdir -p continuous_integration
-          if [ ! -e continuous_integration/install-libraries-platformio.sh ] && [ -e continuous_integration_artifacts/install-libraries-platformio.sh ]
-          then
-            echo "No dependecy installation script found, copying script from artifact"
-            mv continuous_integration_artifacts/install-libraries-platformio.sh continuous_integration/install-libraries-platformio.sh
-          else
-            echo "No library dependencies to install"
-          fi
+          mv continuous_integration_artifacts/install-library-libdeps-arduino-cli.sh continuous_integration/install-library-libdeps-arduino-cli.sh
+          mv continuous_integration_artifacts/install-example-libdeps-arduino-cli.sh continuous_integration/install-example-libdeps-arduino-cli.sh
 
-      - name: Verify the library deps install script exists
-        id: check_lib_install
+      - name: Download Arduino CLI config
+        id: cli_config
         run: |
-          set -e
-          if [ "$RUNNER_DEBUG" = "1" ]; then
-              echo "Enabling debugging!"
-              set -v
-              set -x
-          fi
-          if [ -e continuous_integration/install-libraries-platformio.sh ]
-          then
-            echo "Dependency installation script found at continuous_integration/install-libraries-platformio.sh"
-            echo "valid_lib_dep_script=true" >> $GITHUB_OUTPUT
-          else
-            echo "No dependecy installation script found!"
-            echo "valid_lib_dep_script=false" >> $GITHUB_OUTPUT
-          fi
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
 
-      - name: Restore PlatformIO libraries
+      - name: Restore Arduino libraries
         uses: actions/cache/restore@v4
         id: restore_libraries
-        if: ${{ steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
         with:
           path: |
-            ~/.platformio/lib
-            $GITHUB_WORKSPACE/lib
-          key: ${{ hashFiles('continuous_integration/install-libraries-platformio.sh') }}
+            home/arduino/user
+          key: ${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
 
-      # Install any library dependencies with PlatformIO at the global level, iff no cache
-      - name: Install PlatformIO libraries
+      # Install any library dependencies for the Arduino CLI, iff no cache
+      # NOTE: Don't update the dependencies beyond what's in the install script!
+      - name: Install the Arduino libraries
         id: install_libraries
-        if: ${{ (steps.check_lib_install.outputs.valid_lib_dep_script == 'true') && (steps.restore_libraries.outputs.cache-hit != 'true') }}
+        if: ${{ (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
-          chmod +x continuous_integration/install-libraries-platformio.sh
-          sh continuous_integration/install-libraries-platformio.sh
-          cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/
+          chmod +x continuous_integration/install-library-libdeps-arduino-cli.sh
+          sh continuous_integration/install-library-libdeps-arduino-cli.sh
+          chmod +x continuous_integration/install-example-libdeps-arduino-cli.sh
+          sh continuous_integration/install-example-libdeps-arduino-cli.sh
 
       - name: Install the library from the master branch
         id: install_master_library
         run: |
-          pio pkg install --skip-dependencies -g --library https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
-          pio pkg list -g --only-libraries
+          arduino-cli --config-file continuous_integration/arduino_cli.yaml lib install --git-url https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/} --no-deps
+
+          echo "\e[32mUpdating the library index\e[0m"
+          arduino-cli --config-file continuous_integration/arduino_cli.yaml lib update-index
+
+          echo "\e[32mListing libraries detected by the Arduino CLI\e[0m"
+          arduino-cli --config-file continuous_integration/arduino_cli.yaml lib list
+
+          echo "\e[32mListing the contents of the Arduino library directory\e[0m"
+          ls home/arduino/user/libraries
 
       # zip up all the installed libraries
       # need to cd into the pio directory so we don't get extra junk directories
@@ -140,7 +142,7 @@ jobs:
           echo "::debug::Listing global libraries"
           pio pkg list -g -v --only-libraries
           echo "::debug::Zipping global libraries"
-          cd /home/runner/.platformio/
+          cd /home/user/Arduino/libraries
           zip ${{ needs.check_version_number.outputs.zip_name }}.zip -r lib
           mv ${{ needs.check_version_number.outputs.zip_name }}.zip $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE
@@ -153,22 +155,13 @@ jobs:
           path: |
             ${{ needs.check_version_number.outputs.zip_name }}.zip
 
-      # Uninstall the master library so it's not cached
-      # if it's cached, we could end up with multiple versions of the same file
-      - name: Uninstall the Master Library
-        id: uninstall_master_library
-        run: |
-          pio pkg uninstall --skip-dependencies -g --library https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/}
-          pio pkg list -g --only-libraries
-
-      - name: Cache PlatformIO libraries
+      - name: Cache Arduino libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: ${{ always() && steps.check_lib_install.outputs.valid_lib_dep_script == 'true'}}
+        if: ${{ always() }}
         with:
           path: |
-            ~/.platformio/lib
-            $GITHUB_WORKSPACE/lib
+            home/arduino/user
           key: ${{ steps.restore_libraries.outputs.cache-primary-key }}
 
 
@@ -176,7 +169,7 @@ jobs:
     name: Create a Release with Assets
     runs-on: ubuntu-latest
     needs: [check_version_number, prepare_assets]
-    if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies && needs.check_for_dependencies.outputs.has_dependencies == 'true' }}
+    if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies && needs.check_for_dependencies.outputs.has_library_dependencies == 'true' }}
 
     steps:
       - name: Checkout code
@@ -217,7 +210,7 @@ jobs:
     name: Create a New Release
     runs-on: ubuntu-latest
     needs: [check_version_number]
-    if: ${{ ! failure() && ! cancelled() && (! inputs.include_dependencies || needs.check_for_dependencies.outputs.has_dependencies == 'false') }}
+    if: ${{ ! failure() && ! cancelled() && (! inputs.include_dependencies || needs.check_for_dependencies.outputs.has_library_dependencies == 'false') }}
 
     steps:
       - name: Checkout code
