@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # %%
 import copy
 import os
@@ -285,13 +286,13 @@ def create_pio_ci_command(
         "--library",
     ]
     if isinstance(library, PackageSpec):
-        pio_command_args.append(library.as_dependency())
+        pio_command_args.append(f'"{library.as_dependency()}"')
         return pio_command_args
     elif isinstance(library, dict):
         pio_command_args.append(f'"{convert_dep_dict_to_str(library)}"')
         return pio_command_args
     elif isinstance(library, str):
-        pio_command_args.append(library)
+        pio_command_args.append(f'"{library}"')
         return pio_command_args
 
 
