@@ -207,16 +207,22 @@ if os.path.isfile(examples_deps_file):
 else:
     example_specs = {"dependencies": []}
 
+# %%
+# make sure the 'dependencies' key exists, add if not
+dependencies = []
+if "dependencies" not in library_specs.keys():
+    library_specs["dependencies"] = []
+if "dependencies" not in example_specs.keys():
+    example_specs["dependencies"] = []
+
 # %% Combine dependencies
 dependencies = []
-if "dependencies" in library_specs.keys():
-    dependencies.extend(
-        [get_package_spec(dependency) for dependency in library_specs["dependencies"]]
-    )
-if "dependencies" in example_specs.keys():
-    dependencies.extend(
-        [get_package_spec(dependency) for dependency in example_specs["dependencies"]]
-    )
+dependencies.extend(
+    [get_package_spec(dependency) for dependency in library_specs["dependencies"]]
+)
+dependencies.extend(
+    [get_package_spec(dependency) for dependency in example_specs["dependencies"]]
+)
 
 humanized_deps = [dep.as_dependency() for dep in dependencies]
 
