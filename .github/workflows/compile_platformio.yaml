@@ -94,7 +94,7 @@ jobs:
           sh continuous_integration/install-library-libdeps-platformio.sh
           chmod +x continuous_integration/install-example-libdeps-platformio.sh
           sh continuous_integration/install-example-libdeps-platformio.sh
-          cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/
+          cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/ || true
 
       # Install the library at the Global level for PlatformIO
       - name: Install the testing version of the library for PlatformIO
