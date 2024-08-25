@@ -50,6 +50,7 @@ jobs:
           mv continuous_integration_artifacts/install-library-libdeps-platformio.sh continuous_integration/install-library-libdeps-platformio.sh
           mv continuous_integration_artifacts/install-example-libdeps-platformio.sh continuous_integration/install-example-libdeps-platformio.sh
           if [ ! -e ./continuous_integration/platformio.ini ]
+          then
             mv continuous_integration_artifacts/platformio.ini continuous_integration/platformio.ini
           fi
 
