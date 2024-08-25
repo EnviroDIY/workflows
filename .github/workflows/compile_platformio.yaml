@@ -49,6 +49,9 @@ jobs:
           mv continuous_integration_artifacts/install-platforms-platformio.sh install-platforms-platformio.sh
           mv continuous_integration_artifacts/install-library-libdeps-platformio.sh continuous_integration/install-library-libdeps-platformio.sh
           mv continuous_integration_artifacts/install-example-libdeps-platformio.sh continuous_integration/install-example-libdeps-platformio.sh
+          if [ ! -e ./continuous_integration/platformio.ini ]
+            mv continuous_integration_artifacts/platformio.ini continuous_integration/platformio.ini
+          fi
 
       - name: Restore PlatformIO platforms
         uses: actions/cache/restore@v4
