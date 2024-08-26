@@ -145,7 +145,7 @@ jobs:
           arduino-cli --config-file continuous_integration/arduino_cli.yaml lib list
           echo "::debug::Zipping Arduino libraries"
           cd home/arduino/user/libraries
-          zip ${{ needs.check_version_number.outputs.zip_name }}.zip -r lib
+          zip ${{ needs.check_version_number.outputs.zip_name }}.zip -r .
           mv ${{ needs.check_version_number.outputs.zip_name }}.zip $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE
           ls
