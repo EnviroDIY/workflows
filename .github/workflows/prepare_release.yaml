@@ -55,6 +55,8 @@ jobs:
         run: |
           echo "wheel" > requirements.txt
           echo "adafruit-nrfutil" >> requirements.txt
+          echo "platformio" >> requirements.txt
+          echo "requests" >> requirements.txt
 
       - name: Set up Python
         uses: actions/setup-python@v5
