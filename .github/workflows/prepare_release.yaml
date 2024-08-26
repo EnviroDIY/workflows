@@ -141,10 +141,10 @@ jobs:
       # need to cd into the pio directory so we don't get extra junk directories
       - name: Zip libraries
         run: |
-          echo "::debug::Listing global libraries"
-          pio pkg list -g -v --only-libraries
-          echo "::debug::Zipping global libraries"
-          cd /home/user/Arduino/libraries
+          echo "::debug::Listing Arduino libraries"
+          arduino-cli --config-file continuous_integration/arduino_cli.yaml lib list
+          echo "::debug::Zipping Arduino libraries"
+          cd home/arduino/user/libraries
           zip ${{ needs.check_version_number.outputs.zip_name }}.zip -r lib
           mv ${{ needs.check_version_number.outputs.zip_name }}.zip $GITHUB_WORKSPACE
           cd $GITHUB_WORKSPACE
