@@ -66,12 +66,18 @@ jobs:
           mv continuous_integration_artifacts/install-platforms-arduino-cli.sh install-platforms-arduino-cli.sh
           mv continuous_integration_artifacts/install-library-libdeps-arduino-cli.sh continuous_integration/install-library-libdeps-arduino-cli.sh
           mv continuous_integration_artifacts/install-example-libdeps-arduino-cli.sh continuous_integration/install-example-libdeps-arduino-cli.sh
-          mv continuous_integration_artifacts/arduino_cli.yaml continuous_integration/arduino_cli.yaml
+          if [ -e continuous_integration_artifacts/arduino_cli.yaml ]
+          then
+            mv continuous_integration_artifacts/arduino_cli.yaml continuous_integration/arduino_cli.yaml || true
+          fi
 
-      # - name: Download Arduino CLI config
-      #   id: cli_config
-      #   run: |
-      #     curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
+      - name: Download Arduino CLI config
+        id: cli_config
+        run: |
+          if [ ! -e ./continuous_integration/arduino_cli.yaml ]
+          then
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
+          fi
 
       - name: Restore Arduino platforms
         uses: actions/cache/restore@v4
