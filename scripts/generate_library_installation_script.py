@@ -93,6 +93,7 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
     workspace_dir = os.environ.get("GITHUB_WORKSPACE")
 else:
     workspace_dir = os.getcwd()
+    workspace_dir = "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors"
 
 # %%
 workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
@@ -282,7 +283,7 @@ def create_pio_ci_command(
         "pio",
         "pkg",
         "update" if update else "install",
-        # "--skip-dependencies",
+        "--skip-dependencies",
         "-g",
         "--library",
     ]
