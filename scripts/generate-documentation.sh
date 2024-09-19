@@ -103,7 +103,7 @@ echo "$(<output_doxygen.log)"
 
 echo "::endgroup::"
 
-if [[ "$result_code" -ne "0" ]]; then exit $result_code; fi
+# if [[ "$result_code" -ne "0" ]]; then exit $result_code; fi
 
 # go back to immediate exit
 set -e

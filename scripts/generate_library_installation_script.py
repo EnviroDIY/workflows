@@ -209,15 +209,14 @@ else:
     example_specs = {"dependencies": []}
 
 # %%
-# make sure the 'dependencies' key exists, add if not
 dependencies = []
+# make sure the "dependencies" key exists, add if not
 if "dependencies" not in library_specs.keys():
     library_specs["dependencies"] = []
 if "dependencies" not in example_specs.keys():
     example_specs["dependencies"] = []
 
 # %% Combine dependencies
-dependencies = []
 dependencies.extend(
     [get_package_spec(dependency) for dependency in library_specs["dependencies"]]
 )

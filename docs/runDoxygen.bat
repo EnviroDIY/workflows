@@ -91,6 +91,7 @@ set PLATFORMIO_PACKAGES_DIR=C:/Users/sdamiano/.platformio/PLATFORMIO_PACKAGES_DI
 
 echo Generating Doxygen code documentation...
 "C:\Program Files\doxygen\bin\doxygen.exe" Doxyfile > output_doxygen_run.log 2>&1
+@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d filteroutput -d preprocessor Doxyfile > output_doxygen_run.log 2>&1
 @REM "C:\Program Files\doxygen\bin\doxygen.exe" -d filteroutput -d commentcnv -d markdown Doxyfile > output_doxygen_run.log 2>&1
 endlocal
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # %%
+from collections import OrderedDict
 import copy
 import os
 import sys
@@ -70,21 +71,31 @@ common_env_name = "env"
 
 # %%
 # functions to find dependencies in the platformio.ini file
-def get_shared_lib_deps(env):
-    # Get lib_deps in the custom shared_lib_deps folder
-    raw_lib_deps_custom = proj_config.get(
-        section=f"env:{env}", option="custom_shared_lib_deps", default=""
-    )
-    lib_deps_custom = proj_config.parse_multi_values(raw_lib_deps_custom)
-    # Get lib_deps in the custom shared_lib_deps folder
+def get_shared_lib_deps(env="env"):
+    # Get dependencies listed in the standard lib_deps section for the specified environment
     raw_lib_deps_std = proj_config.get(
         section=f"env:{env}", option="lib_deps", default=""
     )
     lib_deps_std = proj_config.parse_multi_values(raw_lib_deps_std)
+    # Remove any libraries that are symlinks from the list!
+    # The symlinks are created by this program, so if we don't ignore them, everything is duplicated
+    lib_deps_std_nolinks = [
+        lib_dep for lib_dep in lib_deps_std if "symlink" not in lib_dep
+    ]
+    print(f'Dependencies (lib_deps) for environment "{env}"')
+    print(lib_deps_std_nolinks)
+
+    # Get dependencies listed in the custom_shared_lib_deps section for the specified environment
+    raw_lib_deps_custom = proj_config.get(
+        section=f"env:{env}", option="custom_shared_lib_deps", default=""
+    )
+    lib_deps_custom = proj_config.parse_multi_values(raw_lib_deps_custom)
+    print(f'Custom dependencies (custom_shared_lib_deps) for environment "{env}"')
+    print(lib_deps_custom)
 
     # convert each custom lib_dep to a PlatformIO PackageSpec
     lib_deps_specs = []
-    for lib_deps in lib_deps_custom + lib_deps_std:
+    for lib_deps in lib_deps_custom + lib_deps_std_nolinks:
         spec = PackageSpec(lib_deps)
         lib_deps_specs.append(copy.deepcopy(spec))
     return lib_deps_specs
@@ -150,18 +161,23 @@ else:
 # %%
 # find dependencies of the various environments
 dependencies = get_shared_lib_deps(common_env_name)
+# make sure the "dependencies" key exists, add if not
+if "dependencies" not in library_specs.keys():
+    library_specs["dependencies"] = []
+if "dependencies" not in example_specs.keys():
+    example_specs["dependencies"] = []
 
 # %% Combine dependencies
-if "dependencies" in library_specs.keys():
-    dependencies.extend(
-        [get_package_spec(dependency) for dependency in library_specs["dependencies"]]
-    )
-if "dependencies" in example_specs.keys():
-    dependencies.extend(
-        [get_package_spec(dependency) for dependency in example_specs["dependencies"]]
-    )
+dependencies.extend(
+    [get_package_spec(dependency) for dependency in library_specs["dependencies"]]
+)
+dependencies.extend(
+    [get_package_spec(dependency) for dependency in example_specs["dependencies"]]
+)
 
 humanized_deps = [dep.as_dependency() for dep in dependencies]
+print("Humanized dependencies:")
+print(humanized_deps)
 
 # %%
 # quit if there are no dependencies
@@ -180,8 +196,8 @@ def parse_global_installs(verbose: bool = False):
     list_cmd.extend(["--storage-dir", shared_lib_dir])
 
     # Run list command
-    print("Listing libraries")
     if int(verbose) >= 1:
+        print("Global library list command")
         print(" ".join(list_cmd))
     try:
         list_result = subprocess.run(
@@ -206,21 +222,30 @@ def parse_global_installs(verbose: bool = False):
             if int(verbose) >= 1:
                 print("Library name: {}".format(match.group("lib_name")))
                 print("Library Version: {}".format(match.group("lib_version")))
-                print("Library Req: {}".format(match.group("lib_req")))
                 print("Library Storage Dir: {}".format(match.group("lib_dir")))
+                print("Library Req: {}".format(match.group("lib_req")))
             req_entry_by_owner = list(
                 filter(
                     lambda x: match.group("lib_req").lower() in x.lower(),
                     humanized_deps,
                 )
             )
+            if int(verbose) >= 1:
+                print("Library Req Entry by Owner: {}".format(req_entry_by_owner))
             eq_entry_by_name = list(
                 filter(
                     lambda x: match.group("lib_name").lower() in x.lower(),
                     humanized_deps,
                 )
             )
-            req_entry = req_entry_by_owner + eq_entry_by_name
+            if int(verbose) >= 1:
+                print("Library Req Entry by Name: {}".format(eq_entry_by_name))
+
+            req_entry = list(
+                OrderedDict.fromkeys(req_entry_by_owner + eq_entry_by_name)
+            )
+            if int(verbose) >= 1:
+                print("Req Entry: {}".format(req_entry))
             is_in_reqs = len(req_entry) > 0
             if is_in_reqs:
                 req_position = humanized_deps.index(req_entry[0])
@@ -241,18 +266,19 @@ def parse_global_installs(verbose: bool = False):
 
     lib_list = sorted(lib_list_presort, key=lambda d: d["req_position"])
     if int(verbose) >= 1:
-        print(lib_list)
+        print("Listing libraries")
+        print(json.dumps(lib_list))
     return lib_list
 
 
 lib_list = parse_global_installs(False)
-print(lib_list)
+print("Listing libraries")
+print(json.dumps(lib_list))
 
 # decide what to install and what to update
 libs_to_install = []
 libs_to_update = []
 for dep_spec in dependencies:
-    print()
     if f"{dep_spec.owner}/{dep_spec.name}".lower() in [
         lib["lib_req"].lower() for lib in lib_list
     ] or (
@@ -286,13 +312,16 @@ def create_pio_ci_command(
         "--library",
     ]
     if isinstance(library, PackageSpec):
-        pio_command_args.append(f'"{library.as_dependency()}"')
+        pio_command_args.append(library.as_dependency())
+        # pio_command_args.append(f'"{library.as_dependency()}"')
         return pio_command_args
     elif isinstance(library, dict):
-        pio_command_args.append(f'"{convert_dep_dict_to_str(library)}"')
+        pio_command_args.append(convert_dep_dict_to_str(library))
+        # pio_command_args.append(f'"{convert_dep_dict_to_str(library)}"')
         return pio_command_args
     elif isinstance(library, str):
-        pio_command_args.append(f'"{library}"')
+        pio_command_args.append(library)
+        # pio_command_args.append(f'"{library}"')
         return pio_command_args
 
 
@@ -313,17 +342,18 @@ def install_shared_dependencies(verbose):
             print(" ".join(lib_install_cmd))
         # Run command
         install_result = subprocess.run(
-            lib_install_cmd, capture_output=True, text=True, check=True
+            lib_install_cmd, capture_output=True, text=True, check=False
         )
         print(install_result.stdout)
-        # print(install_result.stderr)
+        print(install_result.stderr)
+        install_result.check_returncode()
 
 
 install_shared_dependencies(True)
 
 
 # %%
-print(f"\nInstalling existing common libraries in {shared_lib_dir}")
+print(f"\nUpdating existing common libraries in {shared_lib_dir}")
 
 def update_shared_dependencies(verbose):
     if int(verbose) >= 1:
@@ -338,11 +368,15 @@ def update_shared_dependencies(verbose):
             print(f"Updating {lib}")
             print(" ".join(lib_update_cmd))
         # Run update command
+        # update_result = subprocess.run(
+        #     lib_update_cmd, capture_output=True, text=True, check=True
+        # )
         update_result = subprocess.run(
-            lib_update_cmd, capture_output=True, text=True, check=True
+            lib_update_cmd, capture_output=True, text=True, check=False
         )
         print(update_result.stdout)
-        # print(update_result.stderr)
+        print(update_result.stderr)
+        update_result.check_returncode()
 
 
 update_shared_dependencies(True)
@@ -414,20 +448,26 @@ with open(libdeps_ini_file, "w+") as out_file:
 
     out_file.write("lib_deps =\n")
     for item in common_lib_symlinks["all_symlinks"]:
-        out_file.write("   ")
+        out_file.write("    ")
         out_file.write(item)
         out_file.write("\n")
 
     out_file.write("lib_ignore =\n")
     ignored_folders = [
         ".git",
+        ".github",
         ".pio",
         ".vscode",
         ".history",
+        "boards",
+        "continuous_integration",
+        "continuous_integration_artifacts",
+        "docs",
         "doc",
         "examples",
         "extras",
         "sensor_tests",
+        "ex_one_offs",
     ]
     for folder in ignored_folders:
         out_file.write("   ")
@@ -436,7 +476,7 @@ with open(libdeps_ini_file, "w+") as out_file:
     for lib in lib_list:
         is_req = lib["is_in_reqs"]
         if not is_req:
-            out_file.write("   ")
+            out_file.write("    ")
             out_file.write(lib["lib_name"])
             out_file.write("\n")
 
