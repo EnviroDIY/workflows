@@ -289,6 +289,11 @@ for dep_spec in dependencies:
     else:
         libs_to_install.append(dep_spec)
 
+print("Libraries to install")
+print([dep.as_dependency() for dep in libs_to_install])
+print("\nLibraries to update")
+print([dep.as_dependency() for dep in libs_to_update])
+
 
 # %%
 # Create shared_lib_dir if it does not exist

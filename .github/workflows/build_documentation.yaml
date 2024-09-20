@@ -82,11 +82,31 @@ jobs:
         run: |
           pip install --upgrade --upgrade-strategy only-if-needed -r requirements.txt
 
+      # NOTE: The packages mostly match scheme-medium, with the removal of some languages and addition of standalone
+      # https://tug.org/svn/texlive/trunk/Master/tlpkg/tlpsrc/scheme-medium.tlpsrc?view=markup
       - name: Install or Restore Tex Live
         id: install_tex_live
         uses: zauguin/install-texlive@v3
         with:
-          packages: scheme-medium
+          packages:
+            collection-basic
+            collection-binextra
+            collection-context
+            collection-fontsrecommended
+            collection-fontutils
+            collection-langenglish
+            collection-langeuropean
+            collection-langportuguese
+            collection-langspanish
+            collection-latex
+            collection-latexrecommended
+            collection-luatex
+            collection-mathscience
+            collection-metapost
+            collection-plaingeneric
+            collection-texworks
+            collection-xetex
+            standalone
           cache_version: ${{ inputs.rebuild_cache_number }}
 
       - name: Install or Restore basic apt-get packages

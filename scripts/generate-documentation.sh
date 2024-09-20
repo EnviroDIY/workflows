@@ -25,6 +25,12 @@ echo "\e[32mCurrent GraphViz (dot) version......\e[0m"
 dot -V || true
 echo "\e[32mCurrent TeXLive Version......\e[0m"
 latex --version
+# list all the TeX Live packages, if debugging is on
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    echo "::group::Installed TeX Live Packages"
+    tlmgr info --list --only-installed --data name
+    echo "::endgroup::"
+fi
 echo "\e[32mCurrent Python Version......\e[0m"
 python --version
 
@@ -36,7 +42,7 @@ cd ${MCSS_DIR}css/EnviroDIY
 # pygmentize -f html -S default -a ".m-code-pygments-default" >pygments-default.css
 python -u "${MCSS_DIR}css/postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"
 
-#list the directory contents if GitHub actions debugging is on
+# list the directory contents if GitHub actions debugging is on
 if [ "$RUNNER_DEBUG" = "1" ]; then
     ls ${MCSS_DIR}css/EnviroDIY/ -R
 fi
