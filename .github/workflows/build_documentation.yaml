@@ -107,6 +107,7 @@ jobs:
             collection-texworks
             collection-xetex
             standalone
+            preview
           cache_version: ${{ inputs.rebuild_cache_number }}
 
       - name: Install or Restore basic apt-get packages
