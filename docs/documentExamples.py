@@ -17,6 +17,7 @@ else:
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
     relative_dir = f"../../{repo_name}/"
 
+# %%
 # where to write the file
 output_file = relative_dir + "docs/examples.dox"
 output_file = os.path.join(docbuild_dir, output_file)
@@ -40,19 +41,23 @@ print(f"DOX Output Path: {output_file}")
 
 
 # %%
+examples_to_doc = []
 # Find all of the examples in the examples folder, append the path "examples" to it
-examples_to_doc = [
-    os.path.abspath(os.path.realpath(f"{examples_path}/{f}/{f}.ino"))
-    for f in os.listdir(examples_path)
-    if os.path.isdir(os.path.join(examples_path, f))
-    and f not in [".history", "logger_test", "menu_a_la_carte"]
-]
-examples_to_doc += [
-    os.path.abspath(os.path.realpath(f"{extras_path}/{f}/{f}.ino"))
-    for f in os.listdir(extras_path)
-    if os.path.isdir(os.path.join(extras_path, f))
-    and f not in [".history", "logger_test", "menu_a_la_carte"]
-]
+if os.path.isdir(f"{examples_path}"):
+    examples_to_doc += [
+        os.path.abspath(os.path.realpath(f"{examples_path}/{f}/{f}.ino"))
+        for f in os.listdir(examples_path)
+        if os.path.isdir(os.path.join(examples_path, f))
+        and f not in [".history", "logger_test", "menu_a_la_carte"]
+    ]
+# append any additional examples from the extras folder, iff it exists
+if os.path.isdir(f"{extras_path}"):
+    examples_to_doc += [
+        os.path.abspath(os.path.realpath(f"{extras_path}/{f}/{f}.ino"))
+        for f in os.listdir(extras_path)
+        if os.path.isdir(os.path.join(extras_path, f))
+        and f not in [".history", "logger_test", "menu_a_la_carte"]
+    ]
 print("Examples to document:")
 print("    ", end="")
 print("\n    ".join(examples_to_doc))
