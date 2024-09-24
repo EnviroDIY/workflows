@@ -90,24 +90,15 @@ jobs:
         with:
           packages:
             collection-basic
-            collection-binextra
             collection-context
             collection-fontsrecommended
+            collection-fontsextra
             collection-fontutils
             collection-langenglish
-            collection-langeuropean
-            collection-langportuguese
-            collection-langspanish
             collection-latex
             collection-latexrecommended
-            collection-luatex
+            collection-latexextra
             collection-mathscience
-            collection-metapost
-            collection-plaingeneric
-            collection-texworks
-            collection-xetex
-            standalone
-            preview
           cache_version: ${{ inputs.rebuild_cache_number }}
 
       - name: Install or Restore basic apt-get packages
