@@ -56,6 +56,11 @@ try:
     active_env_name = env["PIOENV"]
 except:
     cwd = os.getcwd()
+    if (
+        cwd.lower()
+        == "c:\\users\\sdamiano\\documents\\github\\envirodiy\\workflows\\pioscripts"
+    ):
+        cwd = "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors"
     shared_lib_dir = f"{cwd}\\lib"
     shared_lib_abbr = "lib"
     project_ini_file = f"{cwd}\\platformio.ini"
@@ -475,7 +480,7 @@ with open(libdeps_ini_file, "w+") as out_file:
         "ex_one_offs",
     ]
     for folder in ignored_folders:
-        out_file.write("   ")
+        out_file.write("    ")
         out_file.write(folder)
         out_file.write("\n")
     for lib in lib_list:

@@ -14,6 +14,13 @@ if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     relative_dir = f"../../../../{repo_name}/"
 else:
     docbuild_dir = os.getcwd()
+    if (
+        docbuild_dir.lower()
+        == "c:\\users\\sdamiano\\documents\\github\\envirodiy\\workflows\\docs"
+    ):
+        docbuild_dir = (
+            "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors\\docs"
+        )
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
     relative_dir = f"../../{repo_name}/"
 
@@ -45,18 +52,30 @@ examples_to_doc = []
 # Find all of the examples in the examples folder, append the path "examples" to it
 if os.path.isdir(f"{examples_path}"):
     examples_to_doc += [
-        os.path.abspath(os.path.realpath(f"{examples_path}/{f}/{f}.ino"))
-        for f in os.listdir(examples_path)
-        if os.path.isdir(os.path.join(examples_path, f))
-        and f not in [".history", "logger_test", "menu_a_la_carte"]
+        os.path.abspath(
+            os.path.realpath(f"{examples_path}/{example_dir}/{example_dir}.ino")
+        )
+        for example_dir in os.listdir(examples_path)
+        if os.path.isdir(os.path.join(examples_path, example_dir))
+        and os.path.isfile(
+            os.path.abspath(
+                os.path.realpath(f"{examples_path}/{example_dir}/{example_dir}.ino")
+            )
+        )
+        and example_dir not in [".history", "logger_test", "menu_a_la_carte"]
     ]
 # append any additional examples from the extras folder, iff it exists
 if os.path.isdir(f"{extras_path}"):
     examples_to_doc += [
-        os.path.abspath(os.path.realpath(f"{extras_path}/{f}/{f}.ino"))
-        for f in os.listdir(extras_path)
-        if os.path.isdir(os.path.join(extras_path, f))
-        and f not in [".history", "logger_test", "menu_a_la_carte"]
+        os.path.abspath(os.path.realpath(f"{extras_path}/{extra_dir}/{extra_dir}.ino"))
+        for extra_dir in os.listdir(extras_path)
+        if os.path.isdir(os.path.join(extras_path, extra_dir))
+        and os.path.isfile(
+            os.path.abspath(
+                os.path.realpath(f"{examples_path}/{extra_dir}/{extra_dir}.ino")
+            )
+        )
+        and extra_dir not in [".history", "logger_test", "menu_a_la_carte"]
     ]
 print("Examples to document:")
 print("    ", end="")
@@ -65,6 +84,8 @@ print("\n    ".join(examples_to_doc))
 # %%
 with open(output_file, "w+") as out_file:
     for filename in examples_to_doc:
+        if not os.path.isfile(filename):
+            continue
         print(f"\nCurrent example: {filename}")
         with open(filename, "r") as in_file:  # open in readonly mode
             i = 1
