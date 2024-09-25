@@ -97,7 +97,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
-            dia curl wget mscgen
+            dia curl wget mscgen ghostscript
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
