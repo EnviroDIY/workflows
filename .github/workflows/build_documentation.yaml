@@ -89,7 +89,7 @@ jobs:
         uses: zauguin/install-texlive@v3
         with:
           packages: >
-            collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience
+            collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience dvisvgm
           cache_version: ${{ inputs.rebuild_cache_number }}
 
       - name: Install or Restore basic apt-get packages
@@ -97,7 +97,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: >
-            dia curl wget mscgen python3-tk ghostscript
+            dia curl wget mscgen python3-tk ghostscript dvisvgm
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
@@ -258,6 +258,7 @@ jobs:
           LD_LIBRARY_PATH: /usr/lib:/usr/local/lib:/usr/local/bin/dot:/usr/bin/dot:/opt/hostedtoolcache/Python/3.12.3/x64/lib
           WORKSPACE_DIR: ${{ github.workspace }}
         run: |
+          fmtutil-user --all
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
           chmod +x generate-documentation.sh
