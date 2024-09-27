@@ -89,7 +89,7 @@ jobs:
         uses: zauguin/install-texlive@v3
         with:
           packages: >
-            collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience dvisvgm
+            collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience dvisvgm tex-gyre tex-gyre-math
           cache_version: ${{ inputs.rebuild_cache_number }}
 
       - name: Install or Restore basic apt-get packages
