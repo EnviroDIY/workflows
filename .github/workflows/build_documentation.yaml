@@ -258,7 +258,9 @@ jobs:
           LD_LIBRARY_PATH: /usr/lib:/usr/local/lib:/usr/local/bin/dot:/usr/bin/dot:/opt/hostedtoolcache/Python/3.12.3/x64/lib
           WORKSPACE_DIR: ${{ github.workspace }}
         run: |
+          echo ::group::TeX Live Format Util
           fmtutil-user --all
+          echo ::endgroup::
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
           chmod +x generate-documentation.sh

@@ -265,7 +265,7 @@ def create_arduino_cli_command(
     else:
         arduino_command_args.append(f"\"{library['name']}\"")
     arduino_command_args.append("--no-deps")
-    if library["name"] == "SDI-12_ExtInts":
+    if library["name"] in ["SDI-12_ExtInts"]:
         return install_sdi12_ext_acli
     elif library["name"] == "SoftwareSerial_ExternalInts":
         return install_ss_ext_acli
