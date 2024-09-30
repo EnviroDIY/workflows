@@ -16,11 +16,11 @@ jobs:
   build_pio:
     name: ${{ matrix.job_info.job_name }}
     runs-on: ubuntu-latest
+    env:
+      PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
     strategy:
       matrix:
         job_info: ${{ fromJSON(inputs.pio_job_matrix) }}
-    env:
-      PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
 
     steps:
       - name: Checkout code
@@ -62,7 +62,7 @@ jobs:
             ~/.platformio/packages
             ~/.platformio/platforms
             ~/.platformio/caches
-          key: ${{ hashFiles('install-platforms-platformio.sh') }}
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}
 
       # Install the PlatformIO platforms at global level, iff no cache
       - name: Install PlatformIO platforms
@@ -87,7 +87,7 @@ jobs:
           path: |
             ~/.platformio/lib
             $GITHUB_WORKSPACE/lib
-          key: ${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
 
       # Install any library dependencies with PlatformIO at the global level, iff no cache
       - name: Install PlatformIO libraries
@@ -100,7 +100,7 @@ jobs:
           sh continuous_integration/install-example-libdeps-platformio.sh
           cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/ || true
 
-      # Install the library at the Global level for PlatformIO
+      # Install the test library at the Global level for PlatformIO
       - name: Install the testing version of the library for PlatformIO
         id: install_test_library
         run: |
@@ -122,7 +122,7 @@ jobs:
       - name: Cache PlatformIO platforms
         uses: actions/cache/save@v4
         id: cache_platforms
-        if: ${{ always() }}
+        if: (${{ always() }}) && ( ${{ steps.restore_platforms.outcome }} == 'skipped' || ${{ steps.restore_platforms.outcome }} == 'success')
         with:
           path: |
             ~/.platformio/packages
@@ -133,7 +133,7 @@ jobs:
       - name: Cache PlatformIO libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: ${{ always() }}
+        if: (${{ always() }}) && ( ${{ steps.restore_libraries.outcome }} == 'skipped' || ${{ steps.restore_libraries.outcome }} == 'success')
         with:
           path: |
             ~/.platformio/lib

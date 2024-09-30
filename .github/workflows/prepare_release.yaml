@@ -110,7 +110,7 @@ jobs:
         with:
           path: |
             home/arduino/user
-          key: ${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
+          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
 
       # Install any library dependencies for the Arduino CLI, iff no cache
       # NOTE: Don't update the dependencies beyond what's in the install script!
@@ -160,7 +160,7 @@ jobs:
       - name: Cache Arduino libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: ${{ always() }}
+        if: (${{ always() }}) && ( ${{ steps.restore_libraries.outcome }} == 'skipped' || ${{ steps.restore_libraries.outcome }} == 'success')
         with:
           path: |
             home/arduino/user

@@ -85,7 +85,7 @@ jobs:
         with:
           path: |
             home/arduino/data
-          key: ${{ hashFiles('install-platforms-arduino-cli.sh') }}
+          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}
 
       # Install cores for the Arduino CLI, iff no cache
       - name: Install the Arduino Platforms
@@ -107,7 +107,7 @@ jobs:
         with:
           path: |
             home/arduino/user
-          key: ${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
+          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
 
       # Install any library dependencies for the Arduino CLI, iff no cache
       # NOTE: Don't update the dependencies beyond what's in the install script!
@@ -147,7 +147,7 @@ jobs:
       - name: Cache Arduino platforms
         uses: actions/cache/save@v4
         id: cache_platforms
-        if: ${{ always() }}
+        if: (${{ always() }}) && ( ${{ steps.restore_platforms.outcome }} == 'skipped' || ${{ steps.restore_platforms.outcome }} == 'success')
         with:
           path: |
             home/arduino/data
@@ -156,7 +156,7 @@ jobs:
       - name: Cache Arduino libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: ${{ always() }}
+        if: (${{ always() }}) && ( ${{ steps.restore_libraries.outcome }} == 'skipped' || ${{ steps.restore_libraries.outcome }} == 'success')
         with:
           path: |
             home/arduino/user
