@@ -210,7 +210,7 @@ jobs:
           prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
           body: ${{ steps.changelog_reader.outputs.changes }}
           generate_release_notes: false
-          files: ${{ format('{0}.zip', needs.check_version_number.outputs.zip_name) }}
+          files: ${{ format('{0}/{1}.zip', github.event.repository.name, needs.check_version_number.outputs.zip_name) }}
           fail_on_unmatched_files: true
 
   release_simple:
