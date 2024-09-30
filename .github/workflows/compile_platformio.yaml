@@ -117,13 +117,13 @@ jobs:
           ACTION_RUN_ID: ${{ github.run_id }}
         run: |
           echo ::group::Installed Platforms
-          pio pkg list --only-platforms
+          pio pkg list -g -v --only-platforms
           echo ::endgroup::
           echo ::group::Installed Tools
-          pio pkg list --only-tools
+          pio pkg list -g -v --only-tools
           echo ::endgroup::
           echo ::group::Installed Libraries
-          pio pkg list --only-libraries
+          pio pkg list -g -v --only-libraries
           echo ::endgroup::
           chmod +x ${{ matrix.job_info.script }}
           bash ${{ matrix.job_info.script }}
