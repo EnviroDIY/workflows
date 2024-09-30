@@ -137,6 +137,12 @@ jobs:
         env:
           ACTION_RUN_ID: ${{ github.run_id }}
         run: |
+          echo ::group::Installed Cores
+          arduino-cli --config-file continuous_integration/arduino_cli.yaml core list
+          echo ::endgroup::
+          echo ::group::Installed Libraries
+          arduino-cli --config-file continuous_integration/arduino_cli.yaml lib list
+          echo ::endgroup::
           chmod +x ${{ matrix.job_info.script }}
           bash ${{ matrix.job_info.script }}
 
