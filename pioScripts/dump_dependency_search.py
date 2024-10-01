@@ -43,7 +43,7 @@ env.Append(CXXFLAGS=["/DEBUG"])
 
 print("Working on environment (PIOENV) {}".format(env["PIOENV"]))
 
-output_file_name = f"{env['PROJECT_DIR']}\\pio_dependency_dump.log"
+output_file_name = f"{env['PROJECT_DIR']}\\output_pio_dependency_dump.log"
 output_file = open(output_file_name, "w")
 
 output_file.write("Enviroment Dump:\n")
