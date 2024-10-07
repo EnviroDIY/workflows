@@ -17,6 +17,7 @@ from platformio.builder.tools.piolib import ProjectAsLibBuilder
 
 import click
 from SCons.Script import ARGUMENTS  # pylint: disable=import-error
+from SCons.Script import BUILD_TARGETS  # pylint: disable=import-error
 from SCons.Script import COMMAND_LINE_TARGETS  # pylint: disable=import-error
 from SCons.Script import DEFAULT_TARGETS  # pylint: disable=import-error
 from SCons.Script import AllowSubstExceptions  # pylint: disable=import-error
@@ -41,7 +42,15 @@ from platformio.project.helpers import get_project_dir
 Import("env")
 env.Append(CXXFLAGS=["/DEBUG"])
 
-print("Working on environment (PIOENV) {}".format(env["PIOENV"]))
+print(
+    "Running dump_dependency_search.py on environment (PIOENV) {}".format(env["PIOENV"])
+)
+print(f"Current build targets: {[str(tgt) for tgt in BUILD_TARGETS]}")
+print(f"Current command line targets: {COMMAND_LINE_TARGETS}")
+
+if set(["_idedata", "idedata"]) & set(COMMAND_LINE_TARGETS):
+    print("This is an IDE data build, exiting.")
+    env.Exit(0)
 
 output_file_name = f"{env['PROJECT_DIR']}\\output_pio_dependency_dump.log"
 output_file = open(output_file_name, "w")
