@@ -170,7 +170,7 @@ jobs:
   release_with_assets:
     name: Create a Release with Assets
     runs-on: ubuntu-latest
-    needs: [check_version_number, prepare_assets]
+    needs: [check_version_number, prepare_assets, check_for_dependencies]
     if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies && needs.check_for_dependencies.outputs.has_library_dependencies == 'true' }}
 
     steps:
@@ -216,7 +216,7 @@ jobs:
   release_simple:
     name: Create a New Release
     runs-on: ubuntu-latest
-    needs: [check_version_number]
+    needs: [check_version_number, check_for_dependencies]
     if: ${{ ! failure() && ! cancelled() && (! inputs.include_dependencies || needs.check_for_dependencies.outputs.has_library_dependencies == 'false') }}
 
     steps:
