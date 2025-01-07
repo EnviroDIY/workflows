@@ -31,12 +31,12 @@ try:
     # alias of `env = DefaultEnvironment()`
     Import("env")
 
-    print(f"Current build targets: {[str(tgt) for tgt in BUILD_TARGETS]}")
-    print(f"Current command line targets: {COMMAND_LINE_TARGETS}")
+    # print(f"Current build targets: {[str(tgt) for tgt in BUILD_TARGETS]}")
+    # print(f"Current command line targets: {COMMAND_LINE_TARGETS}")
 
     if set(["_idedata", "idedata"]) & set(COMMAND_LINE_TARGETS):
         print("This is an IDE data build, exiting.")
-        env.Exit(0)
+        os._exit(os.EX_OK)
 
     print("Working on environment (PIOENV) {}".format(env["PIOENV"]))
     print("Enviroment and project settings:")
@@ -203,7 +203,7 @@ print(humanized_deps)
 # quit if there are no dependencies
 if len(dependencies) == 0:
     print("No dependencies to install!")
-    sys.exit()
+    os._exit(os.EX_OK)
 
 
 # %%

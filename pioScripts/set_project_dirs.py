@@ -9,16 +9,20 @@ from SCons.Script import DEFAULT_TARGETS  # pylint: disable=import-error
 Import("env")
 
 print("Running set_project_dirs.py on environment (PIOENV) {}".format(env["PIOENV"]))
-print(f"Current build targets: {[str(tgt) for tgt in BUILD_TARGETS]}")
-print(f"Current command line targets: {COMMAND_LINE_TARGETS}")
-print(f"Is a clean: {env.IsCleanTarget()}")
-print(
-    f"Is an IDE build: {len(set(['_idedata', 'idedata']) & set(COMMAND_LINE_TARGETS))!=0}"
-)
+# # print(f"Current build targets: {[str(tgt) for tgt in BUILD_TARGETS]}")
+# # print(f"Current command line targets: {COMMAND_LINE_TARGETS}")
+# print(f"Is a clean: {env.IsCleanTarget()}")
+# print(
+#     f"Is an IDE build: {len(set(['_idedata', 'idedata']) & set(COMMAND_LINE_TARGETS))!=0}"
+# )
 
-# if set(["_idedata", "idedata"]) & set(COMMAND_LINE_TARGETS):
-#     print("This is an IDE data build, exiting.")
-#     env.Exit(0)
+if set(["_idedata", "idedata"]) & set(COMMAND_LINE_TARGETS):
+    print("This is an IDE data build, exiting.")
+    os._exit(os.EX_OK)
+
+if env.IsCleanTarget() or env.GetOption("clean"):
+    print("This is cleaning, exiting.")
+    os._exit(os.EX_OK)
 
 # include toolchain paths
 env.Replace(COMPILATIONDB_INCLUDE_TOOLCHAIN=True)

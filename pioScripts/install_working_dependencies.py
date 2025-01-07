@@ -19,6 +19,8 @@ from platformio.project.config import ProjectConfig
 from platformio.package.meta import PackageCompatibility, PackageSpec
 from platformio.package.manager.library import LibraryPackageManager
 from platformio.platform.factory import PlatformFactory
+from platformio.package.exception import UnknownPackageError
+from platformio.platform.exception import UnknownPlatform
 
 try:
     from SCons.Script import BUILD_TARGETS  # pylint: disable=import-error
@@ -31,7 +33,7 @@ except:
 # %%
 print("Running install_working_dependencies.py")
 
-options = {"silent": False, "skip_dependencies": False, "force": False}
+options = {"update": True, "silent": False, "skip_dependencies": False, "force": False}
 
 # Some working directories
 try:
@@ -40,15 +42,15 @@ try:
     # alias of `env = DefaultEnvironment()`
     Import("env")
 
-    print(f"Current build targets: {[str(tgt) for tgt in BUILD_TARGETS]}")
-    print(f"Current command line targets: {COMMAND_LINE_TARGETS}")
+    # print(f"Current build targets: {[str(tgt) for tgt in BUILD_TARGETS]}")
+    # print(f"Current command line targets: {COMMAND_LINE_TARGETS}")
 
     if not (set(["_idedata", "idedata"]) & set(COMMAND_LINE_TARGETS)):
         print(
             "This is an IDE data build, will also install dependencies for the default environment."
         )
     else:
-        env.Exit(0)
+        os._exit(os.EX_OK)
 
     print("Working on environment (PIOENV) {}".format(env["PIOENV"]))
     # print("Enviroment and project settings:")
@@ -89,7 +91,7 @@ try:
     if active_env_name == default_env_name:
         print("This is a build of the default environment, will install dependencies.")
     else:
-        env.Exit(0)
+        os._exit(os.EX_OK)
 
 except:
     cwd = os.getcwd()
@@ -98,6 +100,7 @@ except:
         == "c:\\users\\sdamiano\\documents\\github\\envirodiy\\workflows\\pioscripts"
     ):
         cwd = "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors"
+        cwd = "C:\\Users\\sdamiano\\Documents\\PlatformIO\\Projects\\NGWOS_TTN"
     project_dir = cwd
     shared_lib_dir = f"{cwd}\\lib"
     shared_lib_abbr = "lib"
@@ -168,6 +171,7 @@ def get_package_spec(dependency: dict):
     )
     return spec
 
+
 # %%
 # find dependencies based on the library specification
 if os.path.isfile(library_json_file):
@@ -207,7 +211,7 @@ humanized_deps = [dep.as_dependency() for dep in dependencies]
 # quit if there are no dependencies
 if len(dependencies) == 0:
     print("No dependencies to install!")
-    sys.exit()
+    os._exit(os.EX_OK)
 
 
 # %%
@@ -234,45 +238,62 @@ private_lm = LibraryPackageManager(
         else None
     ),
 )
+private_lm.set_log_level(logging.DEBUG)
 
 
-# https://github.com/platformio/platformio-core/blob/b537004a75f4985630b5aec19699e48d4d186746/platformio/package/commands/install.py#L265
-def uninstall_project_unused_libdeps(options):
+# %%
+# check for changes to dependencies
+def get_changed_dependencies():
     lib_deps = humanized_deps
     if not lib_deps:
         return
-    storage_dir = Path(shared_lib_dir)
-    integrity_dat = storage_dir / "integrity.dat"
+    integrity_dat = Path(shared_lib_dir) / "integrity.dat"
+    have_deps_changed = True
+    unused_dependencies = []
+    new_dependencies = []
     if integrity_dat.is_file():
         prev_lib_deps = set(
             integrity_dat.read_text(encoding="utf-8").strip().split("\n")
         )
-        if lib_deps == prev_lib_deps:
-            print("No change in dependencies.")
-            return
-        lm = LibraryPackageManager(str(storage_dir))
-        if options.get("silent"):
-            lm.set_log_level(logging.WARN)
-            print("Removing unused dependencies...")
-        else:
-            lm.set_log_level(logging.DEBUG)
         unused_dependencies = set(prev_lib_deps) - set(lib_deps)
-        if len(unused_dependencies) == 0:
-            print("No unused dependencies to remove.")
-        for spec in unused_dependencies:
-            try:
-                lm.uninstall(spec)
-            except UnknownPackageError:
-                pass
-    if not storage_dir.is_dir():
-        storage_dir.mkdir(parents=True)
-    integrity_dat.write_text("\n".join(lib_deps), encoding="utf-8")
+        new_dependencies = set(lib_deps) - set(prev_lib_deps)
+        if len(unused_dependencies) == 0 and len(new_dependencies) == 0:
+            print("No change in dependencies.")
+            have_deps_changed = False
+    return have_deps_changed, new_dependencies, unused_dependencies
+
+
+have_deps_changed, new_dependencies, unused_dependencies = get_changed_dependencies()
+
+# %%
+# quit if there are no changes to the dependencies
+if not have_deps_changed:
+    print("No changes to the dependencies")
+    os._exit(os.EX_OK)
+
+
+# %%
+# Uninstall unused libs, install new ones
+# https://github.com/platformio/platformio-core/blob/b537004a75f4985630b5aec19699e48d4d186746/platformio/package/commands/install.py#L265
+def uninstall_project_unused_libdeps(options):
+    if options.get("silent"):
+        private_lm.set_log_level(logging.WARN)
+        print("Removing unused dependencies...")
+    else:
+        private_lm.set_log_level(logging.DEBUG)
+    if len(unused_dependencies) == 0:
+        print("No unused dependencies to remove.")
+    for spec in unused_dependencies:
+        print(private_lm.log)
+        try:
+            private_lm.uninstall(spec)
+        except UnknownPackageError:
+            pass
 
 
 # https://github.com/platformio/platformio-core/blob/b537004a75f4985630b5aec19699e48d4d186746/platformio/package/commands/install.py#L206
 def install_project_env_libraries(options):
     uninstall_project_unused_libdeps(options)
-    already_up_to_date = not options.get("force")
     if options.get("silent"):
         private_lm.set_log_level(logging.WARN)
     else:
@@ -285,16 +306,59 @@ def install_project_env_libraries(options):
         if not spec.external and not spec.owner:
             print(f"Skipping {library}")
             continue
-        if not private_lm.get_package(spec):
-            already_up_to_date = False
-        private_lm.install(
-            spec,
-            skip_dependencies=options.get("skip_dependencies"),
-            force=options.get("force"),
-        )
+        print(private_lm.log)
+        already_installed = private_lm.get_package(spec) is not None
+        was_updated = False
+        if not already_installed:
+            print(
+                "Installing",
+                spec.name,
+                spec.requirements if spec.requirements else spec.uri,
+            )
+            if options.get("silent"):
+                private_lm.set_log_level(logging.WARN)
+            else:
+                private_lm.set_log_level(logging.DEBUG)
+            # print(private_lm.log)
+            private_lm.install(
+                spec,
+                skip_dependencies=options.get("skip_dependencies"),
+                force=options.get("force"),
+            )
+            was_updated = True
+        elif options.get("update"):
+            print(
+                "Updating",
+                spec.name,
+                spec.requirements if spec.requirements else spec.uri,
+            )
+            if options.get("silent"):
+                private_lm.set_log_level(logging.WARN)
+            else:
+                private_lm.set_log_level(logging.DEBUG)
+            # check if the library should be updated
+            # print(private_lm.log)
+            new_pkg = private_lm.update(
+                spec, skip_dependencies=options.get("skip_dependencies")
+            )
+            org_pkg = private_lm.get_package(spec)
+            was_updated = new_pkg == org_pkg
+        if not was_updated:
+            pass
     return private_lm.get_installed()
 
 
+install_project_env_libraries(options)
+
+# write a new 'integrity' file if needed
+if not Path(shared_lib_dir).is_dir():
+    Path(shared_lib_dir).mkdir(parents=True)
+    integrity_dat = Path(shared_lib_dir) / "integrity.dat"
+    integrity_dat.write_text("\n".join(humanized_deps), encoding="utf-8")
+
+
+# %%
+# check what's already installed and sort by dependencies
 def sort_lib_deps(verbose=False):
     private_lm.set_log_level(logging.DEBUG)
     installed_libs = private_lm.get_installed()
@@ -338,8 +402,8 @@ def sort_lib_deps(verbose=False):
     return list(sorted_deps)
 
 
-install_project_env_libraries(options)
 installed_libs = sort_lib_deps()
+
 
 # %%
 # check for not required libs
@@ -387,12 +451,13 @@ all_symlinks = [
     for installed_lib in installed_libs
 ]
 
+ignored_folders = [shared_lib_abbr]
 using_main_dir = "." in get_extra_lib_dirs(common_env_name)
 if using_main_dir:
     sub_dirs = next(os.walk(project_dir))[1]
-ignored_folders = [
-    i_dir for i_dir in sub_dirs if i_dir not in ["lib", "src"] + [shared_lib_abbr]
-]
+    ignored_folders = [
+        i_dir for i_dir in sub_dirs if i_dir not in ["lib", "src"] + [shared_lib_abbr]
+    ]
 
 
 out_file_str = ""
@@ -420,6 +485,10 @@ for lib in not_required_libs:
     out_file_str += "    "
     out_file_str += lib.metadata.name
     out_file_str += "\n"
+for lib_name in ["Adafruit TinyUSB Library"]:
+    out_file_str += "    "
+    out_file_str += lib_name
+    out_file_str += "\n"
 
 if os.path.isfile(libdeps_ini_file):
     with open(libdeps_ini_file, "r") as out_file:
@@ -437,7 +506,7 @@ have_deps_changed = len(prev_content.splitlines()) == 0 or len(
 for line_num, line in enumerate(prev_content.splitlines()):
     if line.startswith("; File last updated at"):
         continue
-    if len(out_file_str.splitlines()) < line_num:
+    if len(out_file_str.splitlines()) <= line_num:
         have_deps_changed = True
     elif line != out_file_str.splitlines()[line_num]:
         have_deps_changed = True

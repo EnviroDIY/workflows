@@ -45,20 +45,25 @@ env.Append(CXXFLAGS=["/DEBUG"])
 print(
     "Running dump_dependency_search.py on environment (PIOENV) {}".format(env["PIOENV"])
 )
-print(f"Current build targets: {[str(tgt) for tgt in BUILD_TARGETS]}")
-print(f"Current command line targets: {COMMAND_LINE_TARGETS}")
+# print(f"Current build targets: {[str(tgt) for tgt in BUILD_TARGETS]}")
+# print(f"Current command line targets: {COMMAND_LINE_TARGETS}")
 
 if set(["_idedata", "idedata"]) & set(COMMAND_LINE_TARGETS):
     print("This is an IDE data build, exiting.")
-    env.Exit(0)
+    os._exit(os.EX_OK)
+
+if env.IsCleanTarget() or env.GetOption("clean"):
+    print("This is cleaning, exiting.")
+    os._exit(os.EX_OK)
 
 output_file_name = f"{env['PROJECT_DIR']}\\output_pio_dependency_dump.log"
 output_file = open(output_file_name, "w")
-
+print("Dumping environment:")
 output_file.write("Enviroment Dump:\n")
 output_file.write(env.Dump())
 output_file.write("\n\n")
 
+print("Dumping dependency search info:")
 shared_lib_dir = env["LIBSOURCE_DIRS"][0]
 shared_lib_abbr = "lib"
 project_ini_file = f"{env['PROJECT_DIR']}\\platformio.ini"
@@ -120,4 +125,4 @@ output_file.write(json.dumps(lib_inc_map, indent=2))
 
 output_file.close()
 
-sys.exit()
+# os._exit(os.EX_OK)

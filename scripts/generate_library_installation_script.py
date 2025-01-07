@@ -230,7 +230,7 @@ humanized_deps = [dep.as_dependency() for dep in dependencies]
 # quit if there are no dependencies
 if len(dependencies) == 0:
     print("No dependencies to install!")
-    # sys.exit()
+    # os._exit(os.EX_OK)
 
 
 # %%

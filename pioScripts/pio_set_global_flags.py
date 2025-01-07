@@ -7,7 +7,7 @@ Import("env")
 
 if set(["_idedata", "idedata"]) & set(COMMAND_LINE_TARGETS):
     print("This is an IDE data build, exiting.")
-    env.Exit(0)
+    os._exit(os.EX_OK)
 
 # append flags to local build environment (for just this library)
 env.Append(
