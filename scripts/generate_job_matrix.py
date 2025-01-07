@@ -127,8 +127,12 @@ if "BOARDS_TO_BUILD" in os.environ.keys() and os.environ.get("BOARDS_TO_BUILD") 
     "",
 ]:
     boards = [board.strip() for board in os.environ.get("BOARDS_TO_BUILD").split(",")]
+    if use_verbose:
+        print("::debug::Building only boards specified in yaml.")
 else:
     boards = list(board_to_pio_env.keys())
+    if use_verbose:
+        print("::debug::Building all boards available in the platformio.ini file.")
 
 # Make sure we have an equivalent Arduino FQBN or PlatformIO environment for all requested boards
 for board in boards:
@@ -186,10 +190,17 @@ if use_verbose:
 if (
     "EXAMPLES_TO_BUILD" in os.environ.keys()
     and len(os.environ.get("EXAMPLES_TO_BUILD")) > 0
+    and os.environ.get("EXAMPLES_TO_BUILD")
+    not in [
+        "all",
+        "",
+    ]
 ):
     examples_to_build = [
         example.strip() for example in os.environ.get("EXAMPLES_TO_BUILD").split(",")
     ]
+    if use_verbose:
+        print("::debug::Building only examples specified in yaml.")
 else:
     # Find all of the examples in the examples folder, append the path "examples" to it
     examples_to_build = [
@@ -198,6 +209,8 @@ else:
         if os.path.isdir(os.path.join(examples_path, f))
         and f not in [".history", "logger_test", "menu_a_la_carte"]
     ]
+    if use_verbose:
+        print("::debug::Building all examples found in the example path.")
 
 if use_verbose:
     print("::debug::==========================================================")
