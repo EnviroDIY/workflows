@@ -23,16 +23,21 @@ echo GitHub Orgs Directory: %GIBHUB_BASE_DIR%
 
 @REM Set directory links
 set MCSS_DIR=%GIBHUB_BASE_DIR%\SRGDamia1\m.css\
+echo mcss Directory: %MCSS_DIR%
 set REPO_DIR=%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%
+echo Repository Directory: %REPO_DIR%
 set WORKFLOW_DIR=%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\
+echo Workflows Directory: %WORKFLOW_DIR%
 
 @REM Delete any old versions of the documentation and css
+echo Deleting any previous documentation directories
 del "%REPO_DIR%_Doxygen\html" /q
 del "%REPO_DIR%_Doxygen\xml" /q
 del "%REPO_DIR%_Doxygen\m.css" /q
 del "%REPO_DIR%\docs\css" /q
 
 @REM Clear out output files
+echo Deleting any previous output files
 echo "" > "%REPO_DIR%\docs\output_generateLogo.log"
 echo "" > "%REPO_DIR%\docs\output_documentExamples.log"
 echo "" > "%REPO_DIR%\docs\output_doxygen_run.log"

@@ -97,11 +97,6 @@ with fileinput.FileInput(
         # allow thank you tags
         massaged_line = massaged_line.replace("thanks to @", r"thanks to \@")
         massaged_line = massaged_line.replace("courtesy of @", r"courtesy of \@")
-
-        # Add a PHP Markdown Extra style header id to the end of header sections
-        # use the GitHub anchor plus the file name as the section id.
-        # GitHub anchors for headers are the text, stripped of punctuation,
-        # with the spaces replaced by hyphens.
         markdown_header = re.match(
             r"(?P<heading_pounds>#{1,6})\s+(?P<section_name>[^<>\{\}\#]+)",
             massaged_line,
@@ -110,6 +105,11 @@ with fileinput.FileInput(
         anchor_header = re.search(
             r"<a name=\"(?P<section_anchor>\w+)\"></a>", massaged_line
         )
+
+        # Add a PHP Markdown Extra style header id to the end of header sections that don't already have a header id.
+        # use the GitHub anchor plus the file name as the section id.
+        # GitHub anchors for headers are the text, stripped of punctuation,
+        # with the spaces replaced by hyphens.
         if (
             file_name is not None
             and file_name != "ChangeLog"
@@ -128,15 +128,15 @@ with fileinput.FileInput(
                 + "}\n"
             )
 
+        # unhide existing PHP Markdown Extra header id's hiding in GitHub flavored markdown comments
         elif (
             file_name is not None
             and file_name != "ChangeLog"
             and markdown_header is not None
             and php_extra_header_label is not None
         ):
-            # unhide PHP Markdown Extra header id's hidding in GitHub flavored markdown comments
             massaged_line = re.sub(
-                r"<!-- \{#(.+)\} -->",
+                r"<!--!?\s*\{#(.+)\}\s*-->",
                 r"{#\1}",
                 massaged_line,
             )

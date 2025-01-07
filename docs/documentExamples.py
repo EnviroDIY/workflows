@@ -95,6 +95,11 @@ with open(output_file, "w+") as out_file:
             got_footer_nav = False
             lines = in_file.readlines()
             for line in lines:
+                # remove any banners
+                line = re.sub(r"^/\*\*\s*[=_-]+$", "/**", line)
+                line = re.sub(r"^ *\*/\s*/\*\s*[=_-]+\s*\*/$", " */", line)
+                line = re.sub(r"^ *\*\s*[=_-]+\s*\*/$", " */", line)
+                # find start/end
                 if i < 3 and line.startswith("/**"):
                     got_start_comment = True
                     print(f"  First line of doc block: {i}")
@@ -110,7 +115,8 @@ with open(output_file, "w+") as out_file:
                         out_file.write(" * @m_examplenavigation{examples_page,}\n")
                     if not got_footer_nav:
                         out_file.write(" * @m_footernavigation\n")
-                    out_file.write(line)
+                    end_comment_in_line = line.find("*/") + 2
+                    out_file.write(line[0:end_comment_in_line])
                     print(f"  Last line of doc block: {i}")
                     got_start_comment = False
                     got_example_nav = False
