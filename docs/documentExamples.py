@@ -118,6 +118,8 @@ with open(output_file, "w+") as out_file:
                     end_comment_in_line = line.find("*/") + 2
                     out_file.write(line[0:end_comment_in_line])
                     print(f"  Last line of doc block: {i}")
+                    # write out a directory listing for the example
+                    out_file.write(f"\n/**\n * @dir {"/".join(filename.split(os.sep)[-3:-1])}\n * @brief Contains the {re.sub(r".ino$",'',os.path.split(filename)[1])} example.\n */\n")
                     got_start_comment = False
                     got_example_nav = False
                     got_footer_nav = False
