@@ -267,13 +267,16 @@ pio --version
 )
 for platform in pio_platforms:
     install_command = create_pio_ci_command(platform_name=platform, is_tool=False)
-    for tool in platformio_platform_tools[platform]["tools"]:
-        install_command += "\n" + create_pio_ci_command(
-            platform_name=tool, is_tool=True
+    if platform in platformio_platform_tools.keys():
+        for tool in platformio_platform_tools[platform]["tools"]:
+            install_command += "\n" + create_pio_ci_command(
+                platform_name=tool, is_tool=True
+            )
+        command_with_log = add_log_to_command(
+            install_command, platformio_platform_tools[platform]["name"]
         )
-    command_with_log = add_log_to_command(
-        install_command, platformio_platform_tools[platform]["name"]
-    )
+    else:
+        command_with_log = add_log_to_command(install_command, platform)
     bash_out.write("\n".join(command_with_log))
 bash_out.write(
     """
