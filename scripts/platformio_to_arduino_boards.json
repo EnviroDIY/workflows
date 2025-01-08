@@ -1,5 +1,6 @@
 {
   "mayfly": { "fqbn": "EnviroDIY:avr:envirodiy_mayfly" },
+  "envirodiy_stonefly_m4": { "fqbn": "EnviroDIY:samd:stonefly_m4" },
   "uno": { "fqbn": "arduino:avr:uno" },
   "megaatmega2560": { "fqbn": "arduino:avr:mega" },
   "leonardo": { "fqbn": "arduino:avr:leonardo" },
