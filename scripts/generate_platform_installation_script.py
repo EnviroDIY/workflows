@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # %%
+import os
 from collections import OrderedDict
+from typing import List
 import json
 import shutil
-from typing import List
-from platformio.project.config import ProjectConfig
-import os
 import requests
+
+from platformio.project.config import ProjectConfig
 
 # %%
 # set verbose
@@ -50,21 +51,22 @@ if not os.path.exists(artifact_dir):
 
 # %%
 # Pull files to convert between boards and platforms and FQBNs
+
+# Translation between board names on PlatformIO and the Arduino CLI
 response = requests.get(
     "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio_to_arduino_boards.json"
 )
 with open(os.path.join(ci_path, "platformio_to_arduino_boards.json"), "wb") as f:
     f.write(response.content)
+with open(os.path.join(ci_path, "platformio_to_arduino_boards.json")) as f:
+    pio_to_acli = json.load(f)
+
+# Tools per platform
 response = requests.get(
     "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio_platform_tools.json"
 )
 with open(os.path.join(ci_path, "platformio_platform_tools.json"), "wb") as f:
     f.write(response.content)
-
-# Translation between board names on PlatformIO and the Arduino CLI
-with open(os.path.join(ci_path, "platformio_to_arduino_boards.json")) as f:
-    pio_to_acli = json.load(f)
-# Tools per platform
 with open(os.path.join(ci_path, "platformio_platform_tools.json")) as f:
     platformio_platform_tools = json.load(f)
 
@@ -130,9 +132,28 @@ if "BOARDS_TO_BUILD" in os.environ.keys() and os.environ.get("BOARDS_TO_BUILD") 
     "all",
     "",
 ]:
-    boards = os.environ.get("BOARDS_TO_BUILD").split(",")
+    boards = [board.strip() for board in os.environ.get("BOARDS_TO_BUILD").split(",")]
+    if use_verbose:
+        print("::debug::Building only boards specified in yaml.")
 else:
     boards = list(board_to_pio_env.keys())
+    if use_verbose:
+        print("::debug::Building all boards available in the platformio.ini file.")
+
+# remove any ignored boards from the list
+if "BOARDS_TO_IGNORE" in os.environ.keys() and os.environ.get(
+    "BOARDS_TO_IGNORE"
+) not in [
+    "",
+]:
+    boards = [
+        board
+        for board in boards
+        if board
+        not in [
+            board_.strip() for board_ in os.environ.get("BOARDS_TO_IGNORE").split(",")
+        ]
+    ]
 
 # Make sure we have an equivalent Arduino FQBN (and thus core) or PlatformIO environment for all requested boards
 for board in boards:
@@ -152,6 +173,7 @@ No platforms or tools will be installed or cached for this board.
 Please check the spelling of your board name or add an entry to your platformio.ini if this is not your expected behavior."""
         )
 
+# convert the list of boards into a list of cores and platforms to install
 arduino_cli_cores = list(
     OrderedDict.fromkeys(
         [pio_to_acli[board]["fqbn"].rsplit(":", 1)[0] for board in boards]
@@ -164,7 +186,7 @@ pio_platforms = list(
 
 # %%
 # helper functions to create commands
-def create_arduino_cli_command(core_name: str) -> str:
+def create_arduino_cli_core_command(core_name: str) -> str:
     arduino_command_args = [
         "arduino-cli",
         "--config-file",
@@ -176,7 +198,7 @@ def create_arduino_cli_command(core_name: str) -> str:
     return " ".join(arduino_command_args)
 
 
-def create_pio_ci_command(
+def create_pio_ci_core_command(
     platform_name: str,
     is_tool: bool = False,
 ) -> str:
@@ -191,7 +213,7 @@ def create_pio_ci_command(
     return " ".join(pio_command_args)
 
 
-def add_log_to_command(command: str, group_title: str) -> List:
+def add_log_to_core_command(command: str, group_title: str) -> List:
     command_list = []
     command_list.append('\necho "::group::{}"'.format(group_title))
     command_list.append(f'echo "\\e[32m{group_title}\\e[0m"')
@@ -224,10 +246,10 @@ arduino-cli --config-file arduino_cli.yaml core update-index
 )
 
 for core in arduino_cli_cores:
-    install_command = create_arduino_cli_command(
+    install_command = create_arduino_cli_core_command(
         core_name=core,
     )
-    command_with_log = add_log_to_command(
+    command_with_log = add_log_to_core_command(
         install_command, core.replace(":", " ").title()
     )
     bash_out.write("\n".join(command_with_log))
@@ -266,17 +288,17 @@ pio --version
 """
 )
 for platform in pio_platforms:
-    install_command = create_pio_ci_command(platform_name=platform, is_tool=False)
+    install_command = create_pio_ci_core_command(platform_name=platform, is_tool=False)
     if platform in platformio_platform_tools.keys():
         for tool in platformio_platform_tools[platform]["tools"]:
-            install_command += "\n" + create_pio_ci_command(
+            install_command += "\n" + create_pio_ci_core_command(
                 platform_name=tool, is_tool=True
             )
-        command_with_log = add_log_to_command(
+        command_with_log = add_log_to_core_command(
             install_command, platformio_platform_tools[platform]["name"]
         )
     else:
-        command_with_log = add_log_to_command(install_command, platform)
+        command_with_log = add_log_to_core_command(install_command, platform)
     bash_out.write("\n".join(command_with_log))
 bash_out.write(
     """

@@ -235,7 +235,7 @@ if len(dependencies) == 0:
 
 # %%
 # helper functions to create commands
-def create_arduino_cli_command(
+def create_arduino_cli_lib_command(
     library: dict,
     update: bool = True,
     include_version: bool = True,
@@ -243,7 +243,7 @@ def create_arduino_cli_command(
     arduino_command_args = [
         "arduino-cli",
         "--config-file",
-        arduino_cli_config,
+        f'"{arduino_cli_config}"',
         "lib",
         "install",
     ]
@@ -273,7 +273,7 @@ def create_arduino_cli_command(
         return " ".join(arduino_command_args)
 
 
-def create_pio_ci_command(
+def create_pio_ci_lib_command(
     library: Union[str | dict | PackageSpec],
     update: bool = True,
     include_version: bool = True,
@@ -297,7 +297,7 @@ def create_pio_ci_command(
         return pio_command_args
 
 
-def add_log_to_command(command: str, group_title: str) -> List:
+def add_log_to_lib_command(command: str, group_title: str) -> List:
     command_list = []
     command_list.append(f'\necho "\\e[32m{group_title}\\e[0m"')
     command_list.append(command + "\n")
@@ -315,10 +315,10 @@ bash_out.write("#!/bin/bash\n\n")
 bash_out.write(debug_text)
 bash_out.write(acli_start_text)
 for library in library_specs["dependencies"]:
-    install_command = create_arduino_cli_command(
+    install_command = create_arduino_cli_lib_command(
         library=library,
     )
-    command_with_log = add_log_to_command(
+    command_with_log = add_log_to_lib_command(
         install_command, f"Installing {library['name']}"
     )
     bash_out.write("\n".join(command_with_log))
@@ -334,10 +334,10 @@ bash_out.write("#!/bin/bash\n\n")
 bash_out.write(debug_text)
 bash_out.write(acli_start_text)
 for library in example_specs["dependencies"]:
-    install_command = create_arduino_cli_command(
+    install_command = create_arduino_cli_lib_command(
         library=library,
     )
-    command_with_log = add_log_to_command(
+    command_with_log = add_log_to_lib_command(
         install_command, f"Installing {library['name']}"
     )
     bash_out.write("\n".join(command_with_log))
@@ -357,8 +357,8 @@ bash_out.write(pio_start_text)
 for library in [
     get_package_spec(dependency) for dependency in library_specs["dependencies"]
 ]:
-    install_command = create_pio_ci_command(library=library, update=False)
-    command_with_log = add_log_to_command(
+    install_command = create_pio_ci_lib_command(library=library, update=False)
+    command_with_log = add_log_to_lib_command(
         " ".join(install_command), f"Installing {library.name}"
     )
     bash_out.write("\n".join(command_with_log))
@@ -376,8 +376,8 @@ bash_out.write(pio_start_text)
 for library in [
     get_package_spec(dependency) for dependency in example_specs["dependencies"]
 ]:
-    install_command = create_pio_ci_command(library=library, update=False)
-    command_with_log = add_log_to_command(
+    install_command = create_pio_ci_lib_command(library=library, update=False)
+    command_with_log = add_log_to_lib_command(
         " ".join(install_command), f"Installing {library.name}"
     )
     bash_out.write("\n".join(command_with_log))

@@ -8,8 +8,18 @@ on:
         default: ""
         required: false
         type: string
+      boards_to_ignore:
+        description: 'A comma-separated list of PlatformIO board names to ignore. Mutually exclusive with boards_to_build'
+        default: ""
+        required: false
+        type: string
       examples_to_build:
         description: 'A comma-separated list of examples to build'
+        default: ""
+        required: false
+        type: string
+      examples_to_ignore:
+        description: 'A comma-separated list of examples to ignore. Mutually exclusive with examples_to_build'
         default: ""
         required: false
         type: string
@@ -24,7 +34,9 @@ jobs:
       pio_job_matrix: ${{ steps.py_matrix.outputs.pio_job_matrix }}
     env:
       BOARDS_TO_BUILD: ${{ inputs.boards_to_build }}
+      BOARDS_TO_IGNORE: ${{ inputs.boards_to_ignore }}
       EXAMPLES_TO_BUILD: ${{ inputs.examples_to_build }}
+      EXAMPLES_TO_IGNORE: ${{ inputs.examples_to_ignore }}
 
     steps:
       - name: Checkout code

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # %%
+import os
+from typing import List
 import json
 import shutil
-from typing import List
-from platformio.project.config import ProjectConfig
-import os
 import requests
+
+from platformio.project.config import ProjectConfig
 
 # %%
 # set verbose
@@ -55,12 +56,13 @@ if not os.path.exists(artifact_dir):
 
 # %%
 # Pull files to convert between boards and platforms and FQBNs
+
+# Translation between board names on PlatformIO and the Arduino CLI
 response = requests.get(
     "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio_to_arduino_boards.json"
 )
 with open(os.path.join(ci_path, "platformio_to_arduino_boards.json"), "wb") as f:
     f.write(response.content)
-# Translation between board names on PlatformIO and the Arduino CLI
 with open(os.path.join(ci_path, "platformio_to_arduino_boards.json")) as f:
     pio_to_acli = json.load(f)
 
@@ -133,6 +135,21 @@ else:
     boards = list(board_to_pio_env.keys())
     if use_verbose:
         print("::debug::Building all boards available in the platformio.ini file.")
+
+# remove any ignored boards from the list
+if "BOARDS_TO_IGNORE" in os.environ.keys() and os.environ.get(
+    "BOARDS_TO_IGNORE"
+) not in [
+    "",
+]:
+    boards = [
+        board
+        for board in boards
+        if board
+        not in [
+            board_.strip() for board_ in os.environ.get("BOARDS_TO_IGNORE").split(",")
+        ]
+    ]
 
 # Make sure we have an equivalent Arduino FQBN or PlatformIO environment for all requested boards
 for board in boards:
@@ -212,6 +229,22 @@ else:
     if use_verbose:
         print("::debug::Building all examples found in the example path.")
 
+# remove any ignored examples from the list
+if "EXAMPLES_TO_IGNORE" in os.environ.keys() and os.environ.get(
+    "EXAMPLES_TO_IGNORE"
+) not in [
+    "",
+]:
+    examples_to_build = [
+        example
+        for example in examples_to_build
+        if example
+        not in [
+            example_.strip()
+            for example_ in os.environ.get("EXAMPLES_TO_IGNORE").split(",")
+        ]
+    ]
+
 if use_verbose:
     print("::debug::==========================================================")
     print("::debug::Building the following Examples:")
@@ -222,7 +255,7 @@ if use_verbose:
 
 # %%
 # helper functions to create commands
-def create_arduino_cli_command(code_subfolder: str, fqbn: str) -> str:
+def create_arduino_cli_compile_command(code_subfolder: str, fqbn: str) -> str:
     arduino_command_args = [
         "arduino-cli",
         "compile",
@@ -243,7 +276,7 @@ def create_arduino_cli_command(code_subfolder: str, fqbn: str) -> str:
     return " ".join(arduino_command_args)
 
 
-def create_pio_ci_command(
+def create_pio_ci_compile_command(
     code_subfolder: str, pio_board_or_env: str, use_pio_config_file: bool
 ) -> str:
     if use_pio_config_file:
@@ -275,7 +308,7 @@ def create_pio_ci_command(
     return " ".join(pio_command_args)
 
 
-def add_log_to_command(command: str, group_title: str) -> List:
+def add_log_to_compile_command(command: str, group_title: str) -> List:
     command_list = []
     command_list.append("\necho ::group::{}".format(group_title))
     command_list.append(command + " 2>&1 | tee output.log")
@@ -318,29 +351,35 @@ for example in examples_to_build:
     # create commands for the Arduino CLI
     # can only specify FQBN, so each board can only be built one way
     for fqbn in fqbns_to_build:
-        build_command = create_arduino_cli_command(
+        build_command = create_arduino_cli_compile_command(
             code_subfolder=example,
             fqbn=fqbn,
         )
-        command_with_log = add_log_to_command(command=build_command, group_title=fqbn)
+        command_with_log = add_log_to_compile_command(
+            command=build_command, group_title=fqbn
+        )
         arduino_ex_commands.extend(command_with_log)
 
     # create commands for PlatformIO
     # use the enviroments list to catch all environments - even those using the same board
     for env in pio_envs_to_build:
-        build_command = create_pio_ci_command(
+        build_command = create_pio_ci_compile_command(
             code_subfolder=example, pio_board_or_env=env, use_pio_config_file=True
         )
-        command_with_log = add_log_to_command(command=build_command, group_title=env)
+        command_with_log = add_log_to_compile_command(
+            command=build_command, group_title=env
+        )
         pio_ex_commands.extend(command_with_log)
     # use the bare board list to catch boards requested in the inputs but not in the platformio.ini file
     for pio_board in pio_bare_boards:
-        build_command = create_pio_ci_command(
+        build_command = create_pio_ci_compile_command(
             code_subfolder=example,
             pio_board_or_env=pio_board,
             use_pio_config_file=False,
         )
-        command_with_log = add_log_to_command(command=build_command, group_title=pio_board)
+        command_with_log = add_log_to_compile_command(
+            command=build_command, group_title=pio_board
+        )
         pio_ex_commands.extend(command_with_log)
 
     arduino_job_matrix.append(
