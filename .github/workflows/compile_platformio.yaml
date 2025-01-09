@@ -123,7 +123,7 @@ jobs:
           echo "Moving Stonefly variants files"
           mv envirodiy_boards/EnviroDIYSAMDBoards/variants variants
           ls -R
-          pio boards
+          pio boards --installed envirodiy
 
       - name: Include problem matcher
         uses: ammaraskar/gcc-problem-matcher@master
