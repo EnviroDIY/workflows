@@ -60,6 +60,7 @@ jobs:
           mv envirodiy_boards/EnviroDIYSAMDBoards/boards boards
           echo "Moving Stonefly variants files"
           mv envirodiy_boards/EnviroDIYSAMDBoards/variants variants
+          ls -R
 
       - name: Generate Platform Installation Script
         id: py_platforms
