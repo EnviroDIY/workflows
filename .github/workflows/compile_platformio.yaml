@@ -107,6 +107,23 @@ jobs:
           pio pkg install --skip-dependencies -g --library ${{ inputs.library_install_git }}
           pio pkg list -g --only-libraries
 
+      # check the EnviroDIY boards repo to get the Stonefly info
+      - name: Checkout EnviroDIY boards
+        uses: actions/checkout@v4
+        with:
+          # Repository name with owner. For example, actions/checkout
+          repository: EnviroDIY/Arduino_boards
+          path: envirodiy_boards
+
+      - name: Move Stonefly Board Info
+        id: py_stonefly
+        run: |
+          echo "Moving Stonefly boards files"
+          mv envirodiy_boards/EnviroDIYSAMDBoards/boards boards
+          echo "Moving Stonefly variants files"
+          mv envirodiy_boards/EnviroDIYSAMDBoards/variants variants
+          ls -R
+
       - name: Include problem matcher
         uses: ammaraskar/gcc-problem-matcher@master
 
