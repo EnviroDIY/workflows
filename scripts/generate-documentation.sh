@@ -55,7 +55,8 @@ echo "::endgroup::"
 # Move back to the repository directory
 cd "${REPO_DIR}"
 
-echo Generating library logos
+echo "\e[32mGenerating library logos\e[0m"
+echo "::group::Generating library logos"
 # Download the font and favicon
 curl -SL "${WORKFLOW_DIR}Ubuntu-Bold.ttf" -o Ubuntu-Bold.ttf
 curl -SL "${WORKFLOW_DIR}enviroDIY_Favicon.png" -o docs/enviroDIY_Favicon.png
@@ -63,6 +64,7 @@ curl -SL "${WORKFLOW_DIR}enviroDIY_Favicon.png" -o docs/enviroDIY_Favicon.png
 curl -SL "${WORKFLOW_DIR}generateLogos.py" -o generateLogos.py
 # Generate the logos
 python -u generateLogos.py 2>&1
+echo "::endgroup::"
 
 # Move back to the docs directory
 cd ${REPO_DIR}/docs
