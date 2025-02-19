@@ -9,6 +9,12 @@ import requests
 from platformio.project.config import ProjectConfig
 
 # %%
+# configuration
+# boards to *always* skip on PlatformIO
+pio_skip_boards = ["esp32-c6-devkitm-1", "arduino_nano_esp32"]
+acli_skip_boards = [""]
+
+# %%
 # set verbose
 use_verbose = False
 if "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1":
@@ -170,17 +176,21 @@ Please check the spelling of your board name or add an entry to your platformio.
         )
 
 # convert the list of boards into list of FQBNs, PIO environments, and PIO bare boards
-fqbns_to_build = [pio_to_acli[board]["fqbn"] for board in boards]
+fqbns_to_build = [
+    pio_to_acli[board]["fqbn"]
+    for board in boards
+    if pio_to_acli[board]["fqbn"] not in acli_skip_boards
+]
 pio_envs_to_build = [
     env
     for env in pio_config.envs()
     if pio_config.get("env:{}".format(env), "board") in boards
-    and pio_config.get("env:{}".format(env), "board") != "esp32-c6-devkitm-1"
+    and not pio_config.get("env:{}".format(env), "board") in pio_skip_boards
 ]
 pio_bare_boards = [
     board
     for board in boards
-    if board not in board_to_pio_env.keys() and board != "esp32-c6-devkitm-1"
+    if board not in board_to_pio_env.keys() and not board in pio_skip_boards
 ]
 
 # print out what will be built
