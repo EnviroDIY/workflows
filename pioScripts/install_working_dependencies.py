@@ -100,7 +100,8 @@ except:
         == "c:\\users\\sdamiano\\documents\\github\\envirodiy\\workflows\\pioscripts"
     ):
         cwd = "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors"
-        cwd = "C:\\Users\\sdamiano\\Documents\\PlatformIO\\Projects\\NGWOS_TTN"
+        # cwd = "C:\\Users\\sdamiano\\Documents\\PlatformIO\\Projects\\NGWOS_TTN"
+        # cwd = "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\GeoluxCamera"
     project_dir = cwd
     shared_lib_dir = f"{cwd}\\lib"
     shared_lib_abbr = "lib"
@@ -485,7 +486,8 @@ for lib in not_required_libs:
     out_file_str += "    "
     out_file_str += lib.metadata.name
     out_file_str += "\n"
-for lib_name in ["Adafruit TinyUSB Library"]:
+# for lib_name in ["Adafruit TinyUSB Library"]:
+for lib_name in []:
     out_file_str += "    "
     out_file_str += lib_name
     out_file_str += "\n"
