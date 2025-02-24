@@ -216,6 +216,13 @@ if "dependencies" not in library_specs.keys():
 if "dependencies" not in example_specs.keys():
     example_specs["dependencies"] = []
 
+if use_verbose and len(library_specs["dependencies"]) > 0:
+    print("::debug::Dependencies found in the library specifications:")
+    print(f"::debug::{library_specs['dependencies']}")
+if use_verbose and len(example_specs["dependencies"]) > 0:
+    print("::debug::Dependencies found in the library examples:")
+    print(f"::debug::{example_specs['dependencies']}")
+
 # %% Combine dependencies
 dependencies.extend(
     [get_package_spec(dependency) for dependency in library_specs["dependencies"]]
@@ -225,6 +232,10 @@ dependencies.extend(
 )
 
 humanized_deps = [dep.as_dependency() for dep in dependencies]
+
+if use_verbose:
+    print("::debug::The combined dependencies are:")
+    print(f"::debug::{humanized_deps}")
 
 # %%
 # quit if there are no dependencies

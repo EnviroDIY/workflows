@@ -135,10 +135,12 @@ if "BOARDS_TO_BUILD" in os.environ.keys() and os.environ.get("BOARDS_TO_BUILD") 
     boards = [board.strip() for board in os.environ.get("BOARDS_TO_BUILD").split(",")]
     if use_verbose:
         print("::debug::Building only boards specified in yaml.")
+        print(f"::debug::{os.environ.get("BOARDS_TO_BUILD")}")
 else:
     boards = list(board_to_pio_env.keys())
     if use_verbose:
         print("::debug::Building all boards available in the platformio.ini file.")
+        print(f"::debug::{board_to_pio_env.keys()}")
 
 # remove any ignored boards from the list
 if "BOARDS_TO_IGNORE" in os.environ.keys() and os.environ.get(
@@ -146,6 +148,9 @@ if "BOARDS_TO_IGNORE" in os.environ.keys() and os.environ.get(
 ) not in [
     "",
 ]:
+    if use_verbose:
+        print("::debug::Ignoring boards specified in yaml.")
+        print(f"::debug::{os.environ.get("BOARDS_TO_IGNORE")}")
     boards = [
         board
         for board in boards
@@ -182,6 +187,14 @@ arduino_cli_cores = list(
 pio_platforms = list(
     OrderedDict.fromkeys([board_to_pio_platform[board] for board in boards])
 )
+
+# print out the list of platforms/cores
+print("The following PlatformIO platforms will be installed:")
+print(pio_platforms)
+
+
+print("The following Arduino cores will be installed:")
+print(arduino_cli_cores)
 
 
 # %%
