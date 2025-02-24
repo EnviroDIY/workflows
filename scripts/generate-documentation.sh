@@ -87,6 +87,16 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     ls ${REPO_DIR} -R
     echo "::endgroup::"
     echo "-------------------"
+
+    echo "::group::Listing contents of current directory recursively"
+    ls -R
+    echo "::endgroup::"
+    echo "-------------------"
+
+    echo "::group::Listing contents of parent directory recursively"
+    ls .. -R
+    echo "::endgroup::"
+    echo "-------------------"
 fi
 
 echo "\e[32mCreating dox files from example file headers\e[0m"
