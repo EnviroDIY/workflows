@@ -102,7 +102,13 @@ set +e
 echo "\e[32mGenerating Doxygen code documentation...\e[0m"
 echo "::group::Doxygen Run Log"
 # Redirect both stderr and stdout to the log file AND the console.
-doxygen Doxyfile 2>&1 | tee output_doxygen_run.log
+# case sensitive!
+if [ -e Doxyfile ]; then
+    doxygen Doxyfile 2>&1 | tee output_doxygen_run.log
+else
+    doxygen doxyfile 2>&1 | tee output_doxygen_run.log
+fi
+
 result_code=${PIPESTATUS[0]}
 echo "::endgroup::"
 
