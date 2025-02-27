@@ -285,7 +285,7 @@ def uninstall_project_unused_libdeps(options):
     if len(unused_dependencies) == 0:
         print("No unused dependencies to remove.")
     for spec in unused_dependencies:
-        print(private_lm.log)
+        # print(private_lm.log)
         try:
             private_lm.uninstall(spec)
         except UnknownPackageError:
@@ -307,7 +307,7 @@ def install_project_env_libraries(options):
         if not spec.external and not spec.owner:
             print(f"Skipping {library}")
             continue
-        print(private_lm.log)
+        # print(private_lm.log)
         already_installed = private_lm.get_package(spec) is not None
         sub_dependencies = private_lm.get_pkg_dependencies(private_lm.get_package(spec))
         if (
