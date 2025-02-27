@@ -309,6 +309,15 @@ def install_project_env_libraries(options):
             continue
         print(private_lm.log)
         already_installed = private_lm.get_package(spec) is not None
+        sub_dependencies = private_lm.get_pkg_dependencies(private_lm.get_package(spec))
+        if (
+            options.get("skip_dependencies") == False
+            and sub_dependencies is not None
+            and len(sub_dependencies) > 0
+        ):
+            for sub_dependency in sub_dependencies:
+                dep_spec = private_lm.dependency_to_spec(sub_dependency)
+                already_installed &= private_lm.get_package(dep_spec) is not None
         was_updated = False
         if not already_installed:
             print(
@@ -383,6 +392,8 @@ def sort_lib_deps(verbose=False):
             matched_dep = list(
                 filter(lambda d: d.metadata.name == dep_spec.name, sorted_deps)
             )
+            if dependency["name"] in ["SD"]:
+                matched_dep.extend(dependency["name"])
             if len(matched_dep) == 0 or dep_spec.external:
                 num_sorted_deps += 1
             else:
@@ -395,7 +406,7 @@ def sort_lib_deps(verbose=False):
         else:
             if verbose:
                 print(
-                    f"{current_lib.metadata.name} still is dependent on {num_sorted_deps} other packagess"
+                    f"{current_lib.metadata.name} still is dependent on {num_sorted_deps} other packages"
                 )
             unsorted_deps.append(current_lib)
 

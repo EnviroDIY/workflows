@@ -82,17 +82,6 @@ jobs:
         run: |
           pip install --upgrade --upgrade-strategy only-if-needed -r requirements.txt
 
-      - name: Setup Node
-        if: env.ACT == 'true'
-        uses: actions/setup-node@v4
-        with:
-          cache: 'npm'
-
-      # Needed for TeX live install
-      - name: Install crypto-js
-        if: env.ACT == 'true'
-        run: npm install crypto-js
-
       # NOTE: The packages mostly match scheme-medium, with the removal of some languages and addition of standalone
       # https://tug.org/svn/texlive/trunk/Master/tlpkg/tlpsrc/scheme-medium.tlpsrc?view=markup
       - name: Install or Restore Tex Live

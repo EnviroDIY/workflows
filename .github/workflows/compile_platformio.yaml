@@ -119,10 +119,9 @@ jobs:
         id: py_stonefly
         run: |
           echo "Moving Stonefly boards files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/boards boards
+          mv envirodiy_boards/EnviroDIYSAMDBoards/boards ~/.platformio/boards
           echo "Moving Stonefly variants files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/variants variants
-          ls -R
+          mv envirodiy_boards/EnviroDIYSAMDBoards/variants ~/.platformio/variants
           pio boards --installed envirodiy
 
       - name: Include problem matcher
