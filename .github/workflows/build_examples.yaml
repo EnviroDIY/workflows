@@ -57,9 +57,9 @@ jobs:
         id: py_stonefly
         run: |
           echo "Moving Stonefly boards files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/boards boards
+          mv envirodiy_boards/EnviroDIYSAMDBoards/boards/* boards
           echo "Moving Stonefly variants files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/variants variants
+          mv envirodiy_boards/EnviroDIYSAMDBoards/variants/* variants
           ls -R
 
       - name: Generate Platform Installation Script
