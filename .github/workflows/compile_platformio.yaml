@@ -118,10 +118,25 @@ jobs:
       - name: Move Stonefly Board Info
         id: py_stonefly
         run: |
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
           echo "Moving Stonefly boards files"
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            ls -R envirodiy_boards/EnviroDIYSAMDBoards
+          fi
           mv envirodiy_boards/EnviroDIYSAMDBoards/boards/* ~/.platformio/boards
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            ls -R ~/.platformio/boards
+          fi
           echo "Moving Stonefly variants files"
           mv envirodiy_boards/EnviroDIYSAMDBoards/variants/* ~/.platformio/variants
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            ls -R ~/.platformio/variants
+          fi
           pio boards --installed envirodiy
 
       - name: Include problem matcher
