@@ -1,4 +1,4 @@
-name: Build Examples with Arduino CLI
+name: Arduino CLI Compile
 
 on:
   workflow_call:

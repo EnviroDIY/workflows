@@ -1,4 +1,4 @@
-name: Build Arduino Library Examples
+name: Build Library Examples
 
 on:
   workflow_call:
@@ -44,23 +44,6 @@ jobs:
 
       - name: Setup PlatformIO
         uses: EnviroDIY/setup-platformio-action@v1.0.2
-
-      # check the EnviroDIY boards repo to get the Stonefly info
-      - name: Checkout EnviroDIY boards
-        uses: actions/checkout@v4
-        with:
-          # Repository name with owner. For example, actions/checkout
-          repository: EnviroDIY/Arduino_boards
-          path: envirodiy_boards
-
-      - name: Move Stonefly Board Info
-        id: py_stonefly
-        run: |
-          echo "Moving Stonefly boards files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/boards/* boards
-          echo "Moving Stonefly variants files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/variants/* variants
-          ls -R
 
       - name: Generate Platform Installation Script
         id: py_platforms

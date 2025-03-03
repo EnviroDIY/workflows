@@ -1,4 +1,4 @@
-name: Build Examples with PlatformIO
+name: PlatformIO Compile
 
 on:
   workflow_call:
@@ -119,9 +119,9 @@ jobs:
         id: py_stonefly
         run: |
           echo "Moving Stonefly boards files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/boards ~/.platformio/boards
+          mv envirodiy_boards/EnviroDIYSAMDBoards/boards/* ~/.platformio/boards
           echo "Moving Stonefly variants files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/variants ~/.platformio/variants
+          mv envirodiy_boards/EnviroDIYSAMDBoards/variants/* ~/.platformio/variants
           pio boards --installed envirodiy
 
       - name: Include problem matcher
@@ -154,6 +154,8 @@ jobs:
             ~/.platformio/packages
             ~/.platformio/platforms
             ~/.platformio/caches
+            ~/.platformio/boards
+            ~/.platformio/variants
           key: ${{ steps.restore_platforms.outputs.cache-primary-key }}
 
       - name: Cache PlatformIO libraries
