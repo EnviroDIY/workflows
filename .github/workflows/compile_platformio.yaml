@@ -129,8 +129,7 @@ jobs:
             ls -R envirodiy_boards/EnviroDIYSAMDBoards
             sleep 5
           fi
-          mv envirodiy_boards/EnviroDIYSAMDBoards/boards/* ~/.platformio/boards  || true
-          mv envirodiy_boards/EnviroDIYSAMDBoards/boards/ ~/.platformio/boards || true
+          mv envirodiy_boards/EnviroDIYSAMDBoards/boards/ ~/.platformio/boards
           if [ "$RUNNER_DEBUG" = "1" ]; then
             ls -R ~/.platformio/boards
             sleep 5
