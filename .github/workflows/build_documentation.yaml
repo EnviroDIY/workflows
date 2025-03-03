@@ -261,6 +261,9 @@ jobs:
           echo ::group::TeX Live Format Util
           fmtutil-user --all
           echo ::endgroup::
+          echo ::group::GhostScript Library Files
+          find / -name "libgs*" || true
+          echo ::endgroup::
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
           chmod +x generate-documentation.sh
