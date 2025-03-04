@@ -135,7 +135,7 @@ jobs:
             sleep 5
           fi
           echo "Moving Stonefly variants files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/variants/* ~/.platformio/variants
+          mv envirodiy_boards/EnviroDIYSAMDBoards/variants/ ~/.platformio/variants
           if [ "$RUNNER_DEBUG" = "1" ]; then
             ls -R ~/.platformio/variants
             sleep 5
@@ -159,6 +159,9 @@ jobs:
           echo ::endgroup::
           echo ::group::Installed Libraries
           pio pkg list -g -v --only-libraries
+          echo ::endgroup::
+          echo ::group::Installed EnviroDIY Boards
+          pio boards --installed envirodiy
           echo ::endgroup::
           chmod +x ${{ matrix.job_info.script }}
           bash ${{ matrix.job_info.script }}
