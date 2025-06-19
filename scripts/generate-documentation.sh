@@ -28,7 +28,7 @@ latex --version || true
 # list all the TeX Live packages, if debugging is on
 if [ "$RUNNER_DEBUG" = "1" ]; then
     echo "::group::Installed TeX Live Packages"
-    tlmgr info --list --only-installed --data name
+    tlmgr info --list --only-installed --data name -V || true
     echo "::endgroup::"
 fi
 echo "\e[32mCurrent Python Version......\e[0m"
