@@ -24,7 +24,7 @@ doxygen -v 2>&1
 echo "\e[32mCurrent GraphViz (dot) version......\e[0m"
 dot -V || true
 echo "\e[32mCurrent TeXLive Version......\e[0m"
-latex --version
+latex --version || true
 # list all the TeX Live packages, if debugging is on
 if [ "$RUNNER_DEBUG" = "1" ]; then
     echo "::group::Installed TeX Live Packages"
