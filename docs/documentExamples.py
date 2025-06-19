@@ -72,7 +72,7 @@ if os.path.isdir(f"{extras_path}"):
         if os.path.isdir(os.path.join(extras_path, extra_dir))
         and os.path.isfile(
             os.path.abspath(
-                os.path.realpath(f"{examples_path}/{extra_dir}/{extra_dir}.ino")
+                os.path.realpath(f"{extras_path}/{extra_dir}/{extra_dir}.ino")
             )
         )
         and extra_dir not in [".history", "logger_test", "menu_a_la_carte"]
