@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_latex:
+        description: 'True use LaTeX for PDF output OR for generating png or svg images of the diagrams or forumlas'
+        required: false
+        type: boolean
+        default: true
       use_graphviz:
         description: 'True use GraphViz/dot'
         required: false
@@ -232,13 +237,14 @@ jobs:
               (steps.check_doxygen_version.outcome != 'success' ||
                   steps.check_doxygen_version.outputs.correct_doxygen != 'true')
             ) || (steps.install_doxygen_tar.outcome != 'success' &&
-                    steps.install_doxygen_tar.outcome != 'skipped')
+                    steps.install_doxygen_tar.outcome != 'skipped') || (inputs.use_latex)
           }}
-        uses: zauguin/install-texlive@v4
+        uses: teatimeguest/setup-texlive-action@v3
         with:
           packages: >
             collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience dvisvgm tex-gyre tex-gyre-math
-          cache_version: ${{ inputs.rebuild_cache_number }}
+          cache: true
+          # cache_version: ${{ inputs.rebuild_cache_number }}
 
       # build from source if we said to and we have the wrong version,
       # or if the install from tarball failed
