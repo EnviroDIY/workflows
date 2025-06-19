@@ -82,15 +82,15 @@ jobs:
         run: |
           pip install --upgrade --upgrade-strategy only-if-needed -r requirements.txt
 
-      # NOTE: The packages mostly match scheme-medium, with the removal of some languages and addition of standalone
-      # https://tug.org/svn/texlive/trunk/Master/tlpkg/tlpsrc/scheme-medium.tlpsrc?view=markup
-      - name: Install or Restore Tex Live
-        id: install_tex_live
-        uses: zauguin/install-texlive@v4
-        with:
-          packages: >
-            collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience dvisvgm tex-gyre tex-gyre-math
-          cache_version: ${{ inputs.rebuild_cache_number }}
+      # # NOTE: The packages mostly match scheme-medium, with the removal of some languages and addition of standalone
+      # # https://tug.org/svn/texlive/trunk/Master/tlpkg/tlpsrc/scheme-medium.tlpsrc?view=markup
+      # - name: Install or Restore Tex Live
+      #   id: install_tex_live
+      #   uses: zauguin/install-texlive@v4
+      #   with:
+      #     packages: >
+      #       collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience dvisvgm tex-gyre tex-gyre-math
+      #     cache_version: ${{ inputs.rebuild_cache_number }}
 
       - name: Install or Restore basic apt-get packages
         id: install_apt_get_deps
@@ -220,6 +220,25 @@ jobs:
             build-essential flex bison
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
+
+
+      # NOTE: The packages mostly match scheme-medium, with the removal of some languages and addition of standalone
+      # https://tug.org/svn/texlive/trunk/Master/tlpkg/tlpsrc/scheme-medium.tlpsrc?view=markup
+      - name: Install or Restore Tex Live
+        id: install_tex_live
+        if: >-
+          ${{
+            (  inputs.build_doxygen &&
+              (steps.check_doxygen_version.outcome != 'success' ||
+                  steps.check_doxygen_version.outputs.correct_doxygen != 'true')
+            ) || (steps.install_doxygen_tar.outcome != 'success' &&
+                    steps.install_doxygen_tar.outcome != 'skipped')
+          }}
+        uses: zauguin/install-texlive@v4
+        with:
+          packages: >
+            collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience dvisvgm tex-gyre tex-gyre-math
+          cache_version: ${{ inputs.rebuild_cache_number }}
 
       # build from source if we said to and we have the wrong version,
       # or if the install from tarball failed
