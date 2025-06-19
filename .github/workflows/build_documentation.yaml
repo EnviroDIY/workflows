@@ -279,7 +279,7 @@ jobs:
         run: |
           if [ "$RUNNER_DEBUG" = "1" ]; then
             echo ::group::TeX Live Format Util
-            fmtutil-user --all
+            fmtutil-user --all || true
             echo ::endgroup::
             echo ::group::GhostScript Library Files
             find / -name "libgs*" || true
