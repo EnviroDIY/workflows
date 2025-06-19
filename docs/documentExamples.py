@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-import fileinput
 import re
 import os
-import glob
 
 # %%
 # Some working directories
@@ -46,6 +44,31 @@ print(f"Examples Path: {examples_path}")
 print(f"Extras Path: {extras_path}")
 print(f"DOX Output Path: {output_file}")
 
+# the file types that doxygen will parse
+doxy_file_types = [
+    r"c",
+    r"cc",
+    r"cxx",
+    r"cpp",
+    r"c++",
+    r"h",
+    r"hh",
+    r"hxx",
+    r"hpp",
+    r"h++",
+    r"tpp",
+    r"inc",
+    r"m",
+    r"markdown",
+    r"md",
+    r"mm",
+    r"dox",
+    r"doc",
+    r"txt",
+]
+doxy_file_type_patterns = (
+    r"(?:(?:.*\." + r")\Z|(?:.*\.".join(doxy_file_types) + r"\Z))".replace(r"+", r"\\+")
+)
 
 # %%
 examples_to_doc = []
@@ -118,8 +141,25 @@ with open(output_file, "w+") as out_file:
                     end_comment_in_line = line.find("*/") + 2
                     out_file.write(line[0:end_comment_in_line])
                     print(f"  Last line of doc block: {i}")
-                    # write out a directory listing for the example
-                    out_file.write(f"\n/**\n * @dir {"/".join(filename.split(os.sep)[-3:-1])}\n * @brief Contains the {re.sub(r".ino$",'',os.path.split(filename)[1])} example.\n */\n")
+                    # write out a directory listing for the example, only if there are other files in the directory
+                    if (
+                        len(
+                            [
+                                file
+                                for file in os.listdir(os.path.dirname(filename))
+                                if re.match(
+                                    doxy_file_type_patterns, file, flags=re.IGNORECASE
+                                )
+                            ]
+                        )
+                        > 0
+                    ):
+                        print(f"  Writing directory listing for {filename}")
+                        out_file.write(
+                            f"\n/**\n * @dir {'/'.join(filename.split(os.sep)[-3:-1])}\n * @brief Contains the {re.sub(r'.ino$','',os.path.split(filename)[1])} example.\n */\n"
+                        )
+                    else:
+                        print(f"  No directory listing needed for {filename}")
                     got_start_comment = False
                     got_example_nav = False
                     got_footer_nav = False
