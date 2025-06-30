@@ -120,6 +120,7 @@ else
 fi
 
 result_code=${PIPESTATUS[0]}
+echo "\n\n\e[32mFinished running doxygen with result code: $result_code"
 echo "::endgroup::"
 
 echo "::group::Doxygen Output"
@@ -186,6 +187,8 @@ fi
 echo "::endgroup::"
 echo "::group::m.css Output"
 echo "$(<output_mcss.log)"
+
+echo "\n\n\e[32mFinished running m.css with result code: $result_code"
 
 echo "::endgroup::"
 

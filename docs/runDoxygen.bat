@@ -114,6 +114,10 @@ python -u "%WORKFLOW_DIR%fixSectionsInXml.py" > output_fixSectionsInXml.log 2>&1
 echo Running m.css Doxygen post-processor...
 python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%MCSS_DIR%documentation\templates\EnviroDIY" --debug > output_mcss_run.log 2>&1
 @REM python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss.log --templates "%MCSS_DIR%documentation\templates\EnviroDIY" > output_mcss_run.log 2>&1
+IF %errorlevel% NEQ 0 (
+  echo m.css post-processor failed with error code %errorlevel%.
+  exit /b %errorlevel%
+)
 
 @REM copy functions so they look right
 echo Copying function documentation
