@@ -1,15 +1,47 @@
 #!/usr/bin/env python
 # %%
-import enum
 import fileinput
 import re
 import sys
 import string
+import hashlib
+import argparse
+
+# %%
+# set up arg parse
+try:
+    get_ipython().__class__.__name__
+    repo_name = "ModularSensors"
+    input_file = "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors\\examples\\ReadMe.md"
+    local_testing = True
+except NameError:
+    # parse command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input_file_positional", nargs="?")
+    parser.add_argument(
+        "--repo",
+        type=str,
+        default=argparse.SUPPRESS,
+        help="The name of the repository, used to create and parse links to the GitHub repo.",
+    )
+    parser.add_argument(
+        "--input_file",
+        type=str,
+        default=argparse.SUPPRESS,
+        help="The name of the input file to process. If not provided, the script will read from standard input.",
+    )
+    args = parser.parse_args()
+    repo_name = args.repo if "repo" in args else None
+    input_file = args.input_file if "input_file" in args else args.input_file_positional
+    local_testing = False
 
 
+#  %%
 # a helper function to go from snake back to camel
-def snake_to_camel(snake_str):
-    components = snake_str.strip().split("_")
+def snake_to_camel(snake_str: str) -> str:
+    components = snake_str.replace("__", "_").strip().split("_")
+    # in the case of multiple underscores, we want to keep the empty components
+    components = ["_" if x == "" else x for x in components]
     # We capitalize the first letter of each component except the first one
     # with the 'title' method and join them together.
     camel_str = components[0] + "".join(x.title() for x in components[1:])
@@ -19,13 +51,15 @@ def snake_to_camel(snake_str):
         return camel_str
 
 
-def camel_to_snake(name):
+def camel_to_snake(name: str | None) -> str:
+    if not name:
+        return ""
     name = name.strip().replace(" ", "_")
     name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name.strip())
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
 
-def github_slugify(name):
+def github_slugify(name: str) -> str:
     return (
         name.strip()
         .lower()
@@ -39,36 +73,323 @@ def github_slugify(name):
     )
 
 
+#  %%
+# doxygen functions for converting file names
+# functions are in https://github.com/doxygen/doxygen/blob/b3b06bddb788e48d207b286f00dbdc384a883ef2/src/util.cpp#L3841C1-L4069C2
+# translated to python using https://www.codeconvert.ai/c++-to-python-converter
+
+
+# this is used by doxygen to escape characters in the raw names of objects to be documented
+def escape_chars_in_string(name: str, allow_dots: bool, allow_underscore: bool) -> str:
+    if not name:
+        return name
+
+    case_sense_names = False  # Assuming case_sense_names is False for this
+    allow_unicode_names = False  # Assuming allow_unicode_names is False for this
+    grow_buf = []
+    hex_chars = "0123456789abcdef"
+    p = iter(name)
+
+    for c in p:
+        if c == "_":
+            if allow_underscore:
+                grow_buf.append("_")
+            else:
+                grow_buf.append("__")
+        elif c == "-":
+            grow_buf.append("-")
+        elif c == ":":
+            grow_buf.append("_1")
+        elif c == "/":
+            grow_buf.append("_2")
+        elif c == "<":
+            grow_buf.append("_3")
+        elif c == ">":
+            grow_buf.append("_4")
+        elif c == "*":
+            grow_buf.append("_5")
+        elif c == "&":
+            grow_buf.append("_6")
+        elif c == "|":
+            grow_buf.append("_7")
+        elif c == ".":
+            if allow_dots:
+                grow_buf.append(".")
+            else:
+                grow_buf.append("_8")
+        elif c == "!":
+            grow_buf.append("_9")
+        elif c == ",":
+            grow_buf.append("_00")
+        elif c == " ":
+            grow_buf.append("_01")
+        elif c == "{":
+            grow_buf.append("_02")
+        elif c == "}":
+            grow_buf.append("_03")
+        elif c == "?":
+            grow_buf.append("_04")
+        elif c == "^":
+            grow_buf.append("_05")
+        elif c == "%":
+            grow_buf.append("_06")
+        elif c == "(":
+            grow_buf.append("_07")
+        elif c == ")":
+            grow_buf.append("_08")
+        elif c == "+":
+            grow_buf.append("_09")
+        elif c == "=":
+            grow_buf.append("_0a")
+        elif c == "$":
+            grow_buf.append("_0b")
+        elif c == "\\":
+            grow_buf.append("_0c")
+        elif c == "@":
+            grow_buf.append("_0d")
+        elif c == "]":
+            grow_buf.append("_0e")
+        elif c == "[":
+            grow_buf.append("_0f")
+        elif c == "#":
+            grow_buf.append("_0g")
+        elif c == '"':
+            grow_buf.append("_0h")
+        elif c == "~":
+            grow_buf.append("_0i")
+        elif c == "'":
+            grow_buf.append("_0j")
+        elif c == ";":
+            grow_buf.append("_0k")
+        elif c == "`":
+            grow_buf.append("_0l")
+        else:
+            if ord(c) < 0:
+                do_escape = True
+                if allow_unicode_names:
+                    pass  # set to false for this script
+                    # char_len = get_utf8_char_num_bytes(ord(c))
+                    # if char_len > 0:
+                    #     grow_buf.append(name[name.index(c) : name.index(c) + char_len])
+                    #     next(p, None)  # Skip the next characters
+                    #     do_escape = False
+                if do_escape:
+                    id = ord(c) & 0xFF
+                    ids = f"_{hex_chars[id >> 4]}{hex_chars[id & 0xF]}"
+                    grow_buf.append(ids)
+            elif case_sense_names or not c.isupper():
+                grow_buf.append(c)
+            else:
+                grow_buf.append("_")
+                grow_buf.append(c.lower())
+
+    return "".join(grow_buf)
+
+
+# This is the inverse of escape_chars_in_string, used to unescape characters in strings
+# It is used to convert the escaped names back to their original form.
+def unescape_chars_in_string(s: str) -> str:
+    if not s:
+        return s
+    case_sense_names = False  # Assuming case_sense_names is False for this
+    result = []
+    p = iter(s)
+
+    try:
+        while True:
+            c = next(p)
+            if c == "_":  # 2 or 3 character escape
+                next_char = next(p)
+                if next_char == "_":
+                    result.append(c)  # __ -> '_'
+                elif next_char == "1":
+                    result.append(":")  # _1 -> ':'
+                elif next_char == "2":
+                    result.append("/")  # _2 -> '/'
+                elif next_char == "3":
+                    result.append("<")  # _3 -> '<'
+                elif next_char == "4":
+                    result.append(">")  # _4 -> '>'
+                elif next_char == "5":
+                    result.append("*")  # _5 -> '*'
+                elif next_char == "6":
+                    result.append("&")  # _6 -> '&'
+                elif next_char == "7":
+                    result.append("|")  # _7 -> '|'
+                elif next_char == "8":
+                    result.append(".")  # _8 -> '.'
+                elif next_char == "9":
+                    result.append("!")  # _9 -> '!'
+                elif next_char == "0":  # 3 character escape
+                    next_next_char = next(p)
+                    if next_next_char == "0":
+                        result.append(",")  # _00 -> ','
+                    elif next_next_char == "1":
+                        result.append(" ")  # _01 -> ' '
+                    elif next_next_char == "2":
+                        result.append("{")  # _02 -> '{'
+                    elif next_next_char == "3":
+                        result.append("}")  # _03 -> '}'
+                    elif next_next_char == "4":
+                        result.append("?")  # _04 -> '?'
+                    elif next_next_char == "5":
+                        result.append("^")  # _05 -> '^'
+                    elif next_next_char == "6":
+                        result.append("%")  # _06 -> '%'
+                    elif next_next_char == "7":
+                        result.append("(")  # _07 -> '('
+                    elif next_next_char == "8":
+                        result.append(")")  # _08 -> ')'
+                    elif next_next_char == "9":
+                        result.append("+")  # _09 -> '+'
+                    elif next_next_char == "a":
+                        result.append("=")  # _0a -> '='
+                    elif next_next_char == "b":
+                        result.append("$")  # _0b -> '$'
+                    elif next_next_char == "c":
+                        result.append("\\")  # _0c -> '\'
+                    elif next_next_char == "d":
+                        result.append("@")  # _0d -> '@'
+                    elif next_next_char == "e":
+                        result.append("]")  # _0e -> ']'
+                    elif next_next_char == "f":
+                        result.append("[")  # _0f -> '['
+                    elif next_next_char == "g":
+                        result.append("#")  # _0g -> '#'
+                    elif next_next_char == "h":
+                        result.append('"')  # _0h -> '"'
+                    elif next_next_char == "i":
+                        result.append("~")  # _0i -> '~'
+                    elif next_next_char == "j":
+                        result.append("'")  # _0j -> '\'
+                    elif next_next_char == "k":
+                        result.append(";")  # _0k -> ';'
+                    elif next_next_char == "l":
+                        result.append("`")  # _0l -> '`'
+                    else:  # unknown escape, just pass underscore character as-is
+                        result.append(c)
+                        result.append(next_char)
+                else:
+                    if (
+                        not case_sense_names and "a" <= next_char <= "z"
+                    ):  # lower to upper case escape, _a -> 'A'
+                        result.append(next_char.upper())
+                    else:  # unknown escape, pass underscore character as-is
+                        result.append(c)
+                        result.append(next_char)
+            else:  # normal character; pass as is
+                result.append(c)
+    except StopIteration:
+        pass
+
+    return "".join(result)
+
+
+def MD5Buffer(data):
+    return hashlib.md5(data.encode()).digest()
+
+
+def MD5SigToString(md5_sig):
+    return "".join(f"{byte:02x}" for byte in md5_sig)
+
+
+# this is the inverse of convert_name_to_file, used to convert file names back to their original names.
+# It is used to convert the escaped file names back to their original form.
+# this is created by me, not copied from doxygen code
+def convert_name_to_file(name, allowDots, allowUnderscore):
+    if not name:
+        return name
+
+    shortNames = False  # Assuming shortNames is False for this
+    createSubdirs = False  # Assuming createSubdirs is False for this
+    result = ""
+
+    if shortNames:  # use short names only
+        pass  # only using long names in this script
+    else:  # long names
+        result = escape_chars_in_string(name, allowDots, allowUnderscore)
+        resultLen = len(result)
+        if resultLen >= 128:  # prevent names that cannot be created!
+            md5_sig = MD5Buffer(result)
+            sigStr = MD5SigToString(md5_sig)
+            result = result[: 128 - 32] + sigStr
+
+    if createSubdirs:
+        pass  # not using subdirs in this script
+    return result
+
+
+# this is used by doxygen to convert the name of an object that will get its own documentation page into a file name for that object.
+def convert_ref_to_name(escaped_ref: str) -> str:
+    if not escaped_ref:
+        return escaped_ref
+    # these have been converted to md5 signatures, which cannot be converted back
+    if len(escaped_ref) >= 128:
+        return escaped_ref
+
+    stripped_ref = escaped_ref
+
+    # for some objects, doxygen adds a prefix to the name
+    # strip those off here
+    prefixes = ["module__", "group__", "dir_", "class", "namespace", "concept"]
+    for prefix in prefixes:
+        if stripped_ref.startswith(prefix):
+            stripped_ref = stripped_ref[len(prefix) :]
+    # in other cases, doxygen adds a post-fix to the name
+    # strip those off here
+    post_fixes = [
+        "_dep_incl",
+        "_incl",
+        "_inherit_graph",
+        "_coll_graph",
+        "-members",
+        "-example",
+    ]
+    for post_fix in post_fixes:
+        if stripped_ref.endswith(post_fix):
+            stripped_ref = stripped_ref[: -len(post_fix)]
+
+    result = unescape_chars_in_string(stripped_ref)
+
+    # when doxygen creates a link for a page, it uses exactly the text given in the @page command
+    # so we do NOT want to unescape the characters in the name
+    # unfortunately, we mostly have to guess what's a page
+    # I *usually* prefix the generic page names with "page_" and the example names with "example_"
+    # so I'm going to exclude those from the unescaping.
+    known_pages = ["change_log", "example_", "extra_", "page_"]
+    if any(escaped_ref.startswith(page) for page in known_pages):
+        result = escaped_ref
+
+    return result
+
+
 # %%
 print_me = True
 skip_me = False
 in_fence = False
 fence_language = ""
 i = 1
-local_testing = False
 
-# when testing use:
-# with fileinput.FileInput(
-#     "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\Arduino-SDI-12\\ChangeLog.md",
-#     openhook=fileinput.hook_encoded("utf-8", "surrogateescape"),
-# ) as input:
 
 with fileinput.FileInput(
-    openhook=fileinput.hook_encoded("utf-8", "surrogateescape")
+    input_file,
+    openhook=fileinput.hook_encoded("utf-8", "surrogateescape"),
 ) as input:
+    file_name = None
+    change_log_version = ""
     for line in input:
         if input.isfirstline():
             # Get the file name and directory
             # We'll use this to create the section id comment
             file_name_dir = input.filename()
             if "\\" in file_name_dir:
-                seper = "\\"
+                file_separator = "\\"
             else:
-                seper = "/"
+                file_separator = "/"
             if local_testing:
-                print("Separator: '{}'\n".format(seper))
-            file_dir = file_name_dir.rsplit(sep=seper, maxsplit=1)[0]
-            file_name_ext = file_name_dir.rsplit(sep=seper, maxsplit=1)[1]
+                print("Separator: '{}'\n".format(file_separator))
+            file_dir = file_name_dir.rsplit(sep=file_separator, maxsplit=1)[0]
+            file_name_ext = file_name_dir.rsplit(sep=file_separator, maxsplit=1)[1]
             file_name = file_name_ext.rsplit(sep=".", maxsplit=1)[0]
             file_ext = file_name_ext.rsplit(sep=".", maxsplit=1)[1]
             if local_testing:
@@ -80,13 +401,15 @@ with fileinput.FileInput(
             # For the example walk-throughs, written in the ReadMe files,
             # we want the example name, which is part of the directory.
             if "examples" in file_dir and file_name == "ReadMe":
-                file_name = "example_" + file_dir.rsplit(sep=seper, maxsplit=1)[-1]
+                file_name = (
+                    "example_" + file_dir.rsplit(sep=file_separator, maxsplit=1)[-1]
+                )
 
         if local_testing:
             print(i, print_me, skip_me, in_fence, fence_language, line)
 
         # I'm using these comments to fence off content that is only intended for
-        # github mardown rendering
+        # github markdown rendering
         if "[//]: # ( Start GitHub Only )" in line:
             print_me = False
 
@@ -166,7 +489,7 @@ with fileinput.FileInput(
                 massaged_line,
             )
 
-        # Special work-arounds for the change log
+        # Special work-around for the change log
         if file_name is not None and file_name == "ChangeLog":
             if line.lower().startswith("# changelog"):
                 massaged_line = "# ChangeLog {#change_log}\n"
@@ -224,7 +547,27 @@ with fileinput.FileInput(
                 massaged_line,
             )
 
-        # finally, replace code blocks with doxygen's prefered code block
+        # convert hard-coded github.io links to reference links
+        # I want these to be plain links, not reference links in the readme files, so they work nicely in GitHub
+        # but I want them to be reference links in the doxygen files, so they work nicely in the doxygen html
+        github_io_link = re.search(
+            r"\]\(https://(?P<org_name>[\w-]+)\.github\.io/(?P<repo_name>[\w-]+)/(?P<file_name>[\w-]+)\.html\)",
+            massaged_line,
+        )
+        if (
+            github_io_link is not None
+            and github_io_link.group("repo_name") is not None
+            and github_io_link.group("repo_name") == repo_name
+        ):
+            slugged_ref = github_io_link.group("file_name")
+            de_slugged_ref = convert_ref_to_name(slugged_ref)
+            massaged_line = re.sub(
+                r"\]\(https://(?P<org_name>[\w-]+)\.github\.io/(?P<repo_name>[\w-]+)/(?P<file_name>[\w-]+)\.html\)",
+                "](@ref " + de_slugged_ref + ")",
+                massaged_line,
+            )
+
+        # finally, replace code blocks with doxygen's preferred code block
         # also replace mermaid diagram blocks with pre/post tags
         # GitHub can render graphs in mermaid directly, but Doxygen needs extra tags and a script to do so.
         if "```" in line and not in_fence:
@@ -281,7 +624,7 @@ with fileinput.FileInput(
         if skip_me:
             skip_me = False
 
-        # a page, section, subsection, or subsubsection commands followed
+        # a page, section, subsection, or sub-subsection commands followed
         # immediately with by a markdown header leads to that section appearing
         # twice in the doxygen html table of contents.
         # I'm putting the section markers right above the header and then will skip the header.
@@ -295,8 +638,10 @@ with fileinput.FileInput(
             skip_me = True
 
         # I'm using these comments to fence off content that is only intended for
-        # github mardown rendering
+        # github markdown rendering
         if "[//]: # ( End GitHub Only )" in line:
             print_me = True
 
         i += 1
+
+# %%

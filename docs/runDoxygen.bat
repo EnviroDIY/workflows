@@ -95,9 +95,11 @@ set PLATFORMIO_GLOBALLIB_DIR=../.pio/libdeps/mayfly
 set PLATFORMIO_PACKAGES_DIR=C:/Users/sdamiano/.platformio/PLATFORMIO_PACKAGES_DIR
 
 echo Generating Doxygen code documentation...
+@REM https://github.com/doxygen/doxygen/blob/master/doc_internal/doxygen.md
 "C:\Program Files\doxygen\bin\doxygen.exe" Doxyfile > output_doxygen_run.log 2>&1
-@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d filteroutput -d preprocessor Doxyfile > output_doxygen_run.log 2>&1
-@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d filteroutput -d commentcnv -d markdown Doxyfile > output_doxygen_run.log 2>&1
+@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d preprocessor Doxyfile > output_doxygen_run.log 2>&1
+@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d filteroutput -d commentcnv -d markdown Doxyfile > output_doxygen_run.log 2>&1
+@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d formula Doxyfile > output_doxygen_run.log 2>&1
 endlocal
 
 @REM Fix up xml sections before running m.css
