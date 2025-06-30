@@ -309,7 +309,12 @@ def install_project_env_libraries(options):
             continue
         # print(private_lm.log)
         already_installed = private_lm.get_package(spec) is not None
-        sub_dependencies = private_lm.get_pkg_dependencies(private_lm.get_package(spec))
+        try:
+            sub_dependencies = private_lm.get_pkg_dependencies(
+                private_lm.get_package(spec)
+            )
+        except TypeError:
+            sub_dependencies = None
         if (
             options.get("skip_dependencies") == False
             and sub_dependencies is not None
@@ -352,7 +357,10 @@ def install_project_env_libraries(options):
                 spec, skip_dependencies=options.get("skip_dependencies")
             )
             org_pkg = private_lm.get_package(spec)
-            was_updated = new_pkg == org_pkg
+            if org_pkg is None:
+                was_updated = True
+            else:
+                was_updated = new_pkg == org_pkg
         if not was_updated:
             pass
     return private_lm.get_installed()

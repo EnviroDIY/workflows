@@ -14,9 +14,9 @@ if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     relative_html = f"../../../../{repo_name}_Doxygen/html/"
 else:
     docbuild_dir = os.getcwd()
-    docbuild_dir = (
-        "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors\\docs"
-    )
+    # docbuild_dir = (
+    #     "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors\\docs"
+    # )
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
     relative_dir = f"../../{repo_name}_Doxygen/m.css/"
     relative_html = f"../../{repo_name}_Doxygen/html/"
