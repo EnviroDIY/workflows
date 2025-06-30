@@ -188,7 +188,8 @@ echo "::endgroup::"
 echo "::group::m.css Output"
 echo "$(<output_mcss.log)"
 
-echo "\n\n\e[32mFinished running m.css with result code: $result_code"
+echo "\n\n"
+echo "\e[32mFinished running m.css with result code: $result_code\e[0m"
 
 echo "::endgroup::"
 
