@@ -201,6 +201,13 @@ curl -SL ${WORKFLOW_DIR}copyFunctions.py -o copyFunctions.py
 python -u copyFunctions.py 2>&1
 echo "::endgroup::"
 
+# delete stupid links
+echo "\e[32mRemoving stupid sub-page links\e[0m"
+echo "::group::Removing stupid sub-page links"
+curl -SL ${WORKFLOW_DIR}removeStupidLinks.py -o removeStupidLinks.py
+python -u removeStupidLinks.py 2>&1
+echo "::endgroup::"
+
 # # Generate Arduino keywords using doxygen2keywords.xsl and Saxon
 # echo "\e[32mConverting the Doxygen output to an Arudino keywords file\e[0m"
 # java  -jar "C:\Users\sdamiano\Downloads\SaxonHE12-4J\saxon-he-12.4.jar" -o:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt" -s:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensorsDoxygen\xml\index.xml" -xsl:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\workflows\docs\doxygen2keywords.xsl"

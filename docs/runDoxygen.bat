@@ -47,6 +47,7 @@ echo "" > "%REPO_DIR%\docs\output_fixFunctionsInGroups.log"
 echo "" > "%REPO_DIR%\docs\output_mcss_run.log"
 echo "" > "%REPO_DIR%\docs\output_mcss.log"
 echo "" > "%REPO_DIR%\docs\output_copyFunctions.log"
+echo "" > "%REPO_DIR%\docs\output_removeStupidLinks.log"
 echo "" > "%REPO_DIR%\docs\output_check_component_inclusion.log"
 
 @REM Check versions of stuff
@@ -117,6 +118,12 @@ python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --out
 @REM copy functions so they look right
 echo Copying function documentation
 python -u "%WORKFLOW_DIR%copyFunctions.py" > output_copyFunctions.log 2>&1
+
+@REM Remove stupid links - to add sub-paging structure you must add pages for every level
+@REM and dump links to them in the parent page.
+@REM This is to remove those stupid pages and links.
+echo Removing stupid links that are created by sub-paging structure
+python -u "%WORKFLOW_DIR%removeStupidLinks.py" > output_removeStupidLinks.log 2>&1
 
 IF "%GITHUB_REPOSITORY%"=="ModularSensors" (
   echo Checking for inclusion of all ModularSensors components

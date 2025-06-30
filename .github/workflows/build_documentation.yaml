@@ -22,7 +22,7 @@ on:
         type: boolean
         default: false
       use_latex:
-        description: 'True use LaTeX for PDF output OR for generating png or svg images of the diagrams or forumlas'
+        description: 'True use LaTeX for PDF output OR for generating png or svg images of the diagrams or formulas'
         required: false
         type: boolean
         default: true

@@ -34,6 +34,7 @@ all_files = [
     if os.path.isfile(os.path.join(doxy_mcss_dir, f))
     and f.endswith(".html")
     and not f.endswith("fixed")
+    and not f.endswith("cleaned")
 ]
 
 
