@@ -65,6 +65,7 @@ def get_section_to_paste(match: re.Match) -> str:
     #     # print("---")
 
 
+# {{ <a href="class_analog_elec_conductivity.html#a66c05fe87f6c708042c97236c333aa76"    class="m-doc">AnalogElecConductivity::<wbr />AnalogElecConductivity</a> }}
 # {{ <a href="class_a_o_song_a_m2315___humidity.html#ab201cd06c49eec79df6263b8da8f10e3" class="m-doc">AOSongAM2315_Humidity::<wbr />AOSongAM2315_Humidity</a> }}
 
 # %%
@@ -92,7 +93,7 @@ for filename in all_files:
             if match is not None:
                 copy_paste_needed = True
                 new_line = re.sub(
-                    r'{{ <a href="(?P<copy_source_file>.*?)#(?P<copy_section_id>.*?)" .*? }}',
+                    r'<p>{{ <a href="(?P<copy_source_file>.*?)#(?P<copy_section_id>.*?)" .*? }}</p>',
                     get_section_to_paste,
                     line,
                 )

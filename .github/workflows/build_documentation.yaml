@@ -226,7 +226,6 @@ jobs:
           version: ${{ inputs.rebuild_cache_number }}
           debug: false
 
-
       # NOTE: The packages mostly match scheme-medium, with the removal of some languages and addition of standalone
       # https://tug.org/svn/texlive/trunk/Master/tlpkg/tlpsrc/scheme-medium.tlpsrc?view=markup
       - name: Install or Restore Tex Live
@@ -243,6 +242,7 @@ jobs:
         with:
           packages: >
             collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience dvisvgm tex-gyre tex-gyre-math
+          # collection-extrautils
           cache: true
           # cache_version: ${{ inputs.rebuild_cache_number }}
 
