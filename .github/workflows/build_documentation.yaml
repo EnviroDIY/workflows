@@ -238,13 +238,13 @@ jobs:
             ) || (steps.install_doxygen_tar.outcome != 'success' &&
                     steps.install_doxygen_tar.outcome != 'skipped') || (inputs.use_latex)
           }}
-        uses: teatimeguest/setup-texlive-action@v3
+        uses: zauguin/install-texlive@v4
         with:
           packages: >
             collection-basic collection-context collection-fontsrecommended collection-fontsextra collection-fontutils collection-langenglish collection-latex collection-latexrecommended collection-latexextra collection-mathscience dvisvgm tex-gyre tex-gyre-math
           # collection-extrautils
-          cache: true
-          # cache_version: ${{ inputs.rebuild_cache_number }}
+          cache_version: ${{ inputs.rebuild_cache_number }}
+          # cache: true
 
       # build from source if we said to and we have the wrong version,
       # or if the install from tarball failed
