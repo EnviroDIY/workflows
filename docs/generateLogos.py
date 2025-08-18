@@ -107,6 +107,7 @@ def create_logo(logo_type: str, library_name: str, library_version: str):
     )
     # display(img)
     img.save(f"docs/{logo_type}.png")
+    print(f"Saved docs/{logo_type}.png")
 
 
 # %%
