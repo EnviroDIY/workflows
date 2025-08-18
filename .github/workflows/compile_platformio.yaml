@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PlatformIO
         uses: EnviroDIY/setup-platformio-action@v1.0.2
@@ -109,7 +109,7 @@ jobs:
 
       # check the EnviroDIY boards repo to get the Stonefly info
       - name: Checkout EnviroDIY boards
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Repository name with owner. For example, actions/checkout
           repository: EnviroDIY/Arduino_boards
