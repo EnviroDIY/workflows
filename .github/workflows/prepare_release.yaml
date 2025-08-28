@@ -160,7 +160,7 @@ jobs:
       - name: Cache Arduino libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: (${{ always() }}) && ( ${{ steps.restore_libraries.outputs.cache-hit }} != 'true')
+        if: always() && steps.restore_libraries.outputs.cache-hit != 'true'
         with:
           path: |
             home/arduino/user
