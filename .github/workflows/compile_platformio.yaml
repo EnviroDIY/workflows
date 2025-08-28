@@ -169,7 +169,7 @@ jobs:
       - name: Cache PlatformIO platforms
         uses: actions/cache/save@v4
         id: cache_platforms
-        if: (${{ always() }}) && ( ${{ steps.restore_platforms.outcome }} == 'skipped' || ${{ steps.restore_platforms.outcome }} == 'success')
+        if: (${{ always() }}) && (${{ steps.restore_platforms.outputs.cache-hit }} != 'true')
         with:
           path: |
             ~/.platformio/packages
@@ -182,7 +182,7 @@ jobs:
       - name: Cache PlatformIO libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: (${{ always() }}) && ( ${{ steps.restore_libraries.outcome }} == 'skipped' || ${{ steps.restore_libraries.outcome }} == 'success')
+        if: (${{ always() }}) && (${{ steps.restore_libraries.outputs.cache-hit }} != 'true')
         with:
           path: |
             ~/.platformio/lib
