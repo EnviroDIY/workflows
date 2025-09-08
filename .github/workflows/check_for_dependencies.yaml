@@ -52,7 +52,7 @@ jobs:
             cat ./continuous_integration/dependencies.json >> consolidated_deps.txt
           fi
 
-          if [ "$has_library_json_deps" = true ] || [ "$has_library_dependencies" = true ]
+          if [[ $has_library_json_deps == true || $has_library_dependencies == true ]]
           then
             echo "has_library_dependencies=${has_library_dependencies}" >> $GITHUB_ENV
           fi
