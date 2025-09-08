@@ -302,17 +302,16 @@ def install_project_env_libraries(options):
 
     lib_deps = humanized_deps
     for library in lib_deps:
-        spec = PackageSpec(library)
+        req_spec = PackageSpec(library)
         # skip built-in dependencies
-        if not spec.external and not spec.owner:
+        if not req_spec.external and not req_spec.owner:
             print(f"Skipping {library}")
             continue
         # print(private_lm.log)
-        already_installed = private_lm.get_package(spec) is not None
+        installed_spec = private_lm.get_package(req_spec)
+        already_installed = installed_spec is not None
         try:
-            sub_dependencies = private_lm.get_pkg_dependencies(
-                private_lm.get_package(spec)
-            )
+            sub_dependencies = private_lm.get_pkg_dependencies(installed_spec)
         except TypeError:
             sub_dependencies = None
         if (
@@ -327,8 +326,8 @@ def install_project_env_libraries(options):
         if not already_installed:
             print(
                 "Installing",
-                spec.name,
-                spec.requirements if spec.requirements else spec.uri,
+                req_spec.name,
+                req_spec.requirements if req_spec.requirements else req_spec.uri,
             )
             if options.get("silent"):
                 private_lm.set_log_level(logging.WARN)
@@ -336,7 +335,7 @@ def install_project_env_libraries(options):
                 private_lm.set_log_level(logging.DEBUG)
             # print(private_lm.log)
             private_lm.install(
-                spec,
+                req_spec,
                 skip_dependencies=options.get("skip_dependencies"),
                 force=options.get("force"),
             )
@@ -344,8 +343,8 @@ def install_project_env_libraries(options):
         elif options.get("update"):
             print(
                 "Updating",
-                spec.name,
-                spec.requirements if spec.requirements else spec.uri,
+                req_spec.name,
+                req_spec.requirements if req_spec.requirements else req_spec.uri,
             )
             if options.get("silent"):
                 private_lm.set_log_level(logging.WARN)
@@ -354,9 +353,11 @@ def install_project_env_libraries(options):
             # check if the library should be updated
             # print(private_lm.log)
             new_pkg = private_lm.update(
-                spec, skip_dependencies=options.get("skip_dependencies")
+                from_spec=installed_spec,
+                to_spec=req_spec,
+                skip_dependencies=options.get("skip_dependencies"),
             )
-            org_pkg = private_lm.get_package(spec)
+            org_pkg = private_lm.get_package(req_spec)
             if org_pkg is None:
                 was_updated = True
             else:
