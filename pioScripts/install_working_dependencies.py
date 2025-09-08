@@ -308,7 +308,16 @@ def install_project_env_libraries(options):
             print(f"Skipping {library}")
             continue
         # print(private_lm.log)
-        installed_spec = private_lm.get_package(req_spec)
+        installed_spec = private_lm.get_package(
+            PackageSpec(
+                raw=None,
+                owner=req_spec.owner,
+                id=req_spec.id,
+                name=req_spec.name,
+                requirements=None,
+                uri=req_spec.uri,
+            )
+        )
         already_installed = installed_spec is not None
         try:
             sub_dependencies = private_lm.get_pkg_dependencies(installed_spec)
