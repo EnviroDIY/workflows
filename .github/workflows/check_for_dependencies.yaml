@@ -38,7 +38,7 @@ jobs:
           if [ -e library.json ]
           then
             echo "Library json found at ./library.json"
-            if grep -q "\"dependencies\": [" library.json; then
+            if grep -q "\"dependencies\"" library.json; then
               echo "Library json has dependencies"
               has_library_json_deps=true
             fi
