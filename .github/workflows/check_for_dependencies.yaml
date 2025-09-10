@@ -34,26 +34,28 @@ jobs:
             set -x
           fi
 
-          has_library_json_deps=false
+          has_library_spec_deps=false
           if [ -e library.json ]
           then
             echo "Library json found at ./library.json"
             if grep -q "\"dependencies\"" library.json; then
               echo "Library json has dependencies"
-              has_library_json_deps=true
+              has_library_spec_deps=true
             fi
           fi
 
-          has_library_dependencies=false
+          has_library_json=false
           if [ -e ./continuous_integration/dependencies.json ]
           then
             echo "Library dependency json found at ./continuous_integration/dependencies.json"
-            has_library_dependencies=true
+            has_library_json=true
             cat ./continuous_integration/dependencies.json >> consolidated_deps.txt
           fi
 
-          if [[ $has_library_json_deps == true || $has_library_dependencies == true ]]
+          has_library_dependencies=false
+          if [[ $has_library_spec_deps == true || $has_library_json == true ]]
           then
+            has_library_dependencies=true
             echo "has_library_dependencies=${has_library_dependencies}" >> $GITHUB_ENV
           fi
 
