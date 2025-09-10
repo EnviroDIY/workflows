@@ -44,16 +44,16 @@ jobs:
             fi
           fi
 
-          has_library_json=false
+          has_library_json_deps=false
           if [ -e ./continuous_integration/dependencies.json ]
           then
             echo "Library dependency json found at ./continuous_integration/dependencies.json"
-            has_library_json=true
+            has_library_json_deps=true
             cat ./continuous_integration/dependencies.json >> consolidated_deps.txt
           fi
 
           has_library_dependencies=false
-          if [[ $has_library_spec_deps == true || $has_library_json == true ]]
+          if [ "$has_library_spec_deps" -eq "true" -a "$has_library_json_deps" -eq "true" ]
           then
             has_library_dependencies=true
             echo "has_library_dependencies=${has_library_dependencies}" >> $GITHUB_ENV
