@@ -38,7 +38,8 @@ jobs:
           if [ -e library.json ]
           then
             echo "Library json found at ./library.json"
-            if grep -q "\"dependencies\"" library.json; then
+            if [ $(grep -q "\"dependencies\"" library.json) ]
+            then
               echo "Library json has dependencies"
               has_library_spec_deps=true
             fi
@@ -53,7 +54,7 @@ jobs:
           fi
 
           has_library_dependencies=false
-          if [ "$has_library_spec_deps" -eq "true" -a "$has_library_json_deps" -eq "true" ]
+          if [ "$has_library_spec_deps" -eq "true" -o "$has_library_json_deps" -eq "true" ]
           then
             has_library_dependencies=true
             echo "has_library_dependencies=${has_library_dependencies}" >> $GITHUB_ENV
