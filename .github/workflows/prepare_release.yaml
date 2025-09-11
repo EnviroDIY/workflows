@@ -13,7 +13,6 @@ env:
   PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
 
 jobs:
-
   check_version_number:
     name: Check Version Number
     runs-on: ubuntu-latest
@@ -104,17 +103,19 @@ jobs:
         run: |
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
 
-      - name: Restore Arduino libraries
+      - name: Restore Arduino Libraries
         uses: actions/cache/restore@v4
         id: restore_libraries
         with:
           path: |
             home/arduino/user
-          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
+          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}
+          restore-keys: |
+            arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
 
       # Install any library dependencies for the Arduino CLI, iff no cache
       # NOTE: Don't update the dependencies beyond what's in the install script!
-      - name: Install the Arduino libraries
+      - name: Install the Arduino Libraries
         id: install_libraries
         if: ${{ (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
@@ -157,15 +158,14 @@ jobs:
           path: |
             ${{ needs.check_version_number.outputs.zip_name }}.zip
 
-      - name: Cache Arduino libraries
+      - name: Cache Arduino Libraries
         uses: actions/cache/save@v4
         id: cache_libraries
         if: always() && steps.restore_libraries.outputs.cache-hit != 'true'
         with:
           path: |
             home/arduino/user
-          key: ${{ steps.restore_libraries.outputs.cache-primary-key }}
-
+          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}
 
   release_with_assets:
     name: Create a Release with Assets

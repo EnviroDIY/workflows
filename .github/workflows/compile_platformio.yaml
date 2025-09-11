@@ -54,7 +54,7 @@ jobs:
             mv continuous_integration_artifacts/platformio.ini continuous_integration/platformio.ini
           fi
 
-      - name: Restore PlatformIO platforms
+      - name: Restore PlatformIO Platforms
         uses: actions/cache/restore@v4
         id: restore_platforms
         with:
@@ -62,10 +62,12 @@ jobs:
             ~/.platformio/packages
             ~/.platformio/platforms
             ~/.platformio/caches
-          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          restore-keys: |
+            pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}
 
       # Install the PlatformIO platforms at global level, iff no cache
-      - name: Install PlatformIO platforms
+      - name: Install PlatformIO Platforms
         id: install_platforms
         if: steps.restore_platforms.outputs.cache-hit != 'true'
         run: |
@@ -80,17 +82,20 @@ jobs:
       #     chmod +x install-platforms-platformio.sh
       #     sh install-platforms-platformio.sh
 
-      - name: Restore PlatformIO libraries
+      - name: Restore PlatformIO Libraries
         uses: actions/cache/restore@v4
         id: restore_libraries
         with:
           path: |
             ~/.platformio/lib
             $GITHUB_WORKSPACE/lib
-          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          restore-keys: |
+            pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}
+            pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
 
       # Install any library dependencies with PlatformIO at the global level, iff no cache
-      - name: Install PlatformIO libraries
+      - name: Install PlatformIO Libraries
         id: install_libraries
         if: ${{ (steps.restore_libraries.outputs.cache-hit != 'true') }}
         run: |
@@ -166,7 +171,7 @@ jobs:
           chmod +x ${{ matrix.job_info.script }}
           bash ${{ matrix.job_info.script }}
 
-      - name: Cache PlatformIO platforms
+      - name: Cache PlatformIO Platforms
         uses: actions/cache/save@v4
         id: cache_platforms
         if: always() && steps.restore_platforms.outputs.cache-hit != 'true'
@@ -177,9 +182,9 @@ jobs:
             ~/.platformio/caches
             ~/.platformio/boards
             ~/.platformio/variants
-          key: ${{ steps.restore_platforms.outputs.cache-primary-key }}
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
 
-      - name: Cache PlatformIO libraries
+      - name: Cache PlatformIO Libraries
         uses: actions/cache/save@v4
         id: cache_libraries
         if: always() && steps.restore_libraries.outputs.cache-hit != 'true'
@@ -187,4 +192,4 @@ jobs:
           path: |
             ~/.platformio/lib
             $GITHUB_WORKSPACE/lib
-          key: ${{ steps.restore_libraries.outputs.cache-primary-key }}
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
