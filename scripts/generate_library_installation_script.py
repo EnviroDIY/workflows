@@ -32,15 +32,15 @@ echo "\\e[32mCurrent Arduino CLI version:\\e[0m"
 arduino-cli version
 
 echo "\\e[32mUpdating the library index\\e[0m"
-arduino-cli --config-file arduino_cli.yaml lib update-index
+arduino-cli --config-file {0} lib update-index
 """
 
 acli_end_text = """
 
 echo "::group::Current globally installed libraries"
 echo "\\e[32mCurrently installed libraries:\\e[0m"
-arduino-cli --config-file arduino_cli.yaml lib update-index
-arduino-cli --config-file arduino_cli.yaml lib list
+arduino-cli --config-file {0} lib update-index
+arduino-cli --config-file {0} lib list
 echo "::endgroup::"
 """
 
@@ -324,7 +324,7 @@ print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
 bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
 bash_out.write("#!/bin/bash\n\n")
 bash_out.write(debug_text)
-bash_out.write(acli_start_text)
+bash_out.write(acli_start_text.format(arduino_cli_config))
 for library in library_specs["dependencies"]:
     install_command = create_arduino_cli_lib_command(
         library=library,
@@ -333,7 +333,7 @@ for library in library_specs["dependencies"]:
         install_command, f"Installing {library['name']}"
     )
     bash_out.write("\n".join(command_with_log))
-bash_out.write(acli_end_text)
+bash_out.write(acli_end_text.format(arduino_cli_config))
 bash_out.close()
 
 
@@ -343,7 +343,7 @@ print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
 bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
 bash_out.write("#!/bin/bash\n\n")
 bash_out.write(debug_text)
-bash_out.write(acli_start_text)
+bash_out.write(acli_start_text.format(arduino_cli_config))
 for library in example_specs["dependencies"]:
     install_command = create_arduino_cli_lib_command(
         library=library,
@@ -352,7 +352,7 @@ for library in example_specs["dependencies"]:
         install_command, f"Installing {library['name']}"
     )
     bash_out.write("\n".join(command_with_log))
-bash_out.write(acli_end_text)
+bash_out.write(acli_end_text.format(arduino_cli_config))
 bash_out.close()
 
 # %%
