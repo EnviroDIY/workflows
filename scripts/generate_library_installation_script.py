@@ -32,15 +32,15 @@ echo "\\e[32mCurrent Arduino CLI version:\\e[0m"
 arduino-cli version
 
 echo "\\e[32mUpdating the library index\\e[0m"
-arduino-cli --config-file {0} lib update-index
+arduino-cli --config-file "{0}" lib update-index
 """
 
 acli_end_text = """
 
 echo "::group::Current globally installed libraries"
 echo "\\e[32mCurrently installed libraries:\\e[0m"
-arduino-cli --config-file {0} lib update-index
-arduino-cli --config-file {0} lib list
+arduino-cli --config-file "{0}" lib update-index
+arduino-cli --config-file "{0}" lib list
 echo "::endgroup::"
 """
 

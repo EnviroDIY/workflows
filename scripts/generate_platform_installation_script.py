@@ -203,7 +203,7 @@ def create_arduino_cli_core_command(core_name: str) -> str:
     arduino_command_args = [
         "arduino-cli",
         "--config-file",
-        arduino_cli_config,
+        f'"{arduino_cli_config}"',
         "core",
         "install",
         core_name,
@@ -254,8 +254,10 @@ echo "\\e[32mCurrent Arduino CLI version:\\e[0m"
 arduino-cli version
 
 echo "\\e[32mUpdating the core index\\e[0m"
-arduino-cli --config-file arduino_cli.yaml core update-index
-"""
+arduino-cli --config-file "{0}" core update-index
+""".format(
+        arduino_cli_config
+    )
 )
 
 for core in arduino_cli_cores:
@@ -270,14 +272,16 @@ bash_out.write(
     """
 
 echo "\\e[32mUpdating the core index\\e[0m"
-arduino-cli --config-file arduino_cli.yaml core update-index
+arduino-cli --config-file "{0}" core update-index
 
 echo "\\e[32mUpgrading all cores\\e[0m"
-arduino-cli --config-file arduino_cli.yaml core upgrade
+arduino-cli --config-file "{0}" core upgrade
 
 echo "\\e[32mCurrently installed cores:\\e[0m"
-arduino-cli --config-file arduino_cli.yaml core list
-"""
+arduino-cli --config-file "{0}" core list
+""".format(
+        arduino_cli_config
+    )
 )
 bash_out.close()
 
