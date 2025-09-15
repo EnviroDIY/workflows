@@ -70,7 +70,7 @@ jobs:
       # Install the PlatformIO platforms at global level, iff no cache
       - name: Install PlatformIO Platforms
         id: install_platforms
-        if: steps.restore_platforms.outputs.cache-hit != 'true'
+        if: steps.restore_platforms.outputs.cache-matched-key != ''
         run: |
           chmod +x install-platforms-platformio.sh
           sh install-platforms-platformio.sh
@@ -98,7 +98,7 @@ jobs:
       # Install any library dependencies with PlatformIO at the global level, iff no cache
       - name: Install PlatformIO Libraries
         id: install_libraries
-        if: ${{ (steps.restore_libraries.outputs.cache-hit != 'true') }}
+        if: ${{ (steps.restore_libraries.outputs.cache-matched-key != '') }}
         run: |
           chmod +x continuous_integration/install-library-libdeps-platformio.sh
           sh continuous_integration/install-library-libdeps-platformio.sh
@@ -175,7 +175,7 @@ jobs:
       - name: Cache PlatformIO Platforms
         uses: actions/cache/save@v4
         id: cache_platforms
-        if: always() && steps.restore_platforms.outputs.cache-hit != 'true'
+        if: always() && steps.restore_platforms.outputs.cache-matched-key != ''
         with:
           path: |
             ~/.platformio/packages
@@ -188,7 +188,7 @@ jobs:
       - name: Cache PlatformIO Libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: always() && steps.restore_libraries.outputs.cache-hit != 'true'
+        if: always() && steps.restore_libraries.outputs.cache-matched-key != ''
         with:
           path: |
             ~/.platformio/lib

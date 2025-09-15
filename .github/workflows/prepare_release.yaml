@@ -117,7 +117,7 @@ jobs:
       # NOTE: Don't update the dependencies beyond what's in the install script!
       - name: Install the Arduino Libraries
         id: install_libraries
-        if: ${{ (steps.restore_libraries.outputs.cache-hit != 'true') }}
+        if: ${{ (steps.restore_libraries.outputs.cache-matched-key != '') }}
         run: |
           chmod +x continuous_integration/install-library-libdeps-arduino-cli.sh
           sh continuous_integration/install-library-libdeps-arduino-cli.sh
@@ -161,7 +161,7 @@ jobs:
       - name: Cache Arduino Libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: always() && steps.restore_libraries.outputs.cache-hit != 'true'
+        if: always() && steps.restore_libraries.outputs.cache-matched-key != ''
         with:
           path: |
             home/arduino/user
