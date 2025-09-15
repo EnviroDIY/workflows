@@ -62,8 +62,9 @@ jobs:
             ~/.platformio/packages
             ~/.platformio/platforms
             ~/.platformio/caches
-          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
+            pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}
             pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}
 
       # Install the PlatformIO platforms at global level, iff no cache
@@ -89,7 +90,7 @@ jobs:
           path: |
             ~/.platformio/lib
             $GITHUB_WORKSPACE/lib
-          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
             pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}
             pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
@@ -182,7 +183,7 @@ jobs:
             ~/.platformio/caches
             ~/.platformio/boards
             ~/.platformio/variants
-          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
 
       - name: Cache PlatformIO Libraries
         uses: actions/cache/save@v4
@@ -192,4 +193,4 @@ jobs:
           path: |
             ~/.platformio/lib
             $GITHUB_WORKSPACE/lib
-          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}

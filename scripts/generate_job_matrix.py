@@ -395,12 +395,14 @@ for example in examples_to_build:
     arduino_job_matrix.append(
         {
             "job_name": "Arduino - {}".format(example.split("/")[-1]),
+            "job_tag": example.split("/")[-1].lower().replace(" ", "-"),
             "command": "\n".join(arduino_ex_commands + [end_job_commands]),
         }
     )
     pio_job_matrix.append(
         {
             "job_name": "PlatformIO - {}".format(example.split("/")[-1]),
+            "job_tag": example.split("/")[-1].lower().replace(" ", "-"),
             "command": "\n".join(pio_ex_commands + [end_job_commands]),
         }
     )

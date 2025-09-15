@@ -85,7 +85,7 @@ jobs:
         with:
           path: |
             home/arduino/data
-          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
             arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
             arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}
@@ -110,7 +110,7 @@ jobs:
         with:
           path: |
             home/arduino/user
-          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
             arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}
             arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
@@ -163,7 +163,7 @@ jobs:
         with:
           path: |
             home/arduino/data
-          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
 
       - name: Cache Arduino Libraries
         uses: actions/cache/save@v4
@@ -172,4 +172,4 @@ jobs:
         with:
           path: |
             home/arduino/user
-          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_name }}
+          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
