@@ -229,7 +229,7 @@ def create_pio_ci_core_command(
 def add_log_to_core_command(command: str, group_title: str) -> List:
     command_list = []
     command_list.append('\necho "::group::{}"'.format(group_title))
-    command_list.append(f'echo "\\e[32m{group_title}\\e[0m"')
+    command_list.append(f'echo -e "\\e[32m{group_title}\\e[0m"')
     command_list.append(command)
     command_list.append('echo "::endgroup::"\n')
     return command_list
@@ -250,10 +250,10 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     set -x # Print command traces before executing command.
 fi
 
-echo "\\e[32mCurrent Arduino CLI version:\\e[0m"
+echo -e "\\e[32mCurrent Arduino CLI version:\\e[0m"
 arduino-cli version
 
-echo "\\e[32mUpdating the core index\\e[0m"
+echo -e "\\e[32mUpdating the core index\\e[0m"
 arduino-cli --config-file "{0}" core update-index
 """.format(
         arduino_cli_config
@@ -271,13 +271,13 @@ for core in arduino_cli_cores:
 bash_out.write(
     """
 
-echo "\\e[32mUpdating the core index\\e[0m"
+echo -e "\\e[32mUpdating the core index\\e[0m"
 arduino-cli --config-file "{0}" core update-index
 
-echo "\\e[32mUpgrading all cores\\e[0m"
+echo -e "\\e[32mUpgrading all cores\\e[0m"
 arduino-cli --config-file "{0}" core upgrade
 
-echo "\\e[32mCurrently installed cores:\\e[0m"
+echo -e "\\e[32mCurrently installed cores:\\e[0m"
 arduino-cli --config-file "{0}" core list
 """.format(
         arduino_cli_config
@@ -300,7 +300,7 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     set -x # Print command traces before executing command.
 fi
 
-echo "\\e[32mCurrent PlatformIO version:\\e[0m"
+echo -e "\\e[32mCurrent PlatformIO version:\\e[0m"
 pio --version
 """
 )
@@ -321,7 +321,7 @@ bash_out.write(
     """
 
 echo "::group::Package List"
-echo "\\e[32mCurrently installed packages:\\e[0m"
+echo -e "\\e[32mCurrently installed packages:\\e[0m"
 pio pkg list -g -v
 echo "::endgroup::"
 """

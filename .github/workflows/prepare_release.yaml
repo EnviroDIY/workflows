@@ -129,13 +129,13 @@ jobs:
         run: |
           arduino-cli --config-file continuous_integration/arduino_cli.yaml lib install --git-url https://github.com/EnviroDIY/${GITHUB_REPOSITORY#*/} --no-deps
 
-          echo "\e[32mUpdating the library index\e[0m"
+          echo -e "\e[32mUpdating the library index\e[0m"
           arduino-cli --config-file continuous_integration/arduino_cli.yaml lib update-index
 
-          echo "\e[32mListing libraries detected by the Arduino CLI\e[0m"
+          echo -e "\e[32mListing libraries detected by the Arduino CLI\e[0m"
           arduino-cli --config-file continuous_integration/arduino_cli.yaml lib list
 
-          echo "\e[32mListing the contents of the Arduino library directory\e[0m"
+          echo -e "\e[32mListing the contents of the Arduino library directory\e[0m"
           ls home/arduino/user/libraries
 
       # zip up all the installed libraries

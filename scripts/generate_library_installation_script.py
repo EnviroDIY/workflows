@@ -28,17 +28,17 @@ fi
 
 acli_start_text = """
 
-echo "\\e[32mCurrent Arduino CLI version:\\e[0m"
+echo -e "\\e[32mCurrent Arduino CLI version:\\e[0m"
 arduino-cli version
 
-echo "\\e[32mUpdating the library index\\e[0m"
+echo -e "\\e[32mUpdating the library index\\e[0m"
 arduino-cli --config-file "{0}" lib update-index
 """
 
 acli_end_text = """
 
 echo "::group::Current globally installed libraries"
-echo "\\e[32mCurrently installed libraries:\\e[0m"
+echo -e "\\e[32mCurrently installed libraries:\\e[0m"
 arduino-cli --config-file "{0}" lib update-index
 arduino-cli --config-file "{0}" lib list
 echo "::endgroup::"
@@ -46,10 +46,10 @@ echo "::endgroup::"
 
 pio_start_text = """
 
-echo "\\e[32mCurrent PlatformIO version:\\e[0m"
+echo -e "\\e[32mCurrent PlatformIO version:\\e[0m"
 pio --version
 
-echo "\\e[32mCurrently installed libraries:\\e[0m"
+echo -e "\\e[32mCurrently installed libraries:\\e[0m"
 pio pkg list -g -v --only-libraries
 
 """
@@ -57,28 +57,28 @@ pio pkg list -g -v --only-libraries
 pio_end_text = """
 
 echo "::group::Current globally installed libraries"
-echo "\\e[32mCurrently installed packages:\\e[0m"
+echo -e "\\e[32mCurrently installed packages:\\e[0m"
 pio pkg list -g -v --only-libraries
 echo "::endgroup::"
 """
 
-install_sdi12_ext_acli = """echo "\\e[32mDownloading External Interrupt version of the SDI-12 library as a zip\\e[0m"
+install_sdi12_ext_acli = """echo -e "\\e[32mDownloading External Interrupt version of the SDI-12 library as a zip\\e[0m"
 # The "external interrupt" version needs to be installed from a zip because the Arduino CLI cannot pull from a branch
 curl -L  --retry 15 --retry-delay 0 https://github.com/EnviroDIY/Arduino-SDI-12/archive/refs/heads/ExtInts.zip --create-dirs -o home/arduino/downloads/EnviroDIY_SDI12_ExtInts.zip
-echo "\\e[32mDecompressing EnviroDIY_SDI12_ExtInts\\e[0m"
+echo -e "\\e[32mDecompressing EnviroDIY_SDI12_ExtInts\\e[0m"
 unzip -q -o home/arduino/downloads/EnviroDIY_SDI12_ExtInts.zip -d home/arduino/downloads/
-echo "\\e[32mMoving EnviroDIY_SDI12_ExtInts to the libraries folder\\e[0m"
+echo -e "\\e[32mMoving EnviroDIY_SDI12_ExtInts to the libraries folder\\e[0m"
 mkdir -p home/arduino/user/libraries/EnviroDIY_SDI12_ExtInts
 mv home/arduino/downloads/Arduino-SDI-12-ExtInts/* home/arduino/user/libraries/EnviroDIY_SDI12_ExtInts
 
 """
 
-install_ss_ext_acli = """echo "\\e[32mDownloading SoftwareSerial with External Interrupts as a zip\\e[0m"
+install_ss_ext_acli = """echo -e "\\e[32mDownloading SoftwareSerial with External Interrupts as a zip\\e[0m"
 # SoftwareSerial with External Interrupts needs to be manually unzipped and moved because the CLI chokes on the library name not matching the h file
 curl -L  --retry 15 --retry-delay 0 https://github.com/EnviroDIY/SoftwareSerial_ExternalInts/archive/master.zip --create-dirs -o home/arduino/downloads/SoftwareSerial_ExternalInts.zip
-echo "\\e[32mDecompressing SoftwareSerial_ExternalInts\\e[0m"
+echo -e "\\e[32mDecompressing SoftwareSerial_ExternalInts\\e[0m"
 unzip -q -o home/arduino/downloads/SoftwareSerial_ExternalInts.zip -d home/arduino/downloads/
-echo "\\e[32mMoving SoftwareSerial_ExternalInts to the libraries folder\\e[0m"
+echo -e "\\e[32mMoving SoftwareSerial_ExternalInts to the libraries folder\\e[0m"
 mkdir -p home/arduino/user/libraries/SoftwareSerial_ExternalInts
 mv home/arduino/downloads/SoftwareSerial_ExtInts-master/* home/arduino/user/libraries/SoftwareSerial_ExternalInts
 
@@ -310,7 +310,7 @@ def create_pio_ci_lib_command(
 
 def add_log_to_lib_command(command: str, group_title: str) -> List:
     command_list = []
-    command_list.append(f'\necho "\\e[32m{group_title}\\e[0m"')
+    command_list.append(f'\necho -e "\\e[32m{group_title}\\e[0m"')
     command_list.append(command + "\n")
     return command_list
 
