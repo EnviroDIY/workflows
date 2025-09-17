@@ -27,7 +27,7 @@ jobs:
         uses: EnviroDIY/setup-platformio-action@v1.0.2
 
       - name: Download the prepared scripts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: generated_scripts
           path: |

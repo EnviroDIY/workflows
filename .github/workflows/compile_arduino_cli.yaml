@@ -159,7 +159,7 @@ jobs:
         uses: arduino/setup-arduino-cli@v2.0.0
 
       - name: Download the prepared scripts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: generated_scripts
           path: |
