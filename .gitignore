@@ -2,11 +2,7 @@
 .history
 __pycache__/
 home/
-.github/workflows/build_examples_matrix.yaml
+archive/
 scripts/arduino_cli.log
 docs/markdown_prefilter_archive.py
 .github/workflows/sync.ffs_db
-pioScripts/convert_sysincludes.py
-scripts/clean_build_dir.py
-scripts/parse_build_inputs.py
-scripts/prepare_build_dirs.py
