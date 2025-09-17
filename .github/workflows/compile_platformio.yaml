@@ -13,9 +13,156 @@ on:
         type: string
 
 jobs:
+  create_environment_caches:
+    name: Create Environment Caches
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup PlatformIO
+        uses: EnviroDIY/setup-platformio-action@v1.0.2
+
+      - name: Download the prepared scripts
+        uses: actions/download-artifact@v4
+        with:
+          name: generated_scripts
+          path: |
+            continuous_integration_artifacts/
+
+      - name: copy scripts into working directory
+        id: copy_scripts
+        run: |
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+          mkdir -p continuous_integration
+          mv continuous_integration_artifacts/install-platforms-platformio.sh install-platforms-platformio.sh
+          mv continuous_integration_artifacts/install-library-libdeps-platformio.sh continuous_integration/install-library-libdeps-platformio.sh
+          mv continuous_integration_artifacts/install-example-libdeps-platformio.sh continuous_integration/install-example-libdeps-platformio.sh
+          if [ ! -e ./continuous_integration/platformio.ini ]
+          then
+            mv continuous_integration_artifacts/platformio.ini continuous_integration/platformio.ini
+          fi
+
+      - name: Restore PlatformIO Platforms
+        uses: actions/cache/restore@v4
+        id: restore_platforms
+        with:
+          path: |
+            ~/.platformio/packages
+            ~/.platformio/platforms
+            ~/.platformio/caches
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
+          restore-keys: |
+            pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}
+            pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}
+
+      # Install the PlatformIO platforms at global level, iff no cache
+      - name: Install PlatformIO Platforms
+        id: install_platforms
+        if: steps.restore_platforms.outputs.cache-matched-key == ''
+        run: |
+          chmod +x install-platforms-platformio.sh
+          sh install-platforms-platformio.sh
+
+      # Upgrade all platforms to the latest version, iff using cache
+      # - name: Upgrade the Installed Platforms
+      #   if: steps.restore_platforms.outputs.cache-hit == 'true'
+      #   run: |
+      #     sed -i 's/pio pkg install -g/pio pkg update -g/g' install-platforms-platformio.sh
+      #     chmod +x install-platforms-platformio.sh
+      #     sh install-platforms-platformio.sh
+
+      - name: Restore PlatformIO Libraries
+        uses: actions/cache/restore@v4
+        id: restore_libraries
+        with:
+          path: |
+            ~/.platformio/lib
+            $GITHUB_WORKSPACE/lib
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}
+          restore-keys: |
+            pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
+
+      # Install any library dependencies with PlatformIO at the global level, iff no cache
+      - name: Install PlatformIO Libraries
+        id: install_libraries
+        if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }}
+        run: |
+          chmod +x continuous_integration/install-library-libdeps-platformio.sh
+          sh continuous_integration/install-library-libdeps-platformio.sh
+          chmod +x continuous_integration/install-example-libdeps-platformio.sh
+          sh continuous_integration/install-example-libdeps-platformio.sh
+          cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/ || true
+
+      # check the EnviroDIY boards repo to get the Stonefly info
+      - name: Checkout EnviroDIY boards
+        uses: actions/checkout@v5
+        with:
+          # Repository name with owner. For example, actions/checkout
+          repository: EnviroDIY/Arduino_boards
+          path: envirodiy_boards
+
+      - name: Move Stonefly Board Info
+        id: py_stonefly
+        run: |
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+          echo "Moving Stonefly boards files"
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            ls -R envirodiy_boards/EnviroDIYSAMDBoards
+            sleep 5
+          fi
+          mv envirodiy_boards/EnviroDIYSAMDBoards/boards/ ~/.platformio/boards
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            ls -R ~/.platformio/boards
+            sleep 5
+          fi
+          echo "Moving Stonefly variants files"
+          mv envirodiy_boards/EnviroDIYSAMDBoards/variants/ ~/.platformio/variants
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+            ls -R ~/.platformio/variants
+            sleep 5
+          fi
+          pio boards --installed envirodiy
+
+      - name: Cache PlatformIO Platforms
+        uses: actions/cache/save@v4
+        id: cache_platforms
+        if: always() && steps.restore_platforms.outputs.cache-matched-key == ''
+        with:
+          path: |
+            ~/.platformio/packages
+            ~/.platformio/platforms
+            ~/.platformio/caches
+            ~/.platformio/boards
+            ~/.platformio/variants
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}
+
+      - name: Cache PlatformIO Libraries
+        uses: actions/cache/save@v4
+        id: cache_libraries
+        if: always() && steps.restore_libraries.outputs.cache-matched-key == ''
+        with:
+          path: |
+            ~/.platformio/lib
+            $GITHUB_WORKSPACE/lib
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}
   build_pio:
     name: ${{ matrix.job_info.job_name }}
     runs-on: ubuntu-latest
+    needs: create_environment_caches
     env:
       PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
     strategy:
