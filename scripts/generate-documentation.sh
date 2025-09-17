@@ -198,13 +198,13 @@ fi
 
 if [ "$result_code_doxygen" -ne "0" ] || [ "$result_code_mcss" -ne "0" ]; then
     # Echo outputs to output and step summaries
-    echo "doxygen_warnings=$(cat docs/output_doxygen.log)" >>$GITHUB_OUTPUT
-    echo "mcss_warnings=$(cat docs/output_mcss.log)" >>$GITHUB_OUTPUT
+    echo "doxygen_warnings=$(cat output_doxygen.log)" >>$GITHUB_OUTPUT
+    echo "mcss_warnings=$(cat output_mcss.log)" >>$GITHUB_OUTPUT
     echo " ## Doxygen completed with the following warnings:" >>$GITHUB_STEP_SUMMARY
-    echo "$(cat docs/output_doxygen.log)" >>$GITHUB_STEP_SUMMARY
+    echo "$(cat output_doxygen.log)" >>$GITHUB_STEP_SUMMARY
     echo "" >>$GITHUB_STEP_SUMMARY
     echo "## mcss Doxygen post-processing completed with the following warnings:" >>$GITHUB_STEP_SUMMARY
-    echo "$(cat docs/output_mcss.log)" >>$GITHUB_STEP_SUMMARY
+    echo "$(cat output_mcss.log)" >>$GITHUB_STEP_SUMMARY
     exit $((result_code_doxygen + result_code_mcss))
 fi
 
