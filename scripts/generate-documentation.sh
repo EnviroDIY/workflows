@@ -119,8 +119,8 @@ else
     doxygen doxyfile 2>&1 | tee output_doxygen_run.log
 fi
 
-result_code=${PIPESTATUS[0]}
-echo "\n\n\e[32mFinished running doxygen with result code: $result_code"
+result_code_doxygen=${PIPESTATUS[0]}
+echo "\n\n\e[32mFinished running doxygen with result code: $result_code_doxygen"
 echo "::endgroup::"
 
 echo "::group::Doxygen Output"
@@ -128,7 +128,7 @@ echo "$(<output_doxygen.log)"
 
 echo "::endgroup::"
 
-# if [[ "$result_code" -ne "0" ]]; then exit $result_code; fi
+# if [[ "$result_code_doxygen" -ne "0" ]]; then exit $result_code_doxygen; fi
 
 # go back to immediate exit
 set -e
@@ -178,10 +178,10 @@ echo "\n\e[32Running m.css Doxygen post-processor...\e[0m"
 echo "::group::m.css Run Log"
 if [ "$RUNNER_DEBUG" = "1" ]; then
     python -u "${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" --debug | tee output_mcss_run.log
-    result_code=${PIPESTATUS[0]}
+    result_code_mcss=${PIPESTATUS[0]}
 else
     python -u "${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" | tee output_mcss_run.log
-    result_code=${PIPESTATUS[0]}
+    result_code_mcss=${PIPESTATUS[0]}
 fi
 
 echo "::endgroup::"
@@ -189,11 +189,13 @@ echo "::group::m.css Output"
 echo "$(<output_mcss.log)"
 
 echo "\n\n"
-echo "\e[32mFinished running m.css with result code: $result_code\e[0m"
+echo "\e[32mFinished running m.css with result code: $result_code_mcss\e[0m"
 
 echo "::endgroup::"
 
-if [[ "$result_code" -ne "0" ]]; then exit $result_code; fi
+# if [[ "$result_code_mcss" -ne "0" ]]; then exit $result_code_mcss; fi
+
+if [ "$result_code_doxygen" -ne "0" ] || [ "$result_code_mcss" -ne "0" ]; then exit $result_code_doxygen + $result_code_mcss; fi
 
 # go back to immediate exit
 set -e
