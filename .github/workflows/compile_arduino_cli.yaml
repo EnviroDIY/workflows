@@ -14,7 +14,7 @@ on:
 
 jobs:
   create_environment_caches:
-    name: Create Environment Caches
+    name: Create Arduino Caches
     runs-on: ubuntu-latest
     env:
       LIBRARY_INSTALL_ZIP: ${{ inputs.library_install_zip }}

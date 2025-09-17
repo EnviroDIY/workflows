@@ -14,7 +14,7 @@ on:
 
 jobs:
   create_environment_caches:
-    name: Create Environment Caches
+    name: Create PlatformIO Caches
     runs-on: ubuntu-latest
     env:
       PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
