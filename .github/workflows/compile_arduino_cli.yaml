@@ -205,6 +205,7 @@ jobs:
           bash ${{ matrix.job_info.script }}
 
       - name: Uninstall testing version of the library before caching
+        if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }}
         run: |
           arduino-cli --config-file continuous_integration/arduino_cli.yaml lib uninstall ${GITHUB_REPOSITORY#*/}
 
