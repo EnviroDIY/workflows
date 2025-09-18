@@ -20,22 +20,27 @@ jobs:
       LIBRARY_INSTALL_ZIP: ${{ inputs.library_install_zip }}
 
     steps:
-      - name: Checkout code
+      - &checkout_code
+        name: Checkout code
         uses: actions/checkout@v5
 
       # We use the `arduino/setup-arduino-cli` action to install and
       # configure the Arduino CLI on the system.
-      - name: Setup Arduino CLI
+      - &setup_arduino_cli
+        name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2.0.0
 
-      - name: Download the prepared scripts
+      - &download_scripts
+        name: Download the prepared scripts
+        id: download_scripts
         uses: actions/download-artifact@v4
         with:
           name: generated_scripts
           path: |
             continuous_integration_artifacts/
 
-      - name: copy scripts into working directory, if needed
+      - &copy_scripts
+        name: copy scripts into working directory, if needed
         id: copy_scripts
         run: |
           set -e
@@ -53,7 +58,8 @@ jobs:
             mv continuous_integration_artifacts/arduino_cli.yaml continuous_integration/arduino_cli.yaml || true
           fi
 
-      - name: Download Arduino CLI config
+      - &cli_config
+        name: Download Arduino CLI config
         id: cli_config
         run: |
           if [ ! -e ./continuous_integration/arduino_cli.yaml ]
@@ -61,43 +67,51 @@ jobs:
             curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
           fi
 
-      - name: Restore Arduino platforms
+      - &restore_cores
+        name: Restore Arduino Cores
         uses: actions/cache/restore@v4
-        id: restore_platforms
+        id: restore_cores
         with:
           path: |
             home/arduino/data
-          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
+          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
+            arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
             arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}
 
       # Install cores for the Arduino CLI, iff no cache
-      - name: Install the Arduino Cores
-        id: install_platforms
-        if: steps.restore_platforms.outputs.cache-matched-key == ''
+      - &install_cores
+        name: Install the Arduino Cores
+        id: install_cores
+        if: steps.restore_cores.outputs.cache-matched-key == ''
         run: |
           chmod +x install-platforms-arduino-cli.sh
           sh install-platforms-arduino-cli.sh
 
-      # # Upgrade all cores to the latest version, iff using cache
-      # - name: Upgrade the Arduino Platforms
-      #   if: steps.restore_platforms.outputs.cache-hit == 'true'
+      # Upgrade all cores to the latest version, iff using cache
+      # - &upgrade_cores
+      #   name: Upgrade the Arduino Platforms
+      #   id: upgrade_cores
+      #   if: steps.restore_cores.outputs.cache-hit == 'true'
       #   run: |
       #     arduino-cli --config-file arduino_cli.yaml core upgrade
 
-      - name: Restore Arduino libraries
+      - &restore_libraries
+        name: Restore Arduino libraries
         uses: actions/cache/restore@v4
         id: restore_libraries
         with:
           path: |
             home/arduino/user
-          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}
+          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
+            arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}
             arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
 
       # Install any library dependencies for the Arduino CLI, iff no cache
       # NOTE: Don't update the dependencies beyond what's in the install script!
-      - name: Install the Arduino libraries
+      - &install_libraries
+        name: Install the Arduino libraries
         id: install_libraries
         if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }}
         run: |
@@ -106,16 +120,18 @@ jobs:
           chmod +x continuous_integration/install-example-libdeps-arduino-cli.sh
           sh continuous_integration/install-example-libdeps-arduino-cli.sh
 
-      - name: Cache Arduino Cores
+      - &cache_cores
+        name: Cache Arduino Cores
         uses: actions/cache/save@v4
-        id: cache_platforms
-        if: always() && steps.restore_platforms.outputs.cache-matched-key == ''
+        id: cache_cores
+        if: always() && steps.restore_cores.outputs.cache-matched-key == ''
         with:
           path: |
             home/arduino/data
           key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
 
-      - name: Cache Arduino Libraries
+      - &cache_libraries
+        name: Cache Arduino Libraries
         uses: actions/cache/save@v4
         id: cache_libraries
         if: always() && steps.restore_libraries.outputs.cache-matched-key == ''
@@ -135,8 +151,7 @@ jobs:
         job_info: ${{ fromJSON(inputs.arduino_job_matrix) }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - *checkout_code
 
       - name: Write the requirements file
         run: |
@@ -153,90 +168,15 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      # We use the `arduino/setup-arduino-cli` action to install and
-      # configure the Arduino CLI on the system.
-      - name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@v2.0.0
-
-      - name: Download the prepared scripts
-        uses: actions/download-artifact@v4
-        with:
-          name: generated_scripts
-          path: |
-            continuous_integration_artifacts/
-
-      - name: copy scripts into working directory, if needed
-        id: copy_scripts
-        run: |
-          set -e
-          if [ "$RUNNER_DEBUG" = "1" ]; then
-              echo "Enabling debugging!"
-              set -v
-              set -x
-          fi
-          mkdir -p continuous_integration
-          mv continuous_integration_artifacts/install-platforms-arduino-cli.sh install-platforms-arduino-cli.sh
-          mv continuous_integration_artifacts/install-library-libdeps-arduino-cli.sh continuous_integration/install-library-libdeps-arduino-cli.sh
-          mv continuous_integration_artifacts/install-example-libdeps-arduino-cli.sh continuous_integration/install-example-libdeps-arduino-cli.sh
-          if [ -e continuous_integration_artifacts/arduino_cli.yaml ]
-          then
-            mv continuous_integration_artifacts/arduino_cli.yaml continuous_integration/arduino_cli.yaml || true
-          fi
-
-      - name: Download Arduino CLI config
-        id: cli_config
-        run: |
-          if [ ! -e ./continuous_integration/arduino_cli.yaml ]
-          then
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
-          fi
-
-      - name: Restore Arduino platforms
-        uses: actions/cache/restore@v4
-        id: restore_platforms
-        with:
-          path: |
-            home/arduino/data
-          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
-          restore-keys: |
-            arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
-            arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}
-
-      # Install cores for the Arduino CLI, iff no cache
-      - name: Install the Arduino Cores
-        id: install_platforms
-        if: steps.restore_platforms.outputs.cache-matched-key == ''
-        run: |
-          chmod +x install-platforms-arduino-cli.sh
-          sh install-platforms-arduino-cli.sh
-
-      # # Upgrade all cores to the latest version, iff using cache
-      # - name: Upgrade the Arduino Platforms
-      #   if: steps.restore_platforms.outputs.cache-hit == 'true'
-      #   run: |
-      #     arduino-cli --config-file arduino_cli.yaml core upgrade
-
-      - name: Restore Arduino libraries
-        uses: actions/cache/restore@v4
-        id: restore_libraries
-        with:
-          path: |
-            home/arduino/user
-          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
-          restore-keys: |
-            arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}
-            arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
-
-      # Install any library dependencies for the Arduino CLI, iff no cache
-      # NOTE: Don't update the dependencies beyond what's in the install script!
-      - name: Install the Arduino libraries
-        id: install_libraries
-        if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }}
-        run: |
-          chmod +x continuous_integration/install-library-libdeps-arduino-cli.sh
-          sh continuous_integration/install-library-libdeps-arduino-cli.sh
-          chmod +x continuous_integration/install-example-libdeps-arduino-cli.sh
-          sh continuous_integration/install-example-libdeps-arduino-cli.sh
+      - *setup_arduino_cli
+      - *download_scripts
+      - *copy_scripts
+      - *cli_config
+      - *restore_cores
+      - *install_cores
+      # - *upgrade_cores
+      - *restore_libraries
+      - *install_libraries
 
       # Install the test library for the Arduino CLI
       - name: Install the testing version of the library for the Arduino CLI
@@ -268,20 +208,5 @@ jobs:
         run: |
           arduino-cli --config-file continuous_integration/arduino_cli.yaml lib uninstall ${GITHUB_REPOSITORY#*/}
 
-      - name: Cache Arduino Cores
-        uses: actions/cache/save@v4
-        id: cache_platforms
-        if: always() && steps.restore_platforms.outputs.cache-matched-key == ''
-        with:
-          path: |
-            home/arduino/data
-          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
-
-      - name: Cache Arduino Libraries
-        uses: actions/cache/save@v4
-        id: cache_libraries
-        if: always() && steps.restore_libraries.outputs.cache-matched-key == ''
-        with:
-          path: |
-            home/arduino/user
-          key: arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
+      - *cache_cores
+      - *cache_libraries

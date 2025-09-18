@@ -20,20 +20,25 @@ jobs:
       PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
 
     steps:
-      - name: Checkout code
+      - &checkout_code
+        name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup PlatformIO
+      - &setup_platformio
+        name: Setup PlatformIO
         uses: EnviroDIY/setup-platformio-action@v1.0.2
 
-      - name: Download the prepared scripts
+      - &download_scripts
+        name: Download the prepared scripts
+        id: download_scripts
         uses: actions/download-artifact@v4
         with:
           name: generated_scripts
           path: |
             continuous_integration_artifacts/
 
-      - name: copy scripts into working directory
+      - &copy_scripts
+        name: copy scripts into working directory
         id: copy_scripts
         run: |
           set -e
@@ -51,20 +56,22 @@ jobs:
             mv continuous_integration_artifacts/platformio.ini continuous_integration/platformio.ini
           fi
 
-      - name: Restore PlatformIO Platforms
+      - &restore_platforms
+        name: Restore PlatformIO Platforms
         uses: actions/cache/restore@v4
         id: restore_platforms
         with:
           path: |
             ~/.platformio/packages
             ~/.platformio/platforms
-            ~/.platformio/caches
-          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
+            pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}
             pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}
 
       # Install the PlatformIO platforms at global level, iff no cache
-      - name: Install PlatformIO Platforms
+      - &install_platforms
+        name: Install PlatformIO Platforms
         id: install_platforms
         if: steps.restore_platforms.outputs.cache-matched-key == ''
         run: |
@@ -72,26 +79,30 @@ jobs:
           sh install-platforms-platformio.sh
 
       # Upgrade all platforms to the latest version, iff using cache
-      # - name: Upgrade the Installed Platforms
+      # - &upgrade_platforms
+      #   name: Upgrade the Installed Platforms
+      #   id: upgrade_platforms
       #   if: steps.restore_platforms.outputs.cache-hit == 'true'
       #   run: |
       #     sed -i 's/pio pkg install -g/pio pkg update -g/g' install-platforms-platformio.sh
       #     chmod +x install-platforms-platformio.sh
       #     sh install-platforms-platformio.sh
 
-      - name: Restore PlatformIO Libraries
+      - &restore_libraries
+        name: Restore PlatformIO Libraries
         uses: actions/cache/restore@v4
         id: restore_libraries
         with:
           path: |
             ~/.platformio/lib
-            $GITHUB_WORKSPACE/lib
-          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
+            pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}
             pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
 
       # Install any library dependencies with PlatformIO at the global level, iff no cache
-      - name: Install PlatformIO Libraries
+      - &install_libraries
+        name: Install PlatformIO Libraries
         id: install_libraries
         if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }}
         run: |
@@ -101,16 +112,46 @@ jobs:
           sh continuous_integration/install-example-libdeps-platformio.sh
           cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/ || true
 
+      - &get_boards_commit
+        name: Get latest commit hash of EnviroDIY Boards
+        id: get_boards_commit
+        run: |
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+          echo "boards_commit_hash=$(git ls-remote https://github.com/EnviroDIY/Arduino_boards.git HEAD | awk '{ print $1}')" >> $GITHUB_OUTPUT
+
+      - &restore_pio_boards
+        name: Restore EnviroDIY Boards
+        id: restore_pio_boards
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.platformio/boards
+            ~/.platformio/variants
+          key: pio_boards-${{ steps.get_boards_commit.outputs.boards_commit_hash }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
+          restore-keys: |
+            pio_boards-${{ steps.get_boards_commit.outputs.boards_commit_hash }}-${{ github.run_id }}
+            pio_boards-${{ steps.get_boards_commit.outputs.boards_commit_hash }}
+
       # check the EnviroDIY boards repo to get the Stonefly info
-      - name: Checkout EnviroDIY boards
+      - &checkout_envirodiy_boards
+        name: Checkout EnviroDIY boards
+        id: checkout_envirodiy_boards
         uses: actions/checkout@v5
+        if: ${{ (steps.restore_pio_boards.outputs.cache-matched-key == '') }}
         with:
           # Repository name with owner. For example, actions/checkout
           repository: EnviroDIY/Arduino_boards
           path: envirodiy_boards
 
-      - name: Move Stonefly Board Info
-        id: py_stonefly
+      - &move_board_info
+        name: Move Stonefly Board Info
+        id: move_board_info
+        if: ${{ (steps.restore_pio_boards.outputs.cache-matched-key == '') }}
         run: |
           set -e
           if [ "$RUNNER_DEBUG" = "1" ]; then
@@ -136,28 +177,71 @@ jobs:
           fi
           pio boards --installed envirodiy
 
-      - name: Cache PlatformIO Platforms
+      - &restore_testing_library
+        name: Restore the testing version of the library for PlatformIO
+        uses: actions/cache/restore@v4
+        id: restore_testing_library
+        with:
+          path: |
+            ~/.platformio/caches
+            $GITHUB_WORKSPACE/lib
+          key: ${{ inputs.library_install_git }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
+          restore-keys: |
+            ${{ inputs.library_install_git }}-${{ github.run_id }}
+            ${{ inputs.library_install_git }}
+
+      # Install the test library at the Global level for PlatformIO
+      - &install_test_library
+        name: Install the testing version of the library for PlatformIO
+        id: install_test_library
+        if: ${{ (steps.restore_testing_library.outputs.cache-matched-key == '') }}
+        run: |
+          pio pkg install --skip-dependencies -g --library ${{ inputs.library_install_git }}
+          pio pkg list -g --only-libraries
+
+      - &cache_platforms
+        name: Cache PlatformIO Platforms
         uses: actions/cache/save@v4
         id: cache_platforms
-        if: always() && steps.restore_platforms.outputs.cache-matched-key == ''
+        if: steps.restore_platforms.outputs.cache-matched-key == ''
         with:
           path: |
             ~/.platformio/packages
             ~/.platformio/platforms
-            ~/.platformio/caches
-            ~/.platformio/boards
-            ~/.platformio/variants
-          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
 
-      - name: Cache PlatformIO Libraries
+      - &cache_libraries
+        name: Cache PlatformIO Libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: always() && steps.restore_libraries.outputs.cache-matched-key == ''
+        if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }}
         with:
           path: |
             ~/.platformio/lib
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
+
+      - &cache_pio_boards
+        name: Cache EnviroDIY Boards
+        uses: actions/cache/save@v4
+        id: cache_pio_boards
+        if: ${{ (steps.restore_pio_boards.outputs.cache-matched-key == '') }}
+        with:
+          path: |
+            ~/.platformio/boards
+            ~/.platformio/variants
+          key: pio_boards-${{ steps.get_boards_commit.outputs.boards_commit_hash }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
+
+      - &cache_testing_library
+        name: Cache the testing version of the library for PlatformIO
+        uses: actions/cache/save@v4
+        id: cache_testing_library
+        if: ${{ (steps.restore_testing_library.outputs.cache-matched-key == '') }}
+        with:
+          path: |
+            ~/.platformio/caches
             $GITHUB_WORKSPACE/lib
-          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}
+          key: ${{ inputs.library_install_git }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
+
   build_pio:
     name: ${{ matrix.job_info.job_name }}
     runs-on: ubuntu-latest
@@ -169,130 +253,21 @@ jobs:
         job_info: ${{ fromJSON(inputs.pio_job_matrix) }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Setup PlatformIO
-        uses: EnviroDIY/setup-platformio-action@v1.0.2
-
-      - name: Download the prepared scripts
-        uses: actions/download-artifact@v4
-        with:
-          name: generated_scripts
-          path: |
-            continuous_integration_artifacts/
-
-      - name: copy scripts into working directory
-        id: copy_scripts
-        run: |
-          set -e
-          if [ "$RUNNER_DEBUG" = "1" ]; then
-              echo "Enabling debugging!"
-              set -v
-              set -x
-          fi
-          mkdir -p continuous_integration
-          mv continuous_integration_artifacts/install-platforms-platformio.sh install-platforms-platformio.sh
-          mv continuous_integration_artifacts/install-library-libdeps-platformio.sh continuous_integration/install-library-libdeps-platformio.sh
-          mv continuous_integration_artifacts/install-example-libdeps-platformio.sh continuous_integration/install-example-libdeps-platformio.sh
-          if [ ! -e ./continuous_integration/platformio.ini ]
-          then
-            mv continuous_integration_artifacts/platformio.ini continuous_integration/platformio.ini
-          fi
-
-      - name: Restore PlatformIO Platforms
-        uses: actions/cache/restore@v4
-        id: restore_platforms
-        with:
-          path: |
-            ~/.platformio/packages
-            ~/.platformio/platforms
-            ~/.platformio/caches
-          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
-          restore-keys: |
-            pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}
-            pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}
-
-      # Install the PlatformIO platforms at global level, iff no cache
-      - name: Install PlatformIO Platforms
-        id: install_platforms
-        if: steps.restore_platforms.outputs.cache-matched-key == ''
-        run: |
-          chmod +x install-platforms-platformio.sh
-          sh install-platforms-platformio.sh
-
-      # Upgrade all platforms to the latest version, iff using cache
-      # - name: Upgrade the Installed Platforms
-      #   if: steps.restore_platforms.outputs.cache-hit == 'true'
-      #   run: |
-      #     sed -i 's/pio pkg install -g/pio pkg update -g/g' install-platforms-platformio.sh
-      #     chmod +x install-platforms-platformio.sh
-      #     sh install-platforms-platformio.sh
-
-      - name: Restore PlatformIO Libraries
-        uses: actions/cache/restore@v4
-        id: restore_libraries
-        with:
-          path: |
-            ~/.platformio/lib
-            $GITHUB_WORKSPACE/lib
-          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
-          restore-keys: |
-            pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}
-            pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
-
-      # Install any library dependencies with PlatformIO at the global level, iff no cache
-      - name: Install PlatformIO Libraries
-        id: install_libraries
-        if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }}
-        run: |
-          chmod +x continuous_integration/install-library-libdeps-platformio.sh
-          sh continuous_integration/install-library-libdeps-platformio.sh
-          chmod +x continuous_integration/install-example-libdeps-platformio.sh
-          sh continuous_integration/install-example-libdeps-platformio.sh
-          cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/ || true
-
-      # Install the test library at the Global level for PlatformIO
-      - name: Install the testing version of the library for PlatformIO
-        id: install_test_library
-        run: |
-          pio pkg install --skip-dependencies -g --library ${{ inputs.library_install_git }}
-          pio pkg list -g --only-libraries
-
-      # check the EnviroDIY boards repo to get the Stonefly info
-      - name: Checkout EnviroDIY boards
-        uses: actions/checkout@v5
-        with:
-          # Repository name with owner. For example, actions/checkout
-          repository: EnviroDIY/Arduino_boards
-          path: envirodiy_boards
-
-      - name: Move Stonefly Board Info
-        id: py_stonefly
-        run: |
-          set -e
-          if [ "$RUNNER_DEBUG" = "1" ]; then
-              echo "Enabling debugging!"
-              set -v
-              set -x
-          fi
-          echo "Moving Stonefly boards files"
-          if [ "$RUNNER_DEBUG" = "1" ]; then
-            ls -R envirodiy_boards/EnviroDIYSAMDBoards
-            sleep 5
-          fi
-          mv envirodiy_boards/EnviroDIYSAMDBoards/boards/ ~/.platformio/boards
-          if [ "$RUNNER_DEBUG" = "1" ]; then
-            ls -R ~/.platformio/boards
-            sleep 5
-          fi
-          echo "Moving Stonefly variants files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/variants/ ~/.platformio/variants
-          if [ "$RUNNER_DEBUG" = "1" ]; then
-            ls -R ~/.platformio/variants
-            sleep 5
-          fi
-          pio boards --installed envirodiy
+      - *checkout_code
+      - *setup_platformio
+      - *download_scripts
+      - *copy_scripts
+      - *restore_platforms
+      - *install_platforms
+      # - *upgrade_platforms
+      - *restore_libraries
+      - *install_libraries
+      - *get_boards_commit
+      - *restore_pio_boards
+      - *checkout_envirodiy_boards
+      - *move_board_info
+      - *restore_testing_library
+      - *install_test_library
 
       - name: Include problem matcher
         uses: ammaraskar/gcc-problem-matcher@master
@@ -318,25 +293,7 @@ jobs:
           chmod +x ${{ matrix.job_info.script }}
           bash ${{ matrix.job_info.script }}
 
-      - name: Cache PlatformIO Platforms
-        uses: actions/cache/save@v4
-        id: cache_platforms
-        if: always() && steps.restore_platforms.outputs.cache-matched-key == ''
-        with:
-          path: |
-            ~/.platformio/packages
-            ~/.platformio/platforms
-            ~/.platformio/caches
-            ~/.platformio/boards
-            ~/.platformio/variants
-          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
-
-      - name: Cache PlatformIO Libraries
-        uses: actions/cache/save@v4
-        id: cache_libraries
-        if: always() && steps.restore_libraries.outputs.cache-matched-key == ''
-        with:
-          path: |
-            ~/.platformio/lib
-            $GITHUB_WORKSPACE/lib
-          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
+      - *cache_platforms
+      - *cache_libraries
+      - *cache_pio_boards
+      - *cache_testing_library
