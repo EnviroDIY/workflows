@@ -302,6 +302,7 @@ def install_project_env_libraries(options):
 
     lib_deps = humanized_deps
     for library in lib_deps:
+        print(f"Processing {library}")
         req_spec = PackageSpec(library)
         # skip built-in dependencies
         if not req_spec.external and not req_spec.owner:
@@ -397,42 +398,66 @@ def sort_lib_deps(verbose=False):
         lib_order[installed_lib.metadata.name]["dep_order_num"] = []
     unsorted_deps = copy.deepcopy(installed_libs)
     sorted_deps = []
+    missing_deps = []
     while len(unsorted_deps) > 0:
         current_lib = unsorted_deps.pop(0)
         pkg_deps = private_lm.get_pkg_dependencies(current_lib) or []
         if verbose:
             print(f"{current_lib.metadata.name} has {len(pkg_deps)} dependencies")
-        num_sorted_deps = 0
+        num_unsorted_deps = 0
         for dep_num, dependency in enumerate(pkg_deps):
             dep_spec = private_lm.dependency_to_spec(dependency)
             if verbose:
-                print(f"{current_lib.metadata.name} is dependent on {dep_spec.name}")
-            matched_dep = list(
+                print(
+                    f"  - {current_lib.metadata.name} is dependent on {dep_spec.name}"
+                )
+            matched_deps = list(
                 filter(lambda d: d.metadata.name == dep_spec.name, sorted_deps)
             )
+            installed_deps = list(
+                filter(lambda d: d.metadata.name == dep_spec.name, installed_libs)
+            )
+            if dep_spec.external:
+                if verbose:
+                    print(
+                        f"    - {dep_spec.name} was installed from a URI ({dep_spec.uri}), and dependencies may not be detected!"
+                    )
             if dependency["name"] in ["SD"]:
-                matched_dep.extend(dependency["name"])
-            if len(matched_dep) == 0 or dep_spec.external:
-                num_sorted_deps += 1
+                if verbose:
+                    print("    - Dependency SD found, skipping")
+                matched_deps.extend(dependency["name"])
+            if len(installed_deps) == 0:
+                if verbose:
+                    print(f"    - {dep_spec.name} is not installed, skipping")
+                matched_deps.extend(dependency["name"])
+                if (
+                    len(list(filter(lambda d: d.name == dep_spec.name, missing_deps)))
+                    == 0
+                ):
+                    missing_deps.append(dep_spec)
+            if len(matched_deps) == 0:
+                if verbose:
+                    print(f"    - {dep_spec.name} has not been sorted yet")
+                num_unsorted_deps += 1
             else:
                 if verbose:
-                    print(f"{dep_spec.name} is already on the ordered list")
-        if num_sorted_deps == 0:
+                    print(f"    - {dep_spec.name} is already on the ordered list")
+        if num_unsorted_deps == 0:
             if verbose:
-                print(f"{current_lib.metadata.name} has no remaining dependencies")
+                print(f"  * {current_lib.metadata.name} has no remaining dependencies")
             sorted_deps.append(current_lib)
         else:
             if verbose:
                 print(
-                    f"{current_lib.metadata.name} still is dependent on {num_sorted_deps} other packages"
+                    f"  x {current_lib.metadata.name} still is dependent on {num_unsorted_deps} other packages"
                 )
             unsorted_deps.append(current_lib)
 
     # return not already_up_to_date
-    return list(sorted_deps)
+    return list(sorted_deps), list(missing_deps)
 
 
-installed_libs = sort_lib_deps()
+installed_libs, missing_libs = sort_lib_deps(verbose=False)
 
 
 # %%
@@ -475,6 +500,7 @@ for installed_lib in installed_libs:
     else:
         print(f"WARNING! MORE THAN ONE LIBRARY MATCHED {installed_lib.metadata.name}")
 
+
 # %%
 all_symlinks = [
     f"{installed_lib.metadata.name}=symlink://{installed_lib.path}"
@@ -489,6 +515,8 @@ if using_main_dir:
         i_dir for i_dir in sub_dirs if i_dir not in ["lib", "src"] + [shared_lib_abbr]
     ]
 
+
+# %%
 
 out_file_str = ""
 out_file_str += (
