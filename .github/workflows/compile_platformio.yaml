@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
+      LOOKUP_ONLY: true
 
     steps:
       - &checkout_code
@@ -68,6 +69,7 @@ jobs:
           restore-keys: |
             pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}
             pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}
+          lookup-only: ${{ env.LOOKUP_ONLY }}
 
       # Install the PlatformIO platforms at global level, iff no cache
       - &install_platforms
@@ -99,6 +101,7 @@ jobs:
           restore-keys: |
             pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}
             pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
+          lookup-only: ${{ env.LOOKUP_ONLY }}
 
       # Install any library dependencies with PlatformIO at the global level, iff no cache
       - &install_libraries
@@ -136,6 +139,7 @@ jobs:
           restore-keys: |
             pio_boards-${{ steps.get_boards_commit.outputs.boards_commit_hash }}-${{ github.run_id }}
             pio_boards-${{ steps.get_boards_commit.outputs.boards_commit_hash }}
+          lookup-only: ${{ env.LOOKUP_ONLY }}
 
       # check the EnviroDIY boards repo to get the Stonefly info
       - &checkout_envirodiy_boards
@@ -189,6 +193,7 @@ jobs:
           restore-keys: |
             ${{ inputs.library_install_git }}-${{ github.run_id }}
             ${{ inputs.library_install_git }}
+          lookup-only: ${{ env.LOOKUP_ONLY }}
 
       # Install the test library at the Global level for PlatformIO
       - &install_test_library
@@ -248,6 +253,7 @@ jobs:
     needs: create_environment_caches
     env:
       PLATFORMIO_BUILD_CACHE_DIR: ~/.platformio/caches
+      LOOKUP_ONLY: false
     strategy:
       matrix:
         job_info: ${{ fromJSON(inputs.pio_job_matrix) }}

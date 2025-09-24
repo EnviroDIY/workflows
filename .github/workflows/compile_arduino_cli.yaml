@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LIBRARY_INSTALL_ZIP: ${{ inputs.library_install_zip }}
+      LOOKUP_ONLY: true
 
     steps:
       - &checkout_code
@@ -78,6 +79,7 @@ jobs:
           restore-keys: |
             arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
             arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}
+          lookup-only: ${{ env.LOOKUP_ONLY }}
 
       # Install cores for the Arduino CLI, iff no cache
       - &install_cores
@@ -107,6 +109,7 @@ jobs:
           restore-keys: |
             arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}-${{ github.run_id }}
             arduino_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-arduino-cli.sh', 'continuous_integration/install-example-libdeps-arduino-cli.sh') }}
+          lookup-only: ${{ env.LOOKUP_ONLY }}
 
       # Install any library dependencies for the Arduino CLI, iff no cache
       # NOTE: Don't update the dependencies beyond what's in the install script!
@@ -146,6 +149,7 @@ jobs:
     needs: create_environment_caches
     env:
       LIBRARY_INSTALL_ZIP: ${{ inputs.library_install_zip }}
+      LOOKUP_ONLY: false
     strategy:
       matrix:
         job_info: ${{ fromJSON(inputs.arduino_job_matrix) }}
