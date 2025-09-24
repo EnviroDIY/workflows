@@ -24,7 +24,7 @@ installed_doxygen=$(doxygen -v | cut -d ' ' -f1)
 echo "$installed_doxygen"
 echo "$installed_doxygen" | cut -d ' ' -f1
 installed_doxygen=$(echo "$installed_doxygen" | cut -d ' ' -f1)
-echo "\e[36mCurrent Doxygen version is ${installed_doxygen}\e[0m"
+echo -e "\e[36mCurrent Doxygen version is ${installed_doxygen}\e[0m"
 echo "Requested Doxygen version was ${DOXYGEN_VERSION}"
 echo "installed_doxygen=${installed_doxygen}" >>$GITHUB_OUTPUT
 if [ "$installed_doxygen" = "$DOXYGEN_VERSION" ]; then
