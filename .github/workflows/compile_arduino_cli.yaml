@@ -98,6 +98,16 @@ jobs:
       #   run: |
       #     arduino-cli --config-file arduino_cli.yaml core upgrade
 
+      - &cache_cores
+        name: Cache Arduino Cores
+        uses: actions/cache/save@v4
+        id: cache_cores
+        if: always() && steps.restore_cores.outputs.cache-matched-key == '' && steps.install_cores.outcome == 'success'
+        with:
+          path: |
+            home/arduino/data
+          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
+
       - &restore_libraries
         name: Restore Arduino libraries
         uses: actions/cache/restore@v4
@@ -123,21 +133,11 @@ jobs:
           chmod +x continuous_integration/install-example-libdeps-arduino-cli.sh
           sh continuous_integration/install-example-libdeps-arduino-cli.sh
 
-      - &cache_cores
-        name: Cache Arduino Cores
-        uses: actions/cache/save@v4
-        id: cache_cores
-        if: always() && steps.restore_cores.outputs.cache-matched-key == ''
-        with:
-          path: |
-            home/arduino/data
-          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
-
       - &cache_libraries
         name: Cache Arduino Libraries
         uses: actions/cache/save@v4
         id: cache_libraries
-        if: always() && steps.restore_libraries.outputs.cache-matched-key == ''
+        if: always() && steps.restore_libraries.outputs.cache-matched-key == '' && steps.install_libraries.outcome == 'success'
         with:
           path: |
             home/arduino/user
