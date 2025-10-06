@@ -184,6 +184,9 @@ arduino_cli_cores = list(
         [pio_to_acli[board]["fqbn"].rsplit(":", 1)[0] for board in boards]
     )
 )
+# if EnviroDIY:samd is in the list, also add adafruit:samd (a dependency of EnviroDIY:samd
+if "EnviroDIY:samd" in arduino_cli_cores and "adafruit:samd" not in arduino_cli_cores:
+    arduino_cli_cores.append("adafruit:samd")
 pio_platforms = list(
     OrderedDict.fromkeys([board_to_pio_platform[board] for board in boards])
 )
