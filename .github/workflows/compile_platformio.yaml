@@ -242,7 +242,7 @@ jobs:
         name: Cache the testing version of the library for PlatformIO
         uses: actions/cache/save@v4
         id: cache_testing_library
-        if: ${{ (steps.restore_testing_library.outputs.cache-matched-key == '') }} && steps.install_libraries.outcome == 'success'
+        if: ${{ (steps.restore_testing_library.outputs.cache-matched-key == '') }} && steps.install_test_library.outcome == 'success'
         with:
           path: |
             ~/.platformio/caches
