@@ -221,7 +221,6 @@ jobs:
         id: restore_testing_library
         with:
           path: |
-            ~/.platformio/caches
             $GITHUB_WORKSPACE/lib
           key: ${{ inputs.library_install_git }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
@@ -245,7 +244,6 @@ jobs:
         if: ${{ (steps.restore_testing_library.outputs.cache-matched-key == '') }} && steps.install_test_library.outcome == 'success'
         with:
           path: |
-            ~/.platformio/caches
             $GITHUB_WORKSPACE/lib
           key: ${{ inputs.library_install_git }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
 
