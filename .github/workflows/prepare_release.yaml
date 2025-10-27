@@ -186,7 +186,7 @@ jobs:
           validation_level: warn
 
       - name: Download any Dependency Zip
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: dependency_zip
           path: |
