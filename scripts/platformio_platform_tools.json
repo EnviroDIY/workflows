@@ -1,7 +1,12 @@
 {
   "atmelavr": {
     "name": "Atmel AVR",
-    "tools": ["framework-arduino-avr", "tool-avrdude", "toolchain-atmelavr"]
+    "tools": [
+      "framework-arduino-avr",
+      "tool-avrdude",
+      "toolchain-atmelavr",
+      "tool-scons"
+    ]
   },
   "atmelmegaavr": {
     "name": "Atmel Mega AVR",
@@ -23,7 +28,12 @@
 
   "espressif8266": {
     "name": "Espressif ESP8266",
-    "tools": ["tool-esptool", "tool-esptoolpy", "toolchain-xtensa"]
+    "tools": [
+      "framework-arduinoespressif8266",
+      "tool-esptool",
+      "tool-esptoolpy",
+      "toolchain-xtensa"
+    ]
   },
 
   "espressif32": {
@@ -32,7 +42,12 @@
       "tool-esptool",
       "tool-esptoolpy",
       "toolchain-riscv32-esp",
-      "toolchain-xtensa-esp32"
+      "toolchain-xtensa-esp32",
+      "contrib-piohome",
+      "framework-arduinoespressif32",
+      "framework-arduinoespressif32-libs",
+      "tool-mklittlefs",
+      "toolchain-xtensa-esp-elf"
     ]
   },
 
@@ -52,7 +67,8 @@
       "framework-cmsis",
       "tool-adafruit-nrfutil",
       "tool-sreccat",
-      "toolchain-gccarmnoneeabi"
+      "toolchain-gccarmnoneeabi",
+      "framework-arduinoadafruitnrf52"
     ]
   },
 
