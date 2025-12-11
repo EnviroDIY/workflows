@@ -23,7 +23,7 @@ jobs:
     steps:
       - &checkout_code
         name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - &setup_platformio
         name: Setup PlatformIO
@@ -168,7 +168,7 @@ jobs:
       - &checkout_envirodiy_boards
         name: Checkout EnviroDIY boards
         id: checkout_envirodiy_boards
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         if: ${{ (steps.restore_pio_boards.outputs.cache-matched-key == '') }}
         with:
           # Repository name with owner. For example, actions/checkout
