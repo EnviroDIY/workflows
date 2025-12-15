@@ -59,7 +59,7 @@ jobs:
 
       - &restore_platforms
         name: Restore PlatformIO Platforms
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: restore_platforms
         with:
           path: |
@@ -92,7 +92,7 @@ jobs:
 
       - &cache_platforms
         name: Cache PlatformIO Platforms
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache_platforms
         if: steps.restore_platforms.outputs.cache-matched-key == '' && steps.install_platforms.outcome == 'success'
         with:
@@ -104,7 +104,7 @@ jobs:
 
       - &restore_libraries
         name: Restore PlatformIO Libraries
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: restore_libraries
         with:
           path: |
@@ -129,7 +129,7 @@ jobs:
 
       - &cache_libraries
         name: Cache PlatformIO Libraries
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache_libraries
         if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }} && steps.install_libraries.outcome == 'success'
         with:
@@ -153,7 +153,7 @@ jobs:
       - &restore_pio_boards
         name: Restore EnviroDIY Boards
         id: restore_pio_boards
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.platformio/boards
@@ -206,7 +206,7 @@ jobs:
 
       - &cache_pio_boards
         name: Cache EnviroDIY Boards
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache_pio_boards
         if: ${{ (steps.restore_pio_boards.outputs.cache-matched-key == '') }}
         with:
@@ -217,7 +217,7 @@ jobs:
 
       - &restore_testing_library
         name: Restore the testing version of the library for PlatformIO
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: restore_testing_library
         with:
           path: |
@@ -239,7 +239,7 @@ jobs:
 
       - &cache_testing_library
         name: Cache the testing version of the library for PlatformIO
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache_testing_library
         if: ${{ (steps.restore_testing_library.outputs.cache-matched-key == '') }} && steps.install_test_library.outcome == 'success'
         with:
