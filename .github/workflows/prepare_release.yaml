@@ -104,7 +104,7 @@ jobs:
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
 
       - name: Restore Arduino Libraries
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: restore_libraries
         with:
           path: |
@@ -159,7 +159,7 @@ jobs:
             ${{ needs.check_version_number.outputs.zip_name }}.zip
 
       - name: Cache Arduino Libraries
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache_libraries
         if: always() && steps.restore_libraries.outputs.cache-matched-key == ''
         with:
