@@ -32,7 +32,7 @@ jobs:
       - &download_scripts
         name: Download the prepared scripts
         id: download_scripts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: generated_scripts
           path: |
