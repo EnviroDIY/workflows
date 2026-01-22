@@ -152,7 +152,7 @@ jobs:
           ls
 
       - name: Store generated dependency zip
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: dependency_zip
           path: |
