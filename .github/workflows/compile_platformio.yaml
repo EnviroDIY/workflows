@@ -27,7 +27,7 @@ jobs:
 
       - &setup_platformio
         name: Setup PlatformIO
-        uses: EnviroDIY/setup-platformio-action@v1.0.2
+        uses: EnviroDIY/setup-platformio-action@v1.0.3
 
       - &download_scripts
         name: Download the prepared scripts
