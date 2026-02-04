@@ -23,7 +23,7 @@ jobs:
     steps:
       - &checkout_code
         name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # We use the `arduino/setup-arduino-cli` action to install and
       # configure the Arduino CLI on the system.
@@ -34,7 +34,7 @@ jobs:
       - &download_scripts
         name: Download the prepared scripts
         id: download_scripts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: generated_scripts
           path: |
@@ -70,7 +70,7 @@ jobs:
 
       - &restore_cores
         name: Restore Arduino Cores
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: restore_cores
         with:
           path: |
@@ -100,7 +100,7 @@ jobs:
 
       - &cache_cores
         name: Cache Arduino Cores
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache_cores
         if: always() && steps.restore_cores.outputs.cache-matched-key == '' && steps.install_cores.outcome == 'success'
         with:
@@ -110,7 +110,7 @@ jobs:
 
       - &restore_libraries
         name: Restore Arduino libraries
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: restore_libraries
         with:
           path: |
@@ -135,7 +135,7 @@ jobs:
 
       - &cache_libraries
         name: Cache Arduino Libraries
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache_libraries
         if: always() && steps.restore_libraries.outputs.cache-matched-key == '' && steps.install_libraries.outcome == 'success'
         with:

@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Output the Version Numbers
         id: set_version
@@ -48,7 +48,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Write the requirements file
         run: |
@@ -104,7 +104,7 @@ jobs:
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
 
       - name: Restore Arduino Libraries
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: restore_libraries
         with:
           path: |
@@ -152,14 +152,14 @@ jobs:
           ls
 
       - name: Store generated dependency zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dependency_zip
           path: |
             ${{ needs.check_version_number.outputs.zip_name }}.zip
 
       - name: Cache Arduino Libraries
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache_libraries
         if: always() && steps.restore_libraries.outputs.cache-matched-key == ''
         with:
@@ -175,7 +175,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get change log entry for release notes
         id: changelog_reader
@@ -186,7 +186,7 @@ jobs:
           validation_level: warn
 
       - name: Download any Dependency Zip
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: dependency_zip
           path: |
@@ -200,7 +200,7 @@ jobs:
       # Create a new release with zipped dependencies
       - name: Create Release with Assets
         id: create_release_with_zip
-        uses: softprops/action-gh-release@v2.3.4
+        uses: softprops/action-gh-release@v2.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -221,7 +221,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get change log entry for release notes
         id: changelog_reader
@@ -234,7 +234,7 @@ jobs:
       # Create a new release with no zip
       - name: Create Simple Release
         id: create_bare_release
-        uses: softprops/action-gh-release@v2.3.4
+        uses: softprops/action-gh-release@v2.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -257,7 +257,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup PlatformIO
         uses: EnviroDIY/setup-platformio-action@v1.0.3
