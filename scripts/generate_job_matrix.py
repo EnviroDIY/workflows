@@ -230,14 +230,16 @@ if (
         print("::debug::Building only examples specified in yaml.")
 else:
     # Find all of the examples in the examples folder, append the path "examples" to it
-    examples_to_build = [
-        f"examples/{f}"
-        for f in os.listdir(examples_path)
-        if os.path.isdir(os.path.join(examples_path, f))
-        and f not in [".history", "logger_test", "menu_a_la_carte"]
-    ]
     if use_verbose:
         print("::debug::Building all examples found in the example path.")
+    examples_to_build = []
+    for root, subdirs, files in os.walk(examples_path):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            if filename == os.path.split(root)[-1] + ".ino":
+                examples_to_build.append(os.path.relpath(root, workspace_path))
+                if use_verbose:
+                    print(f"::debug::\t- example: {filename} (full path: {file_path})")
 
 # remove any ignored examples from the list
 if "EXAMPLES_TO_IGNORE" in os.environ.keys() and os.environ.get(
@@ -324,7 +326,7 @@ def add_log_to_compile_command(command: str, group_title: str) -> List:
     command_list.append(command + " 2>&1 | tee output.log")
     command_list.append("result_code=${PIPESTATUS[0]}")
     command_list.append(
-        'if [ "$result_code" -eq "0" ]; then echo " - {title} :white_check_mark:" >> $GITHUB_STEP_SUMMARY; else echo " - {title} :x:" >> $GITHUB_STEP_SUMMARY; fi'.format(
+        'if [ "$result_code" -eq "0" ]; then echo -e " - {title} :white_check_mark:" >> $GITHUB_STEP_SUMMARY; else echo " - {title} :x:" >> $GITHUB_STEP_SUMMARY; fi'.format(
             title=group_title
         )
     )
