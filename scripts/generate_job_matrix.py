@@ -236,7 +236,13 @@ else:
     for root, subdirs, files in os.walk(examples_path):
         for filename in files:
             file_path = os.path.join(root, filename)
-            if filename == os.path.split(root)[-1] + ".ino":
+            if filename == os.path.split(root)[-1] + ".ino" and root not in [
+                ".history",
+                "logger_test",
+                "archive",
+                "tests",
+                "menu_a_la_carte",
+            ]:
                 examples_to_build.append(os.path.relpath(root, workspace_path))
                 if use_verbose:
                     print(f"::debug::\t- example: {filename} (full path: {file_path})")
