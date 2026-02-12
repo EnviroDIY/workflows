@@ -74,32 +74,30 @@ doxy_file_type_patterns = (
 examples_to_doc = []
 # Find all of the examples in the examples folder, append the path "examples" to it
 if os.path.isdir(f"{examples_path}"):
-    examples_to_doc += [
-        os.path.abspath(
-            os.path.realpath(f"{examples_path}/{example_dir}/{example_dir}.ino")
-        )
-        for example_dir in os.listdir(examples_path)
-        if os.path.isdir(os.path.join(examples_path, example_dir))
-        and os.path.isfile(
-            os.path.abspath(
-                os.path.realpath(f"{examples_path}/{example_dir}/{example_dir}.ino")
-            )
-        )
-        and example_dir not in [".history", "logger_test", "menu_a_la_carte"]
-    ]
+    for root, subdirs, files in os.walk(examples_path):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            if filename == os.path.split(root)[-1] + ".ino" and root not in [
+                ".history",
+                "logger_test",
+                "archive",
+                "tests",
+                "menu_a_la_carte",
+            ]:
+                examples_to_doc.append(os.path.abspath(os.path.realpath(file_path)))
 # append any additional examples from the extras folder, iff it exists
 if os.path.isdir(f"{extras_path}"):
-    examples_to_doc += [
-        os.path.abspath(os.path.realpath(f"{extras_path}/{extra_dir}/{extra_dir}.ino"))
-        for extra_dir in os.listdir(extras_path)
-        if os.path.isdir(os.path.join(extras_path, extra_dir))
-        and os.path.isfile(
-            os.path.abspath(
-                os.path.realpath(f"{extras_path}/{extra_dir}/{extra_dir}.ino")
-            )
-        )
-        and extra_dir not in [".history", "logger_test", "menu_a_la_carte"]
-    ]
+    for root, subdirs, files in os.walk(extras_path):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            if filename == os.path.split(root)[-1] + ".ino" and root not in [
+                ".history",
+                "logger_test",
+                "archive",
+                "tests",
+                "menu_a_la_carte",
+            ]:
+                examples_to_doc.append(os.path.abspath(os.path.realpath(file_path)))
 print("Examples to document:")
 print("    ", end="")
 print("\n    ".join(examples_to_doc))
