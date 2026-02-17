@@ -132,7 +132,7 @@ python -u "%WORKFLOW_DIR%removeStupidLinks.py" > output_removeStupidLinks.log 2>
 IF "%GITHUB_REPOSITORY%"=="ModularSensors" (
   echo Checking for inclusion of all ModularSensors components
   cd "%REPO_DIR%\continuous_integration"
-  python -u check_component_inclusion.py > output_check_component_inclusion.log 2>&1
+  python -u check_component_inclusion.py > "%REPO_DIR%\docs\output_check_component_inclusion.log" 2>&1
 )
 
 @REM Delete copied files
