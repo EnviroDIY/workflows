@@ -102,6 +102,39 @@ print("Examples to document:")
 print("    ", end="")
 print("\n    ".join(examples_to_doc))
 
+# %% Find the primary examples page for example navigation
+print("\nFinding primary examples page for example navigation...")
+main_example_page = "examples_page"
+if os.path.isdir(f"{examples_path}") and os.path.isfile(
+    os.path.join(examples_path, "ReadMe.md")
+):
+    examples_page = os.path.abspath(
+        os.path.realpath(os.path.join(examples_path, "ReadMe.md"))
+    )
+    with open(examples_page, "r") as in_file:  # open in readonly mode
+        lines = in_file.readlines()
+        got_example_page_tag = False
+        for line in lines:
+            i = 0
+            if line.startswith("# "):
+                page_tag = re.match(r"^# .*?<!--! {#(?P<page_name>.*)} -->$", line)
+                if page_tag is not None:
+                    main_example_page = page_tag.group("page_name")
+                    print(
+                        f"Got main example page name: {main_example_page} in line {i}"
+                    )
+                    got_example_page_tag = True
+                break
+            i += 1
+        if not got_example_page_tag:
+            print(
+                f"Did not find main example page tag in {examples_page}, using default: {main_example_page}"
+            )
+else:
+    print(
+        f"Did not find {examples_path}ReadMe.md, using default main example page name: {main_example_page}"
+    )
+
 # %%
 with open(output_file, "w+") as out_file:
     for filename in examples_to_doc:
@@ -133,7 +166,9 @@ with open(output_file, "w+") as out_file:
                 if got_start_comment and "*/" in line:
                     out_file.write(" *\n")
                     if not got_example_nav:
-                        out_file.write(" * @m_examplenavigation{examples_page,}\n")
+                        out_file.write(
+                            f" * @m_examplenavigation{{{main_example_page},}}\n"
+                        )
                     if not got_footer_nav:
                         out_file.write(" * @m_footernavigation\n")
                     end_comment_in_line = line.find("*/") + 2
