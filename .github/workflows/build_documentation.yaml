@@ -298,7 +298,7 @@ jobs:
 
       - name: Deploy to github pages
         if: inputs.publish
-        uses: peaceiris/actions-gh-pages@v4.0.0
+        uses: peaceiris/actions-gh-pages@v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ${{ github.workspace }}/${{ env.DOC_ROOT }}_Doxygen/m.css
