@@ -172,6 +172,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check_version_number, prepare_assets, check_for_dependencies]
     if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies && needs.check_for_dependencies.outputs.has_library_dependencies == 'true' }}
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -218,6 +220,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check_version_number, check_for_dependencies]
     if: ${{ ! failure() && ! cancelled() && (! inputs.include_dependencies || needs.check_for_dependencies.outputs.has_library_dependencies == 'false') }}
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
