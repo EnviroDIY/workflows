@@ -148,7 +148,7 @@ jobs:
               set -v
               set -x
           fi
-          echo "boards_commit_hash=$(git ls-remote https://github.com/EnviroDIY/Arduino_boards.git HEAD | awk '{ print $1}')" >> $GITHUB_OUTPUT
+          echo "boards_commit_hash=$(git ls-remote https://github.com/EnviroDIY/EnviroDIYSAMDBoards.git HEAD | awk '{ print $1}')" >> $GITHUB_OUTPUT
 
       - &restore_pio_boards
         name: Restore EnviroDIY Boards
