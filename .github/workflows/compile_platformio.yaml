@@ -188,6 +188,8 @@ jobs:
           fi
           echo "Moving Stonefly boards files"
           if [ "$RUNNER_DEBUG" = "1" ]; then
+            ls -R envirodiy_boards
+            sleep 5
             ls -R envirodiy_boards/EnviroDIYSAMDBoards
             sleep 5
           fi
