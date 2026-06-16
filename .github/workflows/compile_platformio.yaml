@@ -190,16 +190,14 @@ jobs:
           if [ "$RUNNER_DEBUG" = "1" ]; then
             ls -R envirodiy_boards
             sleep 5
-            ls -R envirodiy_boards/EnviroDIYSAMDBoards
-            sleep 5
           fi
-          mv envirodiy_boards/EnviroDIYSAMDBoards/boards/ ~/.platformio/boards
+          mv envirodiy_boards/boards/ ~/.platformio/boards
           if [ "$RUNNER_DEBUG" = "1" ]; then
             ls -R ~/.platformio/boards
             sleep 5
           fi
           echo "Moving Stonefly variants files"
-          mv envirodiy_boards/EnviroDIYSAMDBoards/variants/ ~/.platformio/variants
+          mv envirodiy_boards/variants/ ~/.platformio/variants
           if [ "$RUNNER_DEBUG" = "1" ]; then
             ls -R ~/.platformio/variants
             sleep 5
