@@ -192,14 +192,14 @@ jobs:
             sleep 5
           fi
           mkdir -p ~/.platformio/boards
-          mv envirodiy_boards/boards/ ~/.platformio/boards
+          mv envirodiy_boards/boards/ ~/.platformio
           if [ "$RUNNER_DEBUG" = "1" ]; then
             ls -R ~/.platformio/boards
             sleep 5
           fi
           echo "Moving Stonefly variants files"
           mkdir -p ~/.platformio/variants
-          mv envirodiy_boards/variants/ ~/.platformio/variants
+          mv envirodiy_boards/variants/ ~/.platformio
           if [ "$RUNNER_DEBUG" = "1" ]; then
             ls -R ~/.platformio/variants
             sleep 5
