@@ -205,6 +205,9 @@ jobs:
             sleep 5
           fi
           pio boards --installed envirodiy
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              pio boards --installed
+          fi
 
       - &cache_pio_boards
         name: Cache EnviroDIY Boards
