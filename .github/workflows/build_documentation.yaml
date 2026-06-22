@@ -71,7 +71,7 @@ jobs:
           echo "${{ env.DOC_ROOT }}"
 
       # check out the library repo into a subfolder
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           path: ${{ env.DOC_ROOT }}
 
@@ -273,7 +273,7 @@ jobs:
 
       # check out my fork of m.css, for post-processing and re-formatting Doxygen output
       - name: Checkout m.css
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           # Repository name with owner. For example, actions/checkout
           repository: SRGDamia1/m.css
