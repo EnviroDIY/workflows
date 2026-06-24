@@ -44,3 +44,6 @@ else:
         f"Setting compile command output to {os.path.join(dump_dir, 'compile_commands.json')}"
     )
     env.Replace(COMPILATIONDB_PATH=os.path.join(dump_dir, "compile_commands.json"))
+
+# %%
+# cSpell:words idedata cppdefines neoswserial pcint pioenv compilationdb

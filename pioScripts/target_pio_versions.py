@@ -25,3 +25,7 @@ env.AddCustomTarget(
     title="Core Env",
     description="Show PlatformIO Core and Python versions",
 )
+
+
+# %%
+# cSpell:words idedata cppdefines pioenv sysenv

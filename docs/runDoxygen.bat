@@ -13,8 +13,8 @@ for %%f in ("%CURRENT_DIR%") do set GITHUB_REPOSITORY=%%~nxf
 echo GitHub Repo: %GITHUB_REPOSITORY%
 
 @REM https://stackoverflow.com/questions/26537949/how-to-split-variables-in-batch-files
-FOR /F "tokens=1-10 delims=\" %%G IN ("%CURRENT_DIR%") DO echo %%G %%H %%I %%J %%K %%L %%M %%N %%O %%P & set GIBHUB_BASE_DIR=%%G\%%H\%%I\%%J\%%K
-echo GitHub Orgs Directory: %GIBHUB_BASE_DIR%
+FOR /F "tokens=1-10 delims=\" %%G IN ("%CURRENT_DIR%") DO echo %%G %%H %%I %%J %%K %%L %%M %%N %%O %%P & set GITHUB_BASE_DIR=%%G\%%H\%%I\%%J\%%K
+echo GitHub Orgs Directory: %GITHUB_BASE_DIR%
 
 @REM IF "%~1"=="" (
 @REM     exit 1
@@ -22,11 +22,11 @@ echo GitHub Orgs Directory: %GIBHUB_BASE_DIR%
 @REM set GITHUB_REPOSITORY=%~1
 
 @REM Set directory links
-set MCSS_DIR=%GIBHUB_BASE_DIR%\SRGDamia1\m.css\
+set MCSS_DIR=%GITHUB_BASE_DIR%\SRGDamia1\m.css\
 echo mcss Directory: %MCSS_DIR%
-set REPO_DIR=%GIBHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%
+set REPO_DIR=%GITHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%
 echo Repository Directory: %REPO_DIR%
-set WORKFLOW_DIR=%GIBHUB_BASE_DIR%\EnviroDIY\workflows\docs\
+set WORKFLOW_DIR=%GITHUB_BASE_DIR%\EnviroDIY\workflows\docs\
 echo Workflows Directory: %WORKFLOW_DIR%
 
 @REM Delete any old versions of the documentation and css

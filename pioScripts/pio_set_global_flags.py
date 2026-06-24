@@ -30,3 +30,6 @@ global_env.Append(
 )
 # print "<<<<<GLOBAL ENV>>>>>"
 # print global_env.Dump()
+
+# %%
+# cSpell:words idedata cppdefines neoswserial pcint

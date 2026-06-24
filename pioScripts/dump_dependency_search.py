@@ -59,7 +59,7 @@ if env.IsCleanTarget() or env.GetOption("clean"):
 output_file_name = f"{env['PROJECT_DIR']}\\output_pio_dependency_dump.log"
 output_file = open(output_file_name, "w")
 print("Dumping environment:")
-output_file.write("Enviroment Dump:\n")
+output_file.write("Environment Dump:\n")
 output_file.write(env.Dump())
 output_file.write("\n\n")
 
@@ -126,3 +126,8 @@ output_file.write(json.dumps(lib_inc_map, indent=2))
 output_file.close()
 
 # os._exit(os.EX_OK)
+
+
+# %%
+# cSpell:words pioenv piolib pythonexe cxxflags compiledb idedata compilationdb
+# cSpell:words libsource lsds depbuilders

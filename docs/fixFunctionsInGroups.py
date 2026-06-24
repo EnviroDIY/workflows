@@ -113,3 +113,5 @@ for filename in all_group_files:
     )
 
 # %%
+# cSpell:words fullwidth  parameterlist parameteritem parameternamelist parametername
+# cSpell:words parameterdescription

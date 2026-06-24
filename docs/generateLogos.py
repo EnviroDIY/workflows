@@ -35,8 +35,8 @@ logo_sizes = {
     "gp-mobile-logo": {"width": 132, "height": 28},
 }
 ubuntu_font = "Ubuntu-Bold.ttf"
-# #8ec551 = rgb(142,197,81) = Greenish, library name
-# #da9230 = rgb(218,146,48) = Orangeish, library version
+# #8ec551 = rgb(142,197,81) = Green-ish, library name
+# #da9230 = rgb(218,146,48) = Orange-ish, library version
 # #222222 = rgb(34,34,34) = blackish header background
 ediy_green = (142, 197, 81, 255)
 ediy_orange = (218, 146, 48, 255)
@@ -115,3 +115,4 @@ for logo_size in logo_sizes.keys():
     create_logo(logo_size, library_name, library_version)
 
 # %%
+# cSpell:words ediy bkgd getbbox

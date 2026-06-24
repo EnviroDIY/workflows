@@ -224,7 +224,7 @@ python -u removeStupidLinks.py 2>&1
 echo "::endgroup::"
 
 # # Generate Arduino keywords using doxygen2keywords.xsl and Saxon
-# echo -e "\e[36mConverting the Doxygen output to an Arudino keywords file\e[0m"
+# echo -e "\e[36mConverting the Doxygen output to an Arduino keywords file\e[0m"
 # java  -jar "C:\Users\sdamiano\Downloads\SaxonHE12-4J\saxon-he-12.4.jar" -o:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt" -s:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensorsDoxygen\xml\index.xml" -xsl:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\workflows\docs\doxygen2keywords.xsl"
 # perl -i -ne 'print if ! $x{$_}++' "C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt"
 

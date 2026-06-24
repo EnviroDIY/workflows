@@ -207,3 +207,4 @@ with open(output_file, "w+") as out_file:
 
 
 # %%
+# cSpell:words examplenavigation

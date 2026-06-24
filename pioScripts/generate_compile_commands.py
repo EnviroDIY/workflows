@@ -38,6 +38,9 @@ else:
     print(f"Dumping environment to {env_dump_file}")
     output_file = open(env_dump_file, "w")
 
-    output_file.write("Enviroment Dump:\n")
+    output_file.write("Environment Dump:\n")
     output_file.write(env.Dump())
     output_file.close()
+
+# %%
+# cSpell:words pioenv compiledb idedata compilationdb

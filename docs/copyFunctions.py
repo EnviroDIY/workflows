@@ -65,9 +65,6 @@ def get_section_to_paste(match: re.Match) -> str:
     #     # print("---")
 
 
-# {{ <a href="class_analog_elec_conductivity.html#a66c05fe87f6c708042c97236c333aa76"    class="m-doc">AnalogElecConductivity::<wbr />AnalogElecConductivity</a> }}
-# {{ <a href="class_a_o_song_a_m2315___humidity.html#ab201cd06c49eec79df6263b8da8f10e3" class="m-doc">AOSongAM2315_Humidity::<wbr />AOSongAM2315_Humidity</a> }}
-
 # %%
 files_to_copy_to = []
 for filename in all_files:
@@ -120,3 +117,4 @@ for filename in all_files:
         )
 
 # %%
+# cSpell:words compounddef

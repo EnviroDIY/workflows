@@ -53,7 +53,7 @@ try:
         os._exit(os.EX_OK)
 
     print("Working on environment (PIOENV) {}".format(env["PIOENV"]))
-    # print("Enviroment and project settings:")
+    # print("Environment and project settings:")
     # for project_directory in [
     #     "PROJECT_DIR",
     #     "PROJECT_CORE_DIR",
@@ -102,6 +102,8 @@ except:
         cwd = "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors"
         # cwd = "C:\\Users\\sdamiano\\Documents\\PlatformIO\\Projects\\NGWOS_TTN"
         # cwd = "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\GeoluxCamera"
+        # cwd = "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ANBSensorsModbus"
+        # cwd = "C:\\Users\\sdamiano\\Documents\\EnviroDIYInstallations\\PorterReservoir"
     project_dir = cwd
     shared_lib_dir = f"{cwd}\\lib"
     shared_lib_abbr = "lib"
@@ -576,4 +578,7 @@ if have_deps_changed:
         out_file.write(out_file_str)
 else:
     print("No changes to dependency output file")
+
+
 # %%
+# cSpell:words idedata pioenv pioscripts libsource libpath linkflags nolinks reqs

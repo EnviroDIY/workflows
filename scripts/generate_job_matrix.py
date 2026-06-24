@@ -206,7 +206,7 @@ if use_verbose:
     print("::debug::Building the following PlatformIO environments and boards:")
     for env in pio_envs_to_build:
         print(
-            f"::debug::Requested Board: {pio_env_to_board[env]} -- Enviroment Name: {env} -- platformio.ini source: {'workflow default' if default_pio_config_file else 'repository CI directory'}"
+            f"::debug::Requested Board: {pio_env_to_board[env]} -- Environment Name: {env} -- platformio.ini source: {'workflow default' if default_pio_config_file else 'repository CI directory'}"
         )
     for board in pio_bare_boards:
         print(f"::debug::Requested Board: {board} -- NO ENVIRONMENT CONFIGURATION")
@@ -379,7 +379,7 @@ for example in examples_to_build:
         arduino_ex_commands.extend(command_with_log)
 
     # create commands for PlatformIO
-    # use the enviroments list to catch all environments - even those using the same board
+    # use the environments list to catch all environments - even those using the same board
     for env in pio_envs_to_build:
         build_command = create_pio_ci_compile_command(
             code_subfolder=example, pio_board_or_env=env, use_pio_config_file=True
@@ -499,3 +499,4 @@ if "GITHUB_WORKSPACE" not in os.environ.keys():
 
 
 # %%
+# cSpell:words devkitm acli genuino bluepill fqbn fqbns pipestatus jsons endgroup

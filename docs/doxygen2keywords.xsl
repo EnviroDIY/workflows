@@ -45,7 +45,7 @@ https://github.com/bengtmartensson/KeywordsTxtGenerator
 #######################################
 
 </xsl:text>
-<!-- If the current elemenet is a compound that is an define or enum value, apply the template for the literal header (the xsl:text above)  -->
+<!-- If the current element is a compound that is an define or enum value, apply the template for the literal header (the xsl:text above)  -->
     <xsl:apply-templates select="compound/member[@kind='define' or @kind='enumvalue']"/>
     </xsl:template>
 
