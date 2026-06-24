@@ -10,6 +10,12 @@ import requests
 from platformio.project.config import ProjectConfig
 
 # %%
+# configuration
+# boards to *always* skip on PlatformIO
+pio_skip_boards = ["esp32-c6-devkitm-1", "arduino_nano_esp32"]
+acli_skip_boards = ["uno_pic32", "genuino101", "bluepill_f103c8"]
+
+# %%
 # set verbose
 use_verbose = False
 if "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1":
@@ -162,7 +168,7 @@ if "BOARDS_TO_IGNORE" in os.environ.keys() and os.environ.get(
 
 # Make sure we have an equivalent Arduino FQBN (and thus core) or PlatformIO environment for all requested boards
 for board in boards:
-    if board not in pio_to_acli.keys():
+    if board not in pio_to_acli.keys() and board not in acli_skip_boards:
         print(
             f"""::error:: file=platformio_to_arduino_boards.json,title=No matching Arduino board::
 Cannot find matching Arduino FQBN for {board}.
@@ -170,7 +176,7 @@ No core will be installed or cached for this board.
 Please check the spelling of your board name or add an entry to the Arduino/PlatformIO board conversion file."""
         )
         boards.remove(board)
-    if board not in board_to_pio_platform.keys():
+    if board not in board_to_pio_platform.keys() and board not in pio_skip_boards:
         print(
             f"""::warning file=platformio.ini,title=No PlatformIO Environment::
 No matching environment was found in the platformio.ini file for {board}.
@@ -181,14 +187,24 @@ Please check the spelling of your board name or add an entry to your platformio.
 # convert the list of boards into a list of cores and platforms to install
 arduino_cli_cores = list(
     OrderedDict.fromkeys(
-        [pio_to_acli[board]["fqbn"].rsplit(":", 1)[0] for board in boards]
+        [
+            pio_to_acli[board]["fqbn"].rsplit(":", 1)[0]
+            for board in boards
+            if board in pio_to_acli.keys() and not board in acli_skip_boards
+        ]
     )
 )
 # if EnviroDIY:samd is in the list, also add adafruit:samd (a dependency of EnviroDIY:samd
 if "EnviroDIY:samd" in arduino_cli_cores and "adafruit:samd" not in arduino_cli_cores:
     arduino_cli_cores.append("adafruit:samd")
 pio_platforms = list(
-    OrderedDict.fromkeys([board_to_pio_platform[board] for board in boards])
+    OrderedDict.fromkeys(
+        [
+            board_to_pio_platform[board]
+            for board in boards
+            if board in board_to_pio_platform.keys() and not board in pio_skip_boards
+        ]
+    )
 )
 
 # print out the list of platforms/cores
@@ -244,8 +260,7 @@ bash_file_name = "install-platforms-arduino-cli.sh"
 print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
 bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
 bash_out.write("#!/bin/bash\n\n")
-bash_out.write(
-    """
+bash_out.write("""
 set -e # Exit with nonzero exit code if anything fails
 if [ "$RUNNER_DEBUG" = "1" ]; then
     echo "Enabling debugging!"
@@ -258,10 +273,7 @@ arduino-cli version
 
 echo "\\e[32mUpdating the core index\\e[0m"
 arduino-cli --config-file "{0}" core update-index
-""".format(
-        arduino_cli_config
-    )
-)
+""".format(arduino_cli_config))
 
 for core in arduino_cli_cores:
     install_command = create_arduino_cli_core_command(
@@ -271,8 +283,7 @@ for core in arduino_cli_cores:
         install_command, core.replace(":", " ").title()
     )
     bash_out.write("\n".join(command_with_log))
-bash_out.write(
-    """
+bash_out.write("""
 
 echo "\\e[32mUpdating the core index\\e[0m"
 arduino-cli --config-file "{0}" core update-index
@@ -282,10 +293,7 @@ arduino-cli --config-file "{0}" core upgrade
 
 echo "\\e[32mCurrently installed cores:\\e[0m"
 arduino-cli --config-file "{0}" core list
-""".format(
-        arduino_cli_config
-    )
-)
+""".format(arduino_cli_config))
 bash_out.close()
 
 # %%
@@ -294,8 +302,7 @@ bash_file_name = "install-platforms-platformio.sh"
 print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
 bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
 bash_out.write("#!/bin/bash\n\n")
-bash_out.write(
-    """
+bash_out.write("""
 set -e # Exit with nonzero exit code if anything fails
 if [ "$RUNNER_DEBUG" = "1" ]; then
     echo "Enabling debugging!"
@@ -305,8 +312,7 @@ fi
 
 echo "\\e[32mCurrent PlatformIO version:\\e[0m"
 pio --version
-"""
-)
+""")
 for platform in pio_platforms:
     install_command = create_pio_ci_core_command(platform_name=platform, is_tool=False)
     if platform in platformio_platform_tools.keys():
@@ -320,15 +326,13 @@ for platform in pio_platforms:
     else:
         command_with_log = add_log_to_core_command(install_command, platform)
     bash_out.write("\n".join(command_with_log))
-bash_out.write(
-    """
+bash_out.write("""
 
 echo "::group::Package List"
 echo "\\e[32mCurrently installed packages:\\e[0m"
 pio pkg list -g -v
 echo "::endgroup::"
-"""
-)
+""")
 bash_out.close()
 
 
