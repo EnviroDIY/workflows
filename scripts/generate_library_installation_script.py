@@ -271,6 +271,7 @@ def create_arduino_cli_lib_command(
             .replace(">", "")
             .replace("<", "")
             .replace("=", "")
+            .replace("^", "")
         )
         arduino_command_args.append(f"\"{library['name']}@{clean_version}\"")
     else:
