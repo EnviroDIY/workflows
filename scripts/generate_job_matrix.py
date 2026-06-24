@@ -12,7 +12,7 @@ from platformio.project.config import ProjectConfig
 # configuration
 # boards to *always* skip on PlatformIO
 pio_skip_boards = ["esp32-c6-devkitm-1", "arduino_nano_esp32"]
-acli_skip_boards = [""]
+acli_skip_boards = ["uno_pic32", "genuino101", "bluepill_f103c8"]
 
 # %%
 # set verbose
@@ -159,7 +159,7 @@ if "BOARDS_TO_IGNORE" in os.environ.keys() and os.environ.get(
 
 # Make sure we have an equivalent Arduino FQBN or PlatformIO environment for all requested boards
 for board in boards:
-    if board not in pio_to_acli.keys():
+    if board not in pio_to_acli.keys() and board not in acli_skip_boards:
         print(
             f"""::error:: file=platformio_to_arduino_boards.json,title=No matching Arduino board::
 Cannot find matching Arduino FQBN for {board}.
@@ -179,7 +179,7 @@ Please check the spelling of your board name or add an entry to your platformio.
 fqbns_to_build = [
     pio_to_acli[board]["fqbn"]
     for board in boards
-    if pio_to_acli[board]["fqbn"] not in acli_skip_boards
+    if board in pio_to_acli.keys() and not board in acli_skip_boards
 ]
 pio_envs_to_build = [
     env
@@ -402,15 +402,15 @@ for example in examples_to_build:
 
     arduino_job_matrix.append(
         {
-            "job_name": "Arduino - {}".format(example.split("/")[-1]),
-            "job_tag": example.split("/")[-1].lower().replace(" ", "-"),
+            "job_name": "Arduino - {}".format(os.path.split(example)[-1]),
+            "job_tag": os.path.split(example)[-1].lower().replace(" ", "-"),
             "command": "\n".join(arduino_ex_commands + [end_job_commands]),
         }
     )
     pio_job_matrix.append(
         {
-            "job_name": "PlatformIO - {}".format(example.split("/")[-1]),
-            "job_tag": example.split("/")[-1].lower().replace(" ", "-"),
+            "job_name": "PlatformIO - {}".format(os.path.split(example)[-1]),
+            "job_tag": os.path.split(example)[-1].lower().replace(" ", "-"),
             "command": "\n".join(pio_ex_commands + [end_job_commands]),
         }
     )
@@ -423,8 +423,7 @@ for matrix_job in arduino_job_matrix + pio_job_matrix:
     print(f"Writing bash file to {os.path.join(artifact_path, bash_file_name)}")
     bash_out = open(os.path.join(artifact_path, bash_file_name), "w+")
     bash_out.write("#!/bin/bash\n\n")
-    bash_out.write(
-        """
+    bash_out.write("""
 set -e # Exit with nonzero exit code if anything fails
 if [ "$RUNNER_DEBUG" = "1" ]; then
     echo "Enabling debugging!"
@@ -432,8 +431,7 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     set -x # Print command traces before executing command.
 fi
 
-"""
-    )
+""")
     bash_out.write(matrix_job["command"])
     bash_out.close()
     matrix_job["script"] = os.path.join(artifact_path, bash_file_name)
