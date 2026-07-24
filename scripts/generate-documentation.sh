@@ -161,8 +161,8 @@ fi
 
 # Fix up xml sections before running m.css
 echo "::group::Fixing XML sections"
-curl -SL ${WORKFLOW_DIR}fixSectionsInXml.py -o fixSectionsInXml.py
-python -u fixSectionsInXml.py 2>&1
+curl -SL ${WORKFLOW_DIR}preprocessXML.py -o preprocessXML.py
+python -u preprocessXML.py 2>&1
 echo "::endgroup::"
 
 # echo -e "\e[36mFixing copied function documentation in group documentation\e[0m"

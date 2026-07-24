@@ -9,3 +9,4 @@ pillow
 ghostscript
 black
 setuptools
+python-slugify
