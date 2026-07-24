@@ -12,7 +12,7 @@ from PIL import ImageFont, Image, ImageDraw
 docbuild_dir = os.getcwd()
 
 if "GITHUB_WORKSPACE" in os.environ.keys():
-    repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]
+    repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]  # type: ignore
 else:
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-1]
 
@@ -34,8 +34,12 @@ logo_sizes = {
     "gp-desktop-logo": {"width": 200, "height": 42},
     "gp-scrolling-logo": {"width": 264, "height": 55},
     "gp-mobile-logo": {"width": 132, "height": 28},
+    "favicon": {"width": 32, "height": 32},
+    "main_logo": {"width": 500, "height": 80},
 }
 ubuntu_font = "Ubuntu-Bold.ttf"
+black = (0, 0, 0, 255)
+white = (255, 255, 255, 255)
 # #8ec551 = rgb(142,197,81) = Green-ish, library name
 # #da9230 = rgb(218,146,48) = Orange-ish, library version
 # #222222 = rgb(34,34,34) = blackish header background
@@ -67,6 +71,9 @@ def get_font_size(text, max_width, max_height):
                 limiter = "width"
             if rendered_height < max_height and final_rendered_height > max_height:
                 limiter = "height"
+            print(
+                f"Font size: {font_size}, Rendered width: {rendered_width} of {max_width}, Rendered height: {rendered_height} of {max_height}, Limiter: {limiter}"
+            )
         else:
             font_size -= 1
         final_rendered_width = rendered_width
@@ -77,7 +84,12 @@ def get_font_size(text, max_width, max_height):
 
 # %%
 def create_logo(
-    logo_type: str, library_name: str, library_version: str, add_version: bool = True
+    logo_type: str,
+    library_text: str,
+    version_text: str,
+    add_version: bool,
+    library_color,
+    version_color,
 ):
     logo_width = logo_sizes[logo_type]["width"]
     logo_height = logo_sizes[logo_type]["height"]
@@ -85,7 +97,7 @@ def create_logo(
 
     # calculate the line sizes
     center_x = int(logo_width / 2)
-    name_lines = library_name.count("\n")
+    name_lines = max(library_text.count("\n"), 1)
     n_lines = name_lines + 1 if add_version else name_lines
     line_y = floor(logo_height / n_lines)
     extra_y = logo_height - (line_y * n_lines)
@@ -95,7 +107,7 @@ def create_logo(
     last_line_y = line_y + extra_y if name_lines > 1 else line_y
 
     # calculate the max font size for the longest line of the library name / non-version text
-    longest_line = max(library_name.splitlines(), key=len)
+    longest_line = max(library_text.splitlines(), key=len)
     font_size, _, final_rendered_height, limiter = get_font_size(
         longest_line, logo_width, first_line_y
     )
@@ -118,7 +130,7 @@ def create_logo(
     # font = ImageFont.truetype(<font-file>, <font-size>)
     font = ImageFont.truetype(font=ubuntu_font, size=font_size)
     # add the library name
-    for lineNum, line in enumerate(library_name.splitlines()):
+    for lineNum, line in enumerate(library_text.splitlines()):
         y_pos = first_line_y + (line_y * lineNum)
         print(
             f"Adding line {lineNum}: {line} to {logo_type} centered at {center_x}, anchored at {y_pos}"
@@ -126,7 +138,7 @@ def create_logo(
         draw.text(
             xy=(center_x, y_pos),  # set the baseline in the center
             text=line,
-            fill=ediy_green,
+            fill=library_color,
             font=font,
             spacing=0,
             anchor="mb",  # anchor x to the center an y to the bottom
@@ -135,17 +147,15 @@ def create_logo(
         )
     if add_version:
         # recalculate the font size for the version text, setting the max height to the last line height minus 3 pixels of padding
-        font_size_version = get_font_size(library_version, logo_width, last_line_y - 3)[
-            0
-        ]
+        font_size_version = get_font_size(version_text, logo_width, last_line_y - 3)[0]
         # add the library version
         print(
-            f"Adding version: {library_version} to {logo_type} centered at {center_x}, anchored at {logo_height}"
+            f"Adding version: {version_text} to {logo_type} centered at {center_x}, anchored at {logo_height}"
         )
         draw.text(
             xy=(center_x, logo_height),  # set the baseline in the center
-            text=library_version,
-            fill=ediy_orange,
+            text=version_text,
+            fill=version_color,
             font=ImageFont.truetype(font=ubuntu_font, size=font_size_version),
             spacing=0,
             anchor="mb",  # anchor x to the center an y to the bottom
@@ -153,13 +163,22 @@ def create_logo(
             # NOTE: not ascender
         )
     # display(img)
-    img.save(f"docs/{logo_type}.png")
-    print(f"Saved docs/{logo_type}.png")
+    img.save(f"{docbuild_dir}\\{logo_type}.png")
+    print(f"Saved {docbuild_dir}\\{logo_type}.png")
 
 
 # %%
 for logo_size in logo_sizes.keys():
-    create_logo(logo_size, library_name, library_version)
+    print(f"Creating logo of size: {logo_size}")
+    if "gp" in logo_size:
+        create_logo(
+            logo_type=logo_size,
+            library_text=library_name,
+            version_text=library_version,
+            add_version=True,
+            library_color=ediy_green,
+            version_color=ediy_orange,
+        )
 
 # %%
 # cSpell:words ediy bkgd getbbox
