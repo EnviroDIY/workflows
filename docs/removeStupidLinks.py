@@ -9,7 +9,7 @@ import os
 # The workspace directory
 if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
-    repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]
+    repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]  # type: ignore
     relative_dir = f"../../../../{repo_name}_Doxygen/m.css/"
     relative_html = f"../../../../{repo_name}_Doxygen/html/"
 else:
@@ -21,10 +21,10 @@ else:
     relative_dir = f"../../{repo_name}_Doxygen/m.css/"
     relative_html = f"../../{repo_name}_Doxygen/html/"
 
-doxy_mcss_dir = os.path.join(docbuild_dir, relative_dir)
+doxy_mcss_dir = os.path.join(docbuild_dir, relative_dir)  # type: ignore
 doxy_mcss_dir = os.path.abspath(os.path.realpath(doxy_mcss_dir))
 
-doxy_html_dir = os.path.join(docbuild_dir, relative_html)
+doxy_html_dir = os.path.join(docbuild_dir, relative_html)  # type: ignore
 doxy_html_dir = os.path.abspath(os.path.realpath(doxy_html_dir))
 
 print(f"Repository Name: {repo_name}")
