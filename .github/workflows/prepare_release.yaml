@@ -58,7 +58,7 @@ jobs:
           echo "requests" >> requirements.txt
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.x'
           cache: 'pip'
@@ -202,7 +202,7 @@ jobs:
       # Create a new release with zipped dependencies
       - name: Create Release with Assets
         id: create_release_with_zip
-        uses: softprops/action-gh-release@v3.0.1
+        uses: softprops/action-gh-release@v3.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -238,7 +238,7 @@ jobs:
       # Create a new release with no zip
       - name: Create Simple Release
         id: create_bare_release
-        uses: softprops/action-gh-release@v3.0.1
+        uses: softprops/action-gh-release@v3.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

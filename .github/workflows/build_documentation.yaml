@@ -80,7 +80,7 @@ jobs:
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/doxygen_mcss_requirements.txt -o requirements.txt
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.x'
           cache: 'pip'
