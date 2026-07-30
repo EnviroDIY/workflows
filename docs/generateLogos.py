@@ -9,7 +9,6 @@ from PIL import ImageFont, Image, ImageDraw
 
 # %%
 # The workspace directory
-docbuild_dir = os.getcwd()
 if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]  # type: ignore
@@ -21,8 +20,8 @@ else:
 
 save_dir = (
     docbuild_dir
-    if os.path.split(docbuild_dir)[1] == "docs"
-    else os.path.join(docbuild_dir, "docs")
+    if os.path.split(repo_dir)[1] == "docs"
+    else os.path.join(repo_dir, "docs")
 )
 lib_specs_path = os.path.join(repo_dir, "library.json")
 lib_specs_path = os.path.abspath(os.path.realpath(lib_specs_path))

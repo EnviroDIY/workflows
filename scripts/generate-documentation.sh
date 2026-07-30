@@ -51,23 +51,8 @@ cp "${MCSS_DIR}css/EnviroDIY/m-EnviroDIY+documentation.compiled.css" "${REPO_DIR
 cp "${MCSS_DIR}documentation/clipboard.js" "${REPO_DIR}/docs"
 echo "::endgroup::"
 
-# Move back to the repository directory
-cd "${REPO_DIR}"
-
-echo "::group::Generating library logos"
-# Download the font and favicon
-curl -SL "${WORKFLOW_DIR}Ubuntu-Bold.ttf" -o Ubuntu-Bold.ttf
-curl -SL "${WORKFLOW_DIR}enviroDIY_Favicon.png" -o docs/enviroDIY_Favicon.png
-# Download the logo generation script
-curl -SL "${WORKFLOW_DIR}generateLogos.py" -o generateLogos.py
-# Generate the logos
-python -u generateLogos.py 2>&1
-echo "::endgroup::"
-
-# Move back to the docs directory
+# Move to the docs directory
 cd ${REPO_DIR}/docs
-# download the markdown pre-filter
-curl -SL ${WORKFLOW_DIR}markdown_prefilter.py -o markdown_prefilter.py
 
 echo "::group::Listing current directory contents"
 echo "Current directory: $PWD"
@@ -97,10 +82,23 @@ if [ "$RUNNER_DEBUG" = "1" ]; then
     echo "-------------------"
 fi
 
+echo "::group::Generating library logos"
+# Download the font and favicon
+curl -SL "${WORKFLOW_DIR}Ubuntu-Bold.ttf" -o Ubuntu-Bold.ttf
+curl -SL "${WORKFLOW_DIR}enviroDIY_Favicon.png" -o enviroDIY_Favicon.png
+# Download the logo generation script
+curl -SL "${WORKFLOW_DIR}generateLogos.py" -o generateLogos.py
+# Generate the logos
+python -u generateLogos.py 2>&1
+echo "::endgroup::"
+
 echo "::group::Creating dox Files from Example Header Lines"
 curl -SL ${WORKFLOW_DIR}documentExamples.py -o documentExamples.py
 python -u documentExamples.py
 echo "::endgroup::"
+
+# download the markdown pre-filter
+curl -SL ${WORKFLOW_DIR}markdown_prefilter.py -o markdown_prefilter.py
 
 # only continue if these steps fail
 # doing this here to print the Doxygen log if it fails
