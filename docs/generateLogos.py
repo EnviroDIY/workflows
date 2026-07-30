@@ -13,16 +13,19 @@ docbuild_dir = os.getcwd()
 
 if "GITHUB_WORKSPACE" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
+    repo_dir = os.environ.get("GITHUB_WORKSPACE")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]  # type: ignore
 else:
     docbuild_dir = os.getcwd()
+    repo_dir = os.path.join(docbuild_dir, "..")
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-1]
 
-lib_specs_path = os.path.join(docbuild_dir, "library.json")
+lib_specs_path = os.path.join(repo_dir, "library.json")
 lib_specs_path = os.path.abspath(os.path.realpath(lib_specs_path))
 
 print(f"Repository Name: {repo_name}")
 print(f"Documentation Building Directory: {docbuild_dir}")
+print(f"Repository Directory: {repo_dir}")
 print("JSON Library Specs File: {}".format(lib_specs_path))
 
 # %% parse the library info

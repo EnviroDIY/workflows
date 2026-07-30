@@ -75,18 +75,15 @@ mkdir "%REPO_DIR%\docs\css"
 copy "%MCSS_DIR%css\EnviroDIY\m-EnviroDIY+documentation.compiled.css" "%REPO_DIR%\docs\css"
 copy "%MCSS_DIR%documentation\clipboard.js" "%REPO_DIR%\docs"
 
-@REM Move back to the repository directory
-cd "%REPO_DIR%"
+@REM Move back to the docs directory
+cd "%REPO_DIR%\docs"
 
 echo Generating library logos
 @REM Download the font and favicon
-copy "%WORKFLOW_DIR%Ubuntu-Bold.ttf" "%REPO_DIR%\"
+copy "%WORKFLOW_DIR%Ubuntu-Bold.ttf" "%REPO_DIR%\docs"
 copy "%WORKFLOW_DIR%enviroDIY_Favicon.png" "%REPO_DIR%\docs"
 @REM Generate the logos
-python -u "%WORKFLOW_DIR%generateLogos.py" > docs\output_generateLogo.log 2>&1
-
-@REM Move back to the docs directory
-cd "%REPO_DIR%\docs"
+python -u "%WORKFLOW_DIR%generateLogos.py" > output_generateLogo.log 2>&1
 
 @REM Document the examples from the header of each example
 echo Creating dox files from example file headers
