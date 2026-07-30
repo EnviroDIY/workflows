@@ -1,0 +1,22 @@
+{
+  "baseUrl": "../",
+  "indexInFolders": true,
+  "linkSuffix": ".md",
+  "linkLowercase": true,
+  "indexClassesName": "ClassIndex",
+  "indexFilesName": "FileIndex",
+  "indexGroupsName": "ModuleIndex",
+  "indexNamespacesName": "NamespaceIndex",
+  "indexRelatedPagesName": "PageIndex",
+  "indexExamplesName": "ExampleIndex",
+  "mainPageInRoot": true,
+  "mainPageName": "ReadMe",
+  "foldersToGenerate": [
+    "modules",
+    "classes",
+    "files",
+    "pages",
+    "namespaces",
+    "examples"
+  ]
+}

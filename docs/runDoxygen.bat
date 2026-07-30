@@ -35,6 +35,7 @@ del "%REPO_DIR%_Doxygen\html" /q
 del "%REPO_DIR%_Doxygen\xml" /q
 del "%REPO_DIR%_Doxygen\m.css" /q
 del "%REPO_DIR%_Doxygen\sqlite3" /q
+del "%REPO_DIR%_Doxygen\md" /q /s
 del "%REPO_DIR%\docs\css" /q
 del "%REPO_DIR%\generated_docs" /q
 
@@ -48,8 +49,13 @@ echo "" > "%REPO_DIR%\docs\output_preprocessXML.log"
 @REM echo "" > "%REPO_DIR%\docs\output_fixFunctionsInGroups.log"
 echo "" > "%REPO_DIR%\docs\output_mcss_run.log"
 echo "" > "%REPO_DIR%\docs\output_mcss.log"
+echo "" > "%REPO_DIR%\docs\output_mcssmd_run.log"
+echo "" > "%REPO_DIR%\docs\output_mcssmd.log"
+echo "" > "%REPO_DIR%\docs\output_mcssr.log"
+echo "" > "%REPO_DIR%\docs\output_mcssr_run.log"
 echo "" > "%REPO_DIR%\docs\output_moxygen_run.log"
 echo "" > "%REPO_DIR%\docs\output_moxygen.log"
+echo "" > "%REPO_DIR%\docs\output_doxybook2_run.log"
 echo "" > "%REPO_DIR%\docs\output_copyFunctions.log"
 echo "" > "%REPO_DIR%\docs\output_removeStupidLinks.log"
 echo "" > "%REPO_DIR%\docs\output_check_component_inclusion.log"
@@ -121,15 +127,23 @@ IF %errorlevel% NEQ 0 (
 @REM   exit /b %errorlevel%
 @REM )
 
-@REM Run m.css
-echo Running m.css Doxygen post-processor...
-@REM python -u "%MCSS_DIR%documentation\doxygen_markdown.py" "mcss-conf.py" --no-doxygen --output output_mcss_run.log --templates "%MCSS_DIR%documentation\templates\markdown" --debug > output_mcss.log 2>&1
-python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss_run.log --templates "%MCSS_DIR%documentation\templates\EnviroDIY" --debug > output_mcss.log 2>&1
+@REM Run m.css for html output
+echo Running m.css Doxygen post-processor to generate html...
+python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output output_mcss_run.log --template-type html --templates "%MCSS_DIR%documentation\templates\EnviroDIY" --debug > output_mcss.log 2>&1
 @REM python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss_run.log --templates "%MCSS_DIR%documentation\templates\EnviroDIY" > output_mcss.log 2>&1
 IF %errorlevel% NEQ 0 (
-  echo m.css post-processor failed with error code %errorlevel%.
+  echo m.css to html post-processor failed with error code %errorlevel%.
   exit /b %errorlevel%
 )
+
+@REM Run m.css for markdown output
+@REM echo Running m.css Doxygen post-processor to generate markdown...
+@REM python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%documentation\templates\doxybook2" --debug > output_mcssmd.log 2>&1
+@REM python -u "%MCSS_DIR%documentation\doxygen_refactored.py" "mcss-conf.py" --no-doxygen --format all --debug > output_mcssr.log 2>&1
+@REM IF %errorlevel% NEQ 0 (
+@REM   echo m.css to markdown post-processor failed with error code %errorlevel%.
+@REM   exit /b %errorlevel%
+@REM )
 
 @REM @REM Move to generated markdown directory to rename files to .md
 @REM cd "C:\Users\sdamiano\Documents\GitHub\EnviroDIY\TinyGSM_Doxygen\m.css\"
@@ -174,17 +188,28 @@ IF %errorlevel% NEQ 0 (
   exit /b %errorlevel%
 )
 
-@REM Run moxygen to generate markdown files from the Doxygen xml output
-echo Running moxygen to generate markdown files from the Doxygen xml output
-call moxygen --groups --pages --anchors --language cpp --frontmatter --templates "%WORKFLOW_DIR%moxygen_templates" --logfile "%REPO_DIR%\docs\output_moxygen.log" --output "%REPO_DIR%\generated_docs\%%%%s.md" "%REPO_DIR%\..\TinyGSM_Doxygen\xml" > "%REPO_DIR%\docs\output_moxygen_run.log" 2>&1
+@REM @REM Run moxygen to generate markdown files from the Doxygen xml output
+@REM echo Running moxygen to generate markdown files from the Doxygen xml output
+@REM call moxygen --groups --pages --anchors --language cpp --frontmatter --templates "%WORKFLOW_DIR%moxygen_templates" --logfile "%REPO_DIR%\docs\output_moxygen.log" --output "%REPO_DIR%\generated_docs\%%%%s.md" "%REPO_DIR%\..\TinyGSM_Doxygen\xml" > "%REPO_DIR%\docs\output_moxygen_run.log" 2>&1
+@REM IF %errorlevel% NEQ 0 (
+@REM   echo moxygen post-processor failed with error code %errorlevel%.
+@REM   exit /b %errorlevel%
+@REM )
+
+@REM Run doxybook2 to generate markdown files from the Doxygen xml output
+echo Running doxybook2 to generate markdown files from the Doxygen xml output
+"C:\Program Files\doxybook2\bin\doxybook2.exe" --config "%WORKFLOW_DIR%\.doxybook\config.json" --templates "%WORKFLOW_DIR%\.doxybook\templates" --input "%REPO_DIR%_Doxygen\xml" --output "%REPO_DIR%_Doxygen\md" -d > "%REPO_DIR%\docs\output_doxybook2_run.log" 2>&1
 IF %errorlevel% NEQ 0 (
-  echo moxygen post-processor failed with error code %errorlevel%.
+  echo doxybook2 post-processor failed with error code %errorlevel%.
   exit /b %errorlevel%
 )
 
 @REM Delete copied files
 echo Deleting copied files
 del "%REPO_DIR%\Ubuntu-Bold.ttf" /q
+del "%REPO_DIR%\docs\UbuntuMono-Regular.ttf" /q
+del "%REPO_DIR%\docs\main_logo.png" /q
+del "%REPO_DIR%\docs\favicon.png" /q
 del "%REPO_DIR%\docs\enviroDIY_favicon.png" /q
 del "%REPO_DIR%\docs\gp-desktop-logo.png" /q
 del "%REPO_DIR%\docs\gp-mobile-logo.png" /q

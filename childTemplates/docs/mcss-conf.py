@@ -13,6 +13,7 @@ LINKS_NAVBAR1 = [
     (
         "Examples",
         "page_the_examples",
+        [],
     ),
     (
         "Source Files",
