@@ -4,38 +4,38 @@ on:
   workflow_call:
     inputs:
       publish:
-        description: 'Publish Documentation to GitHub Pages'
+        description: "Publish Documentation to GitHub Pages"
         required: true
         type: boolean
       rebuild_cache_number:
-        description: 'Change this number to force a cache rebuild'
+        description: "Change this number to force a cache rebuild"
         required: true
         type: number
       doxygen_version:
-        description: 'The version of Doxygen to build'
+        description: "The version of Doxygen to build"
         required: false
         type: string
-        default: '1.17.0'
+        default: "1.17.0"
       build_doxygen:
-        description: 'True to rebuild Doxygen from source instead of using a tarball release'
+        description: "True to rebuild Doxygen from source instead of using a tarball release"
         required: false
         type: boolean
         default: false
       use_latex:
-        description: 'True use LaTeX for PDF output OR for generating png or svg images of the diagrams or formulas'
+        description: "True use LaTeX for PDF output OR for generating png or svg images of the diagrams or formulas"
         required: false
         type: boolean
         default: true
       use_graphviz:
-        description: 'True use GraphViz/dot'
+        description: "True use GraphViz/dot"
         required: false
         type: boolean
         default: true
       graphviz_version:
-        description: 'The version of GraphViz to build'
+        description: "The version of GraphViz to build"
         required: false
         type: string
-        default: '11.0.0' #2.43.0 is the latest on apt-get, but it can't make svgs
+        default: "11.0.0" #2.43.0 is the latest on apt-get, but it can't make svgs
       # build_graphviz:
       #   description: 'True to rebuild GraphViz from source instead of using a tarball release'
       #   required: false
@@ -45,11 +45,11 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: 'Publish Documentation to GitHub Pages'
+        description: "Publish Documentation to GitHub Pages"
         required: true
         type: boolean
       rebuild_cache_number:
-        description: 'Change this number to force a cache rebuild'
+        description: "Change this number to force a cache rebuild"
         required: true
         type: number
 
@@ -71,7 +71,8 @@ jobs:
           echo "${{ env.DOC_ROOT }}"
 
       # check out the library repo into a subfolder
-      - uses: actions/checkout@v7
+      - name: Checkout the library repo in the doc root directory
+        uses: actions/checkout@v7
         with:
           path: ${{ env.DOC_ROOT }}
 
@@ -82,8 +83,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.x'
-          cache: 'pip'
+          python-version: "3.x"
+          cache: "pip"
 
       - name: Install python dependencies for m.css
         run: |
