@@ -13,7 +13,7 @@ if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]  # type: ignore
     repo_dir = f"../"
-    save_dir = os.path.abspath(os.path.realpath(repo_dir))
+    save_dir = os.path.abspath(os.path.realpath(os.path.join(repo_dir, "docs")))
 else:
     docbuild_dir = os.getcwd()
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
