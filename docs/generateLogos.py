@@ -13,12 +13,12 @@ if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]  # type: ignore
     repo_dir = f"../"
-    save_dir = docbuild_dir
+    save_dir = os.getcwd()
 else:
     docbuild_dir = os.getcwd()
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
     repo_dir = f"../"
-    save_dir = docbuild_dir
+    save_dir = os.getcwd()
 
 lib_specs_path = os.path.join(repo_dir, "library.json")
 lib_specs_path = os.path.abspath(os.path.realpath(lib_specs_path))
