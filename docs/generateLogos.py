@@ -13,12 +13,12 @@ if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]  # type: ignore
     repo_dir = f"../"
-    save_dir = os.path.abspath(os.path.realpath(os.path.join(repo_dir, "docs")))
+    save_dir = docbuild_dir
 else:
     docbuild_dir = os.getcwd()
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
     repo_dir = f"../"
-    save_dir = os.path.abspath(os.path.realpath(docbuild_dir))
+    save_dir = docbuild_dir
 
 lib_specs_path = os.path.join(repo_dir, "library.json")
 lib_specs_path = os.path.abspath(os.path.realpath(lib_specs_path))
@@ -169,8 +169,8 @@ def create_logo(
             # NOTE: not ascender
         )
     # display(img)
-    img.save(f"{save_dir}\\{logo_type}.png")
-    print(f"Saved {save_dir}\\{logo_type}.png")
+    img.save(os.path.join(save_dir, f"{logo_type}.png"))  # type: ignore
+    print(f"Saved {os.path.join(save_dir, f'{logo_type}.png')}")  # type: ignore
 
 
 # %%
