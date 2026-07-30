@@ -260,7 +260,7 @@ Please check the spelling of your board name or add an entry to your platformio.
 
 
 # %%
-# expand the combination of boards, modems, and examples into a job matrix
+# expand the combination of boards and examples into a job matrix
 cart_join = list(product(*[examples_to_build, boards]))
 
 
@@ -401,7 +401,7 @@ def group_and_log_commands(commands: List[str], group_title: str) -> List[str]:
 def create_command_list_from_matrix(
     matrix_item: tuple, create_command_function, title_by: str | List[str], **kwargs
 ) -> List[str]:
-    example, board, modem = matrix_item
+    example, board = matrix_item
     if create_command_function == create_arduino_cli_compile_command:
         if board in pio_to_acli.keys() and not board in acli_skip_boards:
             fqbn = pio_to_acli[board]["fqbn"]
@@ -434,8 +434,8 @@ def create_command_list_from_matrix(
 
     example_name = f"{os.path.split(example)[-1]}"
     example_full_path = os.path.join(workspace_path, example, example_name + ".ino")
-    sed_comment = f"sed -i 's/#define TINY_GSM_MODEM_/\\/\\/ #define TINY_GSM_MODEM_/g' \"{example_full_path}\""
-    sed_addition = f"sed -i '1i\\\n#define {modem}\\\n' \"{example_full_path}\""
+    sed_comment = f""
+    sed_addition = f""
 
     group_title = ""
     if type(title_by) == str:
@@ -446,10 +446,6 @@ def create_command_list_from_matrix(
         if len(group_title) > 0:
             group_title += " - "
         group_title += board
-    if "modem" in title_by:
-        if len(group_title) > 0:
-            group_title += " - "
-        group_title += modem
 
     commands_with_log: List[str] = group_and_log_commands(
         commands=[sed_comment, sed_addition, build_command],
