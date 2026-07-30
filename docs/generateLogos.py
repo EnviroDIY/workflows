@@ -168,8 +168,13 @@ def create_logo(
             # NOTE: not ascender
         )
     # display(img)
-    img.save(f"{docbuild_dir}\\{logo_type}.png")
-    print(f"Saved {docbuild_dir}\\{logo_type}.png")
+    save_dir = (
+        docbuild_dir
+        if os.path.split(docbuild_dir)[1] == "docs"
+        else os.path.join(docbuild_dir, "docs")
+    )
+    img.save(f"{save_dir}\\{logo_type}.png")
+    print(f"Saved {save_dir}\\{logo_type}.png")
 
 
 # %%

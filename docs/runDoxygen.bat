@@ -207,6 +207,7 @@ IF %errorlevel% NEQ 0 (
 @REM Delete copied files
 echo Deleting copied files
 del "%REPO_DIR%\Ubuntu-Bold.ttf" /q
+del "%REPO_DIR%\docs\Ubuntu-Bold.ttf" /q
 del "%REPO_DIR%\docs\UbuntuMono-Regular.ttf" /q
 del "%REPO_DIR%\docs\main_logo.png" /q
 del "%REPO_DIR%\docs\favicon.png" /q
