@@ -12,8 +12,10 @@ from PIL import ImageFont, Image, ImageDraw
 docbuild_dir = os.getcwd()
 
 if "GITHUB_WORKSPACE" in os.environ.keys():
+    docbuild_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]  # type: ignore
 else:
+    docbuild_dir = os.getcwd()
     repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-1]
 
 lib_specs_path = os.path.join(docbuild_dir, "library.json")
