@@ -9,13 +9,10 @@ LINKS_NAVBAR1 = [
             ('<a href="change_log.html">ChangeLog</a>',),
         ],
     ),
-    ('<a href="classkeller.html">The EpochTime Class</a>', []),
+    ('<a href="annotated.html">Classes</a>', []),
     (
         "Examples",
         "page_the_examples",
-        [
-            ('<a href="example_get_values.html">Reading Sensor Values</a>',),
-        ],
     ),
     (
         "Source Files",
