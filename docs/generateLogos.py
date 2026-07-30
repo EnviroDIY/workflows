@@ -10,22 +10,27 @@ from PIL import ImageFont, Image, ImageDraw
 # %%
 # The workspace directory
 docbuild_dir = os.getcwd()
-
-if "GITHUB_WORKSPACE" in os.environ.keys():
+if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     docbuild_dir = os.environ.get("DOC_ROOT")
-    repo_dir = os.environ.get("DOC_ROOT")
     repo_name = os.environ.get("GITHUB_REPOSITORY").split("/")[1]  # type: ignore
+    repo_dir = f"../../../../{repo_name}/"
 else:
     docbuild_dir = os.getcwd()
-    repo_dir = os.path.join(docbuild_dir, "..")
-    repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-1]
+    repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
+    repo_dir = f"../../{repo_name}/"
 
+save_dir = (
+    docbuild_dir
+    if os.path.split(docbuild_dir)[1] == "docs"
+    else os.path.join(docbuild_dir, "docs")
+)
 lib_specs_path = os.path.join(repo_dir, "library.json")
 lib_specs_path = os.path.abspath(os.path.realpath(lib_specs_path))
 
 print(f"Repository Name: {repo_name}")
 print(f"Documentation Building Directory: {docbuild_dir}")
 print(f"Repository Directory: {repo_dir}")
+print(f"Logo Save Directory: {save_dir}")
 print("JSON Library Specs File: {}".format(lib_specs_path))
 
 # %% parse the library info
@@ -168,11 +173,6 @@ def create_logo(
             # NOTE: not ascender
         )
     # display(img)
-    save_dir = (
-        docbuild_dir
-        if os.path.split(docbuild_dir)[1] == "docs"
-        else os.path.join(docbuild_dir, "docs")
-    )
     img.save(f"{save_dir}\\{logo_type}.png")
     print(f"Saved {save_dir}\\{logo_type}.png")
 
