@@ -1,4 +1,4 @@
-DOXYFILE = "mcss-Doxyfile"
+DOXYFILE = "mcss-doxyfile"
 THEME_COLOR = "#cb4b16"
 FAVICON = "enviroDIY_Favicon.png"
 LINKS_NAVBAR1 = [
