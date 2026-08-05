@@ -262,6 +262,8 @@ jobs:
     strategy:
       matrix:
         job_info: ${{ fromJSON(inputs.pio_job_matrix) }}
+    # outputs:
+    #   logs_artifact: ${{ steps.store_generated_logs.outputs.artifact-id }}
 
     steps:
       - *checkout_code
@@ -303,6 +305,15 @@ jobs:
           echo ::endgroup::
           chmod +x ${{ matrix.job_info.script }}
           bash ${{ matrix.job_info.script }}
+
+      - name: Store generated logs
+        id: store_generated_logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.job_info.job_tag }}_logs
+          path: |
+            continuous_integration_artifacts/pio_*.log
 
       - *cache_platforms
       - *cache_libraries
