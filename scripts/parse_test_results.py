@@ -187,6 +187,20 @@ for log_file in pio_logs + acli_logs:
 
 
 df = pd.DataFrame(log_results)
+df["flash_percent"] = df.apply(
+    lambda row: (
+        (row["flash_used"] / row["flash_total"] * 100) if row["flash_total"] else None
+    ),
+    axis=1,
+)
+df["ram_percent"] = df.apply(
+    lambda row: (
+        (row["ram_used"] / row["ram_total"] * 100) if row["ram_total"] else None
+    ),
+    axis=1,
+)
+df["success"] = df["success"].astype(int).fillna(0)
+df["success"] = df["success"].replace({1: ":heavy_check_mark:", 0: ":x:"})
 
 
 # %%
@@ -197,9 +211,9 @@ md_table = df[
         "flag",
         "success",
         "ram_used",
-        "ram_total",
+        "ram_percent",
         "flash_used",
-        "flash_total",
+        "flash_percent",
     ]
 ].to_markdown(index=False, tablefmt="github")
 
