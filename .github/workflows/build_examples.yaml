@@ -111,6 +111,14 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ always() && ! contains(github.event.head_commit.message, 'ci skip') }}
     steps:
+
+      - name: Write the requirements file
+        run: |
+          echo "wheel" > requirements.txt
+          echo "requests" >> requirements.txt
+          echo "pandas" >> requirements.txt
+          echo "tabulate" >> requirements.txt
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -120,7 +128,7 @@ jobs:
       - name: Install Python Dependencies
         id: install_dependencies
         run: |
-          pip install pandas tabulate
+          pip install -r requirements.txt
 
       - name: Download All Log Artifacts
         id: download_logs
