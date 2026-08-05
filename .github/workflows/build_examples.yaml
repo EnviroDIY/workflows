@@ -4,22 +4,22 @@ on:
   workflow_call:
     inputs:
       boards_to_build:
-        description: 'A comma-separated list of PlatformIO board names to build'
+        description: "A comma-separated list of PlatformIO board names to build"
         default: ""
         required: false
         type: string
       boards_to_ignore:
-        description: 'A comma-separated list of PlatformIO board names to ignore. Mutually exclusive with boards_to_build'
+        description: "A comma-separated list of PlatformIO board names to ignore. Mutually exclusive with boards_to_build"
         default: ""
         required: false
         type: string
       examples_to_build:
-        description: 'A comma-separated list of examples to build'
+        description: "A comma-separated list of examples to build"
         default: ""
         required: false
         type: string
       examples_to_ignore:
-        description: 'A comma-separated list of examples to ignore. Mutually exclusive with examples_to_build'
+        description: "A comma-separated list of examples to ignore. Mutually exclusive with examples_to_build"
         default: ""
         required: false
         type: string
@@ -48,9 +48,9 @@ jobs:
       - name: Generate Platform Installation Script
         id: py_platforms
         run: |
-            echo "Generating script to install Platforms"
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_platform_installation_script.py -o generate_platform_installation_script.py
-            python -u generate_platform_installation_script.py
+          echo "Generating script to install Platforms"
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_platform_installation_script.py -o generate_platform_installation_script.py
+          python -u generate_platform_installation_script.py
 
       - name: Generate Library Installation Script
         id: py_libraries
@@ -104,3 +104,44 @@ jobs:
     with:
       library_install_git: ${{ needs.determine_library_source.outputs.library_install_git }}
       pio_job_matrix: ${{ needs.generate_scripts.outputs.pio_job_matrix }}
+
+  beautify_outputs:
+    name: Beautify Outputs
+    needs: [build_ex_arduino, build_pio]
+    runs-on: ubuntu-latest
+    if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install Python Dependencies
+        id: install_dependencies
+        run: |
+          pip install pandas tabulate
+
+      - name: Download All Log Artifacts
+        id: download_logs
+        uses: actions/download-artifact@v8
+        with:
+          path: |
+            continuous_integration_artifacts/
+          pattern: "*_logs"
+          merge-multiple: true
+
+      - name: List All Log Artifacts
+        run: ls -R continuous_integration_artifacts/
+
+      - name: Beautify Outputs
+        id: beautify_outputs
+        run: |
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/parse_test_results.py -o parse_test_results.py
+          python parse_test_results.py

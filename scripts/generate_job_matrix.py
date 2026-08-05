@@ -421,7 +421,7 @@ def get_filename_for_log(job: dict) -> str:
         job_type = job["job_type"]
     else:
         job_type = "arduino" if "arduino-cli" in job["command"][0] else "pio"
-    f_name = f"_{job["flag"]}" if "flag" in job and flag != "" else ""
+    f_name = f"_{job["flag"]}" if "flag" in job and job["flag"] != "" else ""
     extension = "json" if job_type == "arduino" else "log"
     ex_name = job["example"].rsplit(os.path.sep)[-1]
     return os.path.abspath(

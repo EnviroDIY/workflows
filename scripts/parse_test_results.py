@@ -134,7 +134,7 @@ def get_filename_for_log(job: dict) -> str:
         job_type = job["job_type"]
     else:
         job_type = "arduino" if "arduino-cli" in job["command"][0] else "pio"
-    f_name = f"_{job["flag"]}" if "flag" in job and flag != "" else ""
+    f_name = f"_{job["flag"]}" if "flag" in job and job["flag"] != "" else ""
     extension = "json" if job_type == "arduino" else "log"
     ex_name = job["example"].rsplit(os.path.sep)[-1]
     return os.path.abspath(
@@ -187,17 +187,31 @@ for log_file in pio_logs + acli_logs:
 
 
 df = pd.DataFrame(log_results)
-df[
+
+
+# %%
+md_table = df[
     [
         "example",
         "board",
         "flag",
+        "success",
         "ram_used",
         "ram_total",
         "flash_used",
         "flash_total",
     ]
-].to_csv(os.path.join(artifact_path, "build_results.csv"), index=False)
+].to_markdown(index=False, tablefmt="github")
+
+print("\n\n### Summary of Build Results\n")
+print(md_table)
+
+
+# %%
+if "GITHUB_WORKSPACE" in os.environ.keys():
+    with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+        print("\n\n### Summary of Build Results\n", file=fh)
+        print(md_table, file=fh)
 
 
 # %%
