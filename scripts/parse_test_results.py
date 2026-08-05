@@ -199,7 +199,7 @@ df["ram_percent"] = df.apply(
     ),
     axis=1,
 )
-df["success"] = df["success"].astype(int).fillna(0)
+df["success"] = df["success"].fillna(0).astype(int)
 df["success"] = df["success"].replace({1: ":heavy_check_mark:", 0: ":x:"})
 
 
