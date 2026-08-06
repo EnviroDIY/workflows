@@ -194,24 +194,29 @@ for log_file in pio_logs + acli_logs:
 df = pd.DataFrame(log_results)
 df["flash_percent"] = df.apply(
     lambda row: (
-        (row["flash_used"] / row["flash_total"] * 100) if row["flash_total"] else None
+        (row["flash_used"] / row["flash_total"] * 100).round()
+        if row["flash_total"]
+        else None
     ),
     axis=1,
 )
 df["ram_percent"] = df.apply(
     lambda row: (
-        (row["ram_used"] / row["ram_total"] * 100) if row["ram_total"] else None
+        (row["ram_used"] / row["ram_total"] * 100).round() if row["ram_total"] else None
     ),
     axis=1,
 )
 df["success"] = df["success"].fillna(0).astype(int)
 df["success"] = df["success"].replace({1: ":heavy_check_mark:", 0: ":x:"})
-df = df.sort_values(by=["board", "example", "flag"], ascending=[True, True, True])
+df = df.sort_values(
+    by=["board", "example", "flag", "job_type"], ascending=[True, True, True, True]
+)
 
 
 # %%
 md_table = df[
     [
+        "job_type",
         "example",
         "board",
         "flag",
