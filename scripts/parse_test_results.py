@@ -117,50 +117,28 @@ def parse_pio_output(result_str: str) -> dict[str, int | None] | None:
         re.MULTILINE,
     )
     match_success = re_success.search(result_str)
-    if match_ram and match_flash and match_success:
-        return {
-            "ram_used": int(match_ram.group("used_bytes")),
-            "ram_total": int(match_ram.group("total_bytes")),
-            "flash_used": int(match_flash.group("used_bytes")),
-            "flash_total": int(match_flash.group("total_bytes")),
-            "success": match_success.group("status") == "SUCCESS",
-        }
-    else:
-        return None
-
-
-def get_filename_for_log(job: dict) -> str:
-    if "job_type" in job:
-        job_type = job["job_type"]
-    else:
-        job_type = "arduino" if "arduino-cli" in job["command"][0] else "pio"
-    f_name = (
-        f"_{job["flag"].replace("_", "-")}"
-        if "flag" in job and job["flag"] != ""
-        else ""
-    )
-    b_name = job["board"].replace("_", "-")
-    ex_name = job["example"].rsplit(os.path.sep)[-1].replace("_", "-")
-    extension = "json" if job_type == "arduino" else "log"
-    return os.path.abspath(
-        os.path.join(
-            artifact_path,
-            f"{job_type}{f_name}_{b_name}_{ex_name}.{extension}",
-        )
-    )
+    return {
+        "ram_used": int(match_ram.group("used_bytes")) if match_ram else None,
+        "ram_total": int(match_ram.group("total_bytes")) if match_ram else None,
+        "flash_used": int(match_flash.group("used_bytes")) if match_flash else None,
+        "flash_total": int(match_flash.group("total_bytes")) if match_flash else None,
+        "success": (
+            match_success.group("status") == "SUCCESS" if match_success else None
+        ),
+    }
 
 
 def get_job_info_from_filename(filename: str) -> dict:
     name_parts = os.path.basename(filename).split("_")
     if len(name_parts) == 3:
         return {
-            "job_type": name_parts[0],
+            "compiler": name_parts[0],
             "board": name_parts[1],
             "example": name_parts[2].rsplit(".", 1)[0],
         }
     else:
         return {
-            "job_type": name_parts[0],
+            "compiler": name_parts[0],
             "flag": name_parts[1],
             "board": name_parts[2],
             "example": name_parts[3].rsplit(".", 1)[0],
@@ -177,7 +155,7 @@ log_results = []
 for log_file in pio_logs + acli_logs:
     job_info = get_job_info_from_filename(log_file)
     with open(log_file, "r") as f:
-        if job_info["job_type"] == "pio":
+        if job_info["compiler"] == "pio":
             log_contents = f.read()
             parsed_result = parse_pio_output(log_contents)
         else:
@@ -207,17 +185,20 @@ df["ram_percent"] = df.apply(
 )
 df["ram_percent"] = df["ram_percent"].round(1)
 df["success"] = df["success"].fillna(2).astype(int)
-df["success"] = df["success"].replace({2: "", 1: ":heavy_check_mark:", 0: ":x:"})
+# sort with failures at the top, then by board, example, flag, and compiler
 df = df.sort_values(
-    by=["success", "board", "example", "flag", "job_type"],
-    ascending=[False, True, True, True, True],
+    by=["success", "board", "example", "flag", "compiler"],
+    ascending=[True, True, True, True, True],
+)
+df["success"] = df["success"].replace(
+    {2: ":black_circle:", 1: ":heavy_check_mark:", 0: ":x:"}
 )
 
 
 # %%
 md_table = df[
     [
-        "job_type",
+        "compiler",
         "example",
         "board",
         "flag",
