@@ -206,8 +206,8 @@ df["ram_percent"] = df.apply(
     ),
     axis=1,
 )
-df["success"] = df["success"].fillna(0).astype(int)
-df["success"] = df["success"].replace({1: ":heavy_check_mark:", 0: ":x:"})
+df["success"] = df["success"].fillna(2).astype(int)
+df["success"] = df["success"].replace({2: "", 1: ":heavy_check_mark:", 0: ":x:"})
 df = df.sort_values(
     by=["success", "board", "example", "flag", "job_type"],
     ascending=[False, True, True, True, True],
