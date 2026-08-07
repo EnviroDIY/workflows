@@ -22,11 +22,11 @@ echo GitHub Orgs Directory: %GITHUB_BASE_DIR%
 @REM set GITHUB_REPOSITORY=%~1
 
 @REM Set directory links
-set MCSS_DIR=%GITHUB_BASE_DIR%\SRGDamia1\m.css\
+set MCSS_DIR=%GITHUB_BASE_DIR%\SRGDamia1\m.css
 echo mcss Directory: %MCSS_DIR%
 set REPO_DIR=%GITHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%
 echo Repository Directory: %REPO_DIR%
-set WORKFLOW_DIR=%GITHUB_BASE_DIR%\EnviroDIY\workflows\docs\
+set WORKFLOW_DIR=%GITHUB_BASE_DIR%\EnviroDIY\workflows\docs
 echo Workflows Directory: %WORKFLOW_DIR%
 
 @REM Delete any old versions of the documentation and css
@@ -72,32 +72,32 @@ call python --version
 
 @REM Update the style sheets
 echo Update the style sheets
-cd "%MCSS_DIR%css\EnviroDIY"
+cd "%MCSS_DIR%\css\EnviroDIY"
 @REM pygmentize -f html -S arduino -a ".m-code-arduino" > pygments-arduino.css
 @REM pygmentize -f html -S default -a ".m-code-pygments-default" > pygments-default.css
-python -u "%MCSS_DIR%css\postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "%MCSS_DIR%css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"  2>&1
+python -u "%MCSS_DIR%\css\postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "%MCSS_DIR%\css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"  2>&1
 
 mkdir "%REPO_DIR%\docs\css"
-copy "%MCSS_DIR%css\EnviroDIY\m-EnviroDIY+documentation.compiled.css" "%REPO_DIR%\docs\css"
-copy "%MCSS_DIR%documentation\clipboard.js" "%REPO_DIR%\docs"
+copy "%MCSS_DIR%\css\EnviroDIY\m-EnviroDIY+documentation.compiled.css" "%REPO_DIR%\docs\css"
+copy "%MCSS_DIR%\documentation\clipboard.js" "%REPO_DIR%\docs"
 
 @REM Move back to the docs directory
 cd "%REPO_DIR%\docs"
 
 echo Generating library logos
 @REM Download the font and favicon
-copy "%WORKFLOW_DIR%Ubuntu-Bold.ttf" "%REPO_DIR%\docs"
-copy "%WORKFLOW_DIR%enviroDIY_Favicon.png" "%REPO_DIR%\docs"
+copy "%WORKFLOW_DIR%\Ubuntu-Bold.ttf" "%REPO_DIR%\docs"
+copy "%WORKFLOW_DIR%\enviroDIY_Favicon.png" "%REPO_DIR%\docs"
 @REM Generate the logos
-python -u "%WORKFLOW_DIR%generateLogos.py" > output_generateLogo.log 2>&1
+python -u "%WORKFLOW_DIR%\generateLogos.py" > output_generateLogo.log 2>&1
 
 @REM Document the examples from the header of each example
 echo Creating dox files from example file headers
-python -u "%WORKFLOW_DIR%documentExamples.py" > output_documentExamples.log 2>&1
+python -u "%WORKFLOW_DIR%\documentExamples.py" > output_documentExamples.log 2>&1
 
 @REM  download the markdown pre-filter
 echo Copying markdown pre-filter to docs directory
-copy "%WORKFLOW_DIR%markdown_prefilter.py" "%REPO_DIR%\docs"
+copy "%WORKFLOW_DIR%\markdown_prefilter.py" "%REPO_DIR%\docs"
 
 @REM Set global vars for local work, then run Doxygen
 setlocal
@@ -114,14 +114,14 @@ endlocal
 
 @REM Preprocess XML to fix bad section ids and anchor ids and remove private functions from the XML output.
 echo Preprocessing XML...
-python -u "%WORKFLOW_DIR%preprocessXML.py" > output_preprocessXML.log 2>&1
+python -u "%WORKFLOW_DIR%\preprocessXML.py" > output_preprocessXML.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo xml post-processor failed with error code %errorlevel%.
   exit /b %errorlevel%
 )
 
 @REM echo Fixing copied function documentation in group documentation
-@REM python -u "%WORKFLOW_DIR%fixFunctionsInGroups.py" > output_fixFunctionsInGroups.log 2>&1
+@REM python -u "%WORKFLOW_DIR%\fixFunctionsInGroups.py" > output_fixFunctionsInGroups.log 2>&1
 @REM IF %errorlevel% NEQ 0 (
 @REM   echo copied function post-processor failed with error code %errorlevel%.
 @REM   exit /b %errorlevel%
@@ -129,8 +129,8 @@ IF %errorlevel% NEQ 0 (
 
 @REM Run m.css for html output
 echo Running m.css Doxygen post-processor to generate html...
-python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output output_mcss_run.log --template-type html --templates "%MCSS_DIR%documentation\templates\EnviroDIY" --debug > output_mcss.log 2>&1
-@REM python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss_run.log --templates "%MCSS_DIR%documentation\templates\EnviroDIY" > output_mcss.log 2>&1
+python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output output_mcss_run.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > output_mcss.log 2>&1
+@REM python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss_run.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > output_mcss.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo m.css to html post-processor failed with error code %errorlevel%.
   exit /b %errorlevel%
@@ -138,8 +138,8 @@ IF %errorlevel% NEQ 0 (
 
 @REM Run m.css for markdown output
 @REM echo Running m.css Doxygen post-processor to generate markdown...
-@REM python -u "%MCSS_DIR%documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%documentation\templates\doxybook2" --debug > output_mcssmd.log 2>&1
-@REM python -u "%MCSS_DIR%documentation\doxygen_refactored.py" "mcss-conf.py" --no-doxygen --format all --debug > output_mcssr.log 2>&1
+@REM python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > output_mcssmd.log 2>&1
+@REM python -u "%MCSS_DIR%\documentation\doxygen_refactored.py" "mcss-conf.py" --no-doxygen --format all --debug > output_mcssr.log 2>&1
 @REM IF %errorlevel% NEQ 0 (
 @REM   echo m.css to markdown post-processor failed with error code %errorlevel%.
 @REM   exit /b %errorlevel%
@@ -162,7 +162,7 @@ IF %errorlevel% NEQ 0 (
 
 @REM copy functions so they look right
 echo Copying function documentation
-python -u "%WORKFLOW_DIR%copyFunctions.py" > output_copyFunctions.log 2>&1
+python -u "%WORKFLOW_DIR%\copyFunctions.py" > output_copyFunctions.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo copy functions post-processor failed with error code %errorlevel%.
   exit /b %errorlevel%
@@ -172,7 +172,7 @@ IF %errorlevel% NEQ 0 (
 @REM and dump links to them in the parent page.
 @REM This is to remove those stupid pages and links.
 echo Removing stupid links that are created by sub-paging structure
-python -u "%WORKFLOW_DIR%removeStupidLinks.py" > output_removeStupidLinks.log 2>&1
+python -u "%WORKFLOW_DIR%\removeStupidLinks.py" > output_removeStupidLinks.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo stupid link post-processor failed with error code %errorlevel%.
   exit /b %errorlevel%
@@ -190,7 +190,7 @@ IF %errorlevel% NEQ 0 (
 
 @REM @REM Run moxygen to generate markdown files from the Doxygen xml output
 @REM echo Running moxygen to generate markdown files from the Doxygen xml output
-@REM call moxygen --groups --pages --anchors --language cpp --frontmatter --templates "%WORKFLOW_DIR%moxygen_templates" --logfile "%REPO_DIR%\docs\output_moxygen.log" --output "%REPO_DIR%\generated_docs\%%%%s.md" "%REPO_DIR%\..\TinyGSM_Doxygen\xml" > "%REPO_DIR%\docs\output_moxygen_run.log" 2>&1
+@REM call moxygen --groups --pages --anchors --language cpp --frontmatter --templates "%WORKFLOW_DIR%\moxygen_templates" --logfile "%REPO_DIR%\docs\output_moxygen.log" --output "%REPO_DIR%\generated_docs\%%%%s.md" "%REPO_DIR%\..\TinyGSM_Doxygen\xml" > "%REPO_DIR%\docs\output_moxygen_run.log" 2>&1
 @REM IF %errorlevel% NEQ 0 (
 @REM   echo moxygen post-processor failed with error code %errorlevel%.
 @REM   exit /b %errorlevel%
@@ -198,7 +198,7 @@ IF %errorlevel% NEQ 0 (
 
 @REM Run doxybook2 to generate markdown files from the Doxygen xml output
 echo Running doxybook2 to generate markdown files from the Doxygen xml output
-"C:\Program Files\doxybook2\bin\doxybook2.exe" --config "%WORKFLOW_DIR%\.doxybook\config.json" --templates "%WORKFLOW_DIR%\.doxybook\templates" --input "%REPO_DIR%_Doxygen\xml" --output "%REPO_DIR%_Doxygen\md" -d > "%REPO_DIR%\docs\output_doxybook2_run.log" 2>&1
+"C:\Program Files\doxybook2\bin\doxybook2.exe" --config "%WORKFLOW_DIR%\\.doxybook\config.json" --templates "%WORKFLOW_DIR%\\.doxybook\templates" --input "%REPO_DIR%_Doxygen\xml" --output "%REPO_DIR%_Doxygen\md" -d > "%REPO_DIR%\docs\output_doxybook2_run.log" 2>&1
 IF %errorlevel% NEQ 0 (
   echo doxybook2 post-processor failed with error code %errorlevel%.
   exit /b %errorlevel%

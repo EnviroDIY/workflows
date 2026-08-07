@@ -19,9 +19,49 @@ echo GitHub Orgs Directory: %GITHUB_BASE_DIR%
 @REM )
 @REM set GITHUB_REPOSITORY=%~1
 
+@REM Set directory links
+set REPO_DIR=%GITHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%
+echo Repository Directory: %REPO_DIR%
+set WORKFLOW_DIR=%GITHUB_BASE_DIR%\EnviroDIY\workflows\docs
+echo Workflows Directory: %WORKFLOW_DIR%
+
+@REM Delete old keywords_duplicates file if it exists
+if exist "%REPO_DIR%\keywords_duplicates.txt" (
+    echo Deleting old keywords_duplicates file
+    del "%REPO_DIR%\keywords_duplicates.txt" /q
+)
+
 @REM Generate Arduino keywords using doxygen2keywords.xsl and Saxon
 echo Converting the Doxygen output to an Arduino keywords file
-java -jar "C:\Users\sdamiano\Downloads\SaxonHE12-4J\saxon-he-12.4.jar" -o:"%GITHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\keywords.txt" -s:"%GITHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%_Doxygen\xml\index.xml" -xsl:"%GITHUB_BASE_DIR%\EnviroDIY\workflows\docs\doxygen2keywords.xsl"
-@REM perl -i -ne 'print if ! $x{$_}++' "%GITHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%\keywords.txt"
+java -jar "%WORKFLOW_DIR%\SaxonHE12-10J\saxon-he-12.10.jar" -o:"%REPO_DIR%\keywords_duplicates.txt" -s:"%REPO_DIR%_Doxygen\xml\index.xml" -xsl:"%WORKFLOW_DIR%\doxygen2keywords.xsl"
+if %errorlevel% neq 0 (
+    echo Error: Java command failed with exit code %errorlevel%
+    exit /b %errorlevel%
+)
 
-cd "%GITHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%"
+@REM Delete old keywords file if it exists
+if exist "%REPO_DIR%\keywords.txt" (
+    echo Deleting old keywords file
+    del "%REPO_DIR%\keywords.txt" /q
+)
+
+@echo off
+set "source=%REPO_DIR%\keywords_duplicates.txt"
+set "dest=%REPO_DIR%\keywords.txt"
+
+powershell -Command "$ErrorActionPreference='Stop'; $h=@{}; Get-Content \"%source%\" | %% { if ($_ -match '^\s*$' -or $_ -match '^\s*#+\s*$') { $_ } elseif (-not $h.ContainsKey($_)) { $h[$_]=$true; $_ } } | Set-Content \"%dest%\""
+if %errorlevel% neq 0 (
+    echo Error: PowerShell command failed with exit code %errorlevel%
+    exit /b %errorlevel%
+)
+
+echo Duplicates removed. Saved to "%dest%".
+
+echo Deleting file with duplicates
+if exist "%REPO_DIR%\keywords_duplicates.txt" (
+    echo Deleting file with duplicates
+    del "%REPO_DIR%\keywords_duplicates.txt" /q
+)
+
+
+cd "%REPO_DIR%"
