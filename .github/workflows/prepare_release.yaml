@@ -8,9 +8,10 @@ on:
         required: false
         type: boolean
         default: true
-
-env:
-  PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
+    secrets:
+      PLATFORMIO_AUTH_TOKEN:
+        description: 'PlatformIO token used only for package publishing'
+        required: true
 
 jobs:
   check_version_number:
@@ -204,7 +205,7 @@ jobs:
         id: create_release_with_zip
         uses: softprops/action-gh-release@v3.0.2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           tag_name: ${{ format('v{0}',needs.check_version_number.outputs.current_version) }}
           name: ${{ format('v{0}',needs.check_version_number.outputs.current_version) }}
@@ -240,7 +241,7 @@ jobs:
         id: create_bare_release
         uses: softprops/action-gh-release@v3.0.2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           tag_name: ${{ format('v{0}',needs.check_version_number.outputs.current_version) }}
           name: ${{ format('v{0}',needs.check_version_number.outputs.current_version) }}
@@ -269,4 +270,6 @@ jobs:
       # Publish the new release to the PlatformIO package manager
       - name: Publish release to the PlatformIO package manager
         id: publish-pio
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
         run: pio pkg publish --owner envirodiy --non-interactive
