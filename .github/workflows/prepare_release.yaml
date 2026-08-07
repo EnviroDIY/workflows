@@ -4,13 +4,13 @@ on:
   workflow_call:
     inputs:
       include_dependencies:
-        description: 'True to include a zip file with dependencies in the release'
+        description: "True to include a zip file with dependencies in the release"
         required: false
         type: boolean
         default: true
     secrets:
       PLATFORMIO_AUTH_TOKEN:
-        description: 'PlatformIO token used only for package publishing'
+        description: "PlatformIO token used only for package publishing"
         required: true
 
 jobs:
@@ -61,8 +61,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.x'
-          cache: 'pip'
+          python-version: "3.x"
+          cache: "pip"
 
       - name: Install python dependencies, including NRF-Utils needed for Adafruit Feathers
         run: |

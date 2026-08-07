@@ -11,14 +11,14 @@ on:
       - published
   # Trigger with the release workflow finishes
   workflow_run:
-    workflows: ['Create a New Release']
+    workflows: ["Create a New Release"]
     types: [completed]
     branches: [master, main]
   # Also give a manual trigger
   workflow_dispatch:
     inputs:
       publish:
-        description: 'Publish Documentation to GitHub Pages'
+        description: "Publish Documentation to GitHub Pages"
         required: false
         type: boolean
         default: false

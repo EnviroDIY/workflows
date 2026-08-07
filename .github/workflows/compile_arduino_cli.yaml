@@ -4,11 +4,11 @@ on:
   workflow_call:
     inputs:
       library_install_zip:
-        description: 'The git link to the zip of the library repo at the exact has to build'
+        description: "The git link to the zip of the library repo at the exact has to build"
         required: true
         type: string
       arduino_job_matrix:
-        description: 'A json string with the job matrix'
+        description: "A json string with the job matrix"
         required: true
         type: string
 
@@ -167,8 +167,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.x'
-          cache: 'pip'
+          python-version: "3.x"
+          cache: "pip"
 
       - name: Install python dependencies, including NRF-Utils needed for Adafruit Feathers
         run: |

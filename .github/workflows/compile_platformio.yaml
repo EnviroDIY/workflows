@@ -4,11 +4,11 @@ on:
   workflow_call:
     inputs:
       library_install_git:
-        description: 'The git link to the exact hash of the library to build'
+        description: "The git link to the exact hash of the library to build"
         required: true
         type: string
       pio_job_matrix:
-        description: 'A json string with the job matrix'
+        description: "A json string with the job matrix"
         required: true
         type: string
 
@@ -101,7 +101,6 @@ jobs:
             ~/.platformio/platforms
           key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
 
-
       - &restore_libraries
         name: Restore PlatformIO Libraries
         uses: actions/cache/restore@v6
@@ -136,7 +135,6 @@ jobs:
           path: |
             ~/.platformio/lib
           key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
-
 
       - &get_boards_commit
         name: Get latest commit hash of EnviroDIY Boards

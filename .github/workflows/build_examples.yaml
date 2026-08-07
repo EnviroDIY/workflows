@@ -111,7 +111,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ always() && ! contains(github.event.head_commit.message, 'ci skip') }}
     steps:
-
       - name: Write the requirements file
         run: |
           echo "wheel" > requirements.txt
