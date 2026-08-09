@@ -130,19 +130,15 @@ def parse_pio_output(result_str: str) -> dict[str, int | None] | None:
 
 def get_job_info_from_filename(filename: str) -> dict:
     name_parts = os.path.basename(filename).split("_")
-    if len(name_parts) == 3:
-        return {
-            "compiler": name_parts[0],
-            "board": name_parts[1],
-            "example": name_parts[2].rsplit(".", 1)[0],
-        }
-    else:
-        return {
-            "compiler": name_parts[0],
-            "flag": name_parts[1],
-            "board": name_parts[2],
-            "example": name_parts[3].rsplit(".", 1)[0],
-        }
+    assumed_vals = {
+        "compiler": name_parts[0],
+        "board": name_parts[1],
+        "example": name_parts[2].rsplit(".", 1)[0],
+    }
+    for n, v in enumerate(name_parts[3:]):
+        assumed_vals[f"flag_{n+1}"] = v
+
+    return assumed_vals
 
 
 # %%
@@ -187,8 +183,9 @@ df["ram_percent"] = df["ram_percent"].round(1)
 df["success"] = df["success"].fillna(2).astype(int)
 # sort with failures at the top, then by board, example, flag, and compiler
 df = df.sort_values(
-    by=["success", "board", "example", "flag", "compiler"],
-    ascending=[True, True, True, True, True],
+    by=["success", "board", "example"]
+    + [col for col in df.columns if col.startswith("flag_")]
+    + ["compiler"],
 )
 df["success"] = df["success"].replace(
     {2: ":black_circle:", 1: ":heavy_check_mark:", 0: ":x:"}
