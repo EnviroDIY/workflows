@@ -750,45 +750,6 @@ for matrix_item in complete_command_matrix:
             if k in grouped_command_matrix[l_key].keys()
             and v != grouped_command_matrix[l_key][k]
         }
-        if len(different_keys) > 0:
-            print(f"\tKey is from matrix item:")
-            print(f"\t\t compiler: {matrix_item['compiler']}")
-            print(f"\t\t example: {matrix_item['example']}")
-            print(f"\t\t board: {matrix_item['board']}")
-            print(f"\t\t sensor: {matrix_item['sensor']}")
-            print(f"\t\t modem: {matrix_item['modem']}")
-            print(f"\t\t publisher: {matrix_item['publisher']}")
-            print(f"\t\t array: {matrix_item['array']}")
-            print(f"\t\t loop: {matrix_item['loop']}")
-            print(f"\t\t serial: {matrix_item['serial']}")
-            print(f"\t\t compiler_flags: {matrix_item['compiler_flags']}")
-            print(f"\tMatching existing group has:")
-            print(f"\t\t compiler: {grouped_command_matrix[l_key]['compiler']}")
-            print(f"\t\t example: {grouped_command_matrix[l_key]['example']}")
-            print(f"\t\t board: {grouped_command_matrix[l_key]['board']}")
-            print(f"\t\t sensor: {grouped_command_matrix[l_key]['sensor']}")
-            print(f"\t\t modem: {grouped_command_matrix[l_key]['modem']}")
-            print(f"\t\t publisher: {grouped_command_matrix[l_key]['publisher']}")
-            print(f"\t\t array: {grouped_command_matrix[l_key]['array']}")
-            print(f"\t\t loop: {grouped_command_matrix[l_key]['loop']}")
-            print(f"\t\t serial: {grouped_command_matrix[l_key]['serial']}")
-            print(
-                f"\t\t compiler_flags: {grouped_command_matrix[l_key]['compiler_flags']}"
-            )
-            print(f"Different keys?")
-            print(f"{different_keys}")
-        else:
-            print(f"\tKey is from matrix item with nothing unique!!!:")
-            print(f"\t\t compiler: {matrix_item['compiler']}")
-            print(f"\t\t example: {matrix_item['example']}")
-            print(f"\t\t board: {matrix_item['board']}")
-            print(f"\t\t sensor: {matrix_item['sensor']}")
-            print(f"\t\t modem: {matrix_item['modem']}")
-            print(f"\t\t publisher: {matrix_item['publisher']}")
-            print(f"\t\t array: {matrix_item['array']}")
-            print(f"\t\t loop: {matrix_item['loop']}")
-            print(f"\t\t serial: {matrix_item['serial']}")
-            print(f"\t\t compiler_flags: {matrix_item['compiler_flags']}")
         grouped_command_matrix[l_key]["group_commands"] += l_command_list  # type: ignore
         # break
 print(f"Total log groups: {len(grouped_command_matrix)}")

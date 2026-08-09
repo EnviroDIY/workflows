@@ -193,19 +193,16 @@ df["success"] = df["success"].replace(
 
 
 # %%
-md_table = df[
-    [
-        "compiler",
-        "example",
-        "board",
-        "flag",
-        "success",
-        "ram_used",
-        "ram_percent",
-        "flash_used",
-        "flash_percent",
-    ]
-].to_markdown(index=False, tablefmt="github")
+display_columns = ["compiler", "example", "board"]
+display_columns += [col for col in df.columns if col.startswith("flag_")]
+display_columns += [
+    "success",
+    "ram_used",
+    "ram_percent",
+    "flash_used",
+    "flash_percent",
+]
+md_table = df[display_columns].to_markdown(index=False, tablefmt="github")
 
 print("\n\n### Summary of Build Results\n")
 print(md_table)
