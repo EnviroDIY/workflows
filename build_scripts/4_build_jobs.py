@@ -203,7 +203,13 @@ def create_command_list_from_matrix(
     job_dict = deepcopy(matrix_item)
     job_dict["inline_flags"] = inline_flags
     output_file_name = get_filename_for_log(
-        job_dict, artifact_path, list(matrix_item.keys())
+        job_dict,
+        artifact_path,
+        [
+            k
+            for k in matrix_item.keys()
+            if k not in ["build_commands", "other_commands"]
+        ],
     )
 
     if compiler == "arduino-cli":
@@ -265,7 +271,7 @@ def create_command_list_from_matrix(
             )
 
     job_dict["output_file_name"] = output_file_name
-    job_dict["other_commands"] = sed_commands
+    job_dict["other_commands"] = matrix_item.get("other_commands", []) + sed_commands
     job_dict["build_commands"] = [build_command]
 
     return deepcopy(job_dict)
@@ -305,9 +311,21 @@ if __name__ == "__main__":
     # Use log_grouping_fields from config, or default to all keys
     if "log_grouping_fields" in config and len(config["log_grouping_fields"]) > 0:
         log_groupers = config["log_grouping_fields"]
+        if "build_commands" or "other_commands" in log_groupers:
+            print(
+                "::warning::'build_commands' and 'other_commands' should not be used as log grouping fields. They will be ignored."
+            )
+        # remove "build_commands" and "other_commands" from log_groupers if present
+        log_groupers = [
+            g for g in log_groupers if g not in ["build_commands", "other_commands"]
+        ]
         print(f"Using log grouping fields from config: {log_groupers}")
     else:
         log_groupers = list(final_matrix[0].keys())
+        # remove "build_commands" and "other_commands" from log_groupers if present
+        log_groupers = [
+            g for g in log_groupers if g not in ["build_commands", "other_commands"]
+        ]
         print(f"Using all matrix keys as log grouping fields: {log_groupers}")
     grouped_command_matrix: dict[str, dict] = {}
 
@@ -325,7 +343,7 @@ if __name__ == "__main__":
             else:
                 l_names.append(get_filename_slug(grouper, matrix_item[grouper]))
 
-        l_key = "-".join(l_names)
+        l_key = "_".join(l_names)
         l_key = re.sub(r"[\-]{2,}", "-", l_key)
         l_key = re.sub(r"[_]{2,}", "_", l_key)
 
