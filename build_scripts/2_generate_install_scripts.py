@@ -504,7 +504,9 @@ Please check the spelling of your board name or add an entry to your platformio.
             for library in library_specs["dependencies"]:
                 # spec = get_package_spec(library)
                 # if spec:
-                install_command = create_pio_ci_lib_command(library)
+                install_command = create_pio_ci_lib_command(
+                    library, update=False, include_version=True
+                )
                 command_with_log = add_log_to_command(
                     install_command, f"Installing {library['name']}"
                 )
@@ -522,7 +524,9 @@ Please check the spelling of your board name or add an entry to your platformio.
             for library in example_specs["dependencies"]:
                 # spec = get_package_spec(library)
                 # if spec:
-                install_command = create_pio_ci_lib_command(library)
+                install_command = create_pio_ci_lib_command(
+                    library, update=False, include_version=True
+                )
                 command_with_log = add_log_to_command(
                     install_command, f"Installing {library['name']}"
                 )
