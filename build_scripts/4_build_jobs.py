@@ -32,7 +32,7 @@ def create_arduino_cli_compile_command(
     code_subfolder: str,
     fqbn: str,
     arduino_cli_config: str,
-    arduino_cli_format: str,
+    arduino_cli_format: str = "json",
     compiler_flags: List[str] = [],
 ) -> str:
     """Create an Arduino CLI compile command"""
@@ -225,7 +225,6 @@ def create_command_list_from_matrix(
             code_subfolder=example,
             fqbn=fqbn,
             arduino_cli_config=config["arduino_cli_config"],
-            arduino_cli_format=config["arduino_cli_format"],
             compiler_flags=compiler_flags,
         )
     elif compiler == "pio":

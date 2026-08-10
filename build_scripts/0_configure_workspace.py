@@ -24,34 +24,36 @@ import os
 import json
 import requests
 import shutil
-from pathlib import Path
 from typing import Any
-from matrix_utils import print_verbose, get_working_directories
+from matrix_utils import get_working_directories
 
-
-def download_board_conversion_file(ci_path: str, artifact_path: str):
+def load_pio_to_arduino_mapping(ci_path: str, artifact_path: str):
     """Download the platformio_to_arduino_boards.json file"""
     print("Downloading board conversion file...")
     response = requests.get(
         "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/platformio_to_arduino_boards.json"
     )
-    conversion_file = os.path.join(ci_path, "platformio_to_arduino_boards.json")
-    with open(conversion_file, "wb") as f:
+    pio_to_acli_file = os.path.join(ci_path, "platformio_to_arduino_boards.json")
+    print("Saving board conversion file to: {}".format(pio_to_acli_file))
+    with open(pio_to_acli_file, "wb") as f:
         f.write(response.content)
     # Also copy to artifacts for debugging
     shutil.copyfile(
-        conversion_file,
+        pio_to_acli_file,
         os.path.join(artifact_path, "platformio_to_arduino_boards.json"),
     )
-    return conversion_file
+
+    with open(pio_to_acli_file) as f:
+        pio_to_acli = json.load(f)
+
+    return pio_to_acli_file, pio_to_acli
 
 
-def setup_arduino_cli_config(ci_path: str, artifact_path: str):
-    """Setup Arduino CLI configuration file"""
+def load_arduino_cli_config(ci_path: str, artifact_path: str):
+    """Load or download Arduino CLI configuration file."""
 
     downloaded_arduino_cli_config = False
     arduino_cli_config = os.path.join(ci_path, "arduino_cli.yaml")
-    arduino_cli_format = "json"
 
     if not os.path.isfile(arduino_cli_config):
         downloaded_arduino_cli_config = True
@@ -63,17 +65,22 @@ def setup_arduino_cli_config(ci_path: str, artifact_path: str):
         # copy to the CI directory
         with open(os.path.join(ci_path, "arduino_cli.yaml"), "wb") as f:
             f.write(response.content)
+        print("Saving Arduino CLI configuration to: {}".format(arduino_cli_config))
         # also copy to the artifacts directory
         shutil.copyfile(
             os.path.join(ci_path, "arduino_cli.yaml"),
             os.path.join(artifact_path, "arduino_cli.yaml"),
         )
 
-    return arduino_cli_config, arduino_cli_format, downloaded_arduino_cli_config
+    return arduino_cli_config, downloaded_arduino_cli_config
 
 
-def setup_platformio_config(ci_path: str, artifact_path: str):
-    """Setup PlatformIO configuration file"""
+def load_platformio_config(ci_path: str, artifact_path: str):
+    """
+    Download the PlatformIO configuration file, if necessary,
+    and build mapping dictionaries for boards and environments.
+    """
+
     from platformio.project.config import ProjectConfig
 
     downloaded_pio_config = False
@@ -88,6 +95,7 @@ def setup_platformio_config(ci_path: str, artifact_path: str):
         # copy to the CI directory
         with open(os.path.join(ci_path, "platformio.ini"), "wb") as f:
             f.write(response.content)
+        print("Saving PlatformIO configuration to: {}".format(pio_config_file))
         # also copy to the artifacts directory
         shutil.copyfile(
             os.path.join(ci_path, "platformio.ini"),
@@ -104,17 +112,41 @@ def setup_platformio_config(ci_path: str, artifact_path: str):
 
     # Build mapping dictionaries
     board_to_pio_env = {}
+    board_to_pio_platform = {}
     pio_env_to_board = {}
+    # Read the environments from the PlatformIO config and build the mappings
+    # to boards and platforms.
+    # NOTE: we use the unexpanded config here because we want to capture the original
+    # mapping of boards to environments, not any additional environments that may
+    # have been added in the extra config.
+    # NOTE: In case of duplicate boards, we keep the first one we encounter,
+    # which is usually the one with the most generic flags.
     for pio_env_name in pio_config.envs():
-        board_to_pio_env[pio_config.get("env:{}".format(pio_env_name), "board")] = (
-            pio_env_name
-        )
+        board = pio_config.get("env:{}".format(pio_env_name), "board")
+        if board not in board_to_pio_env.keys():
+            board_to_pio_env[board] = pio_env_name
+        if board not in board_to_pio_platform.keys():
+            board_to_pio_platform[board] = pio_config.get(
+                "env:{}".format(pio_env_name), "platform"
+            )
+    # Go in the opposite direction to map from PIO environment names to boards.
+    # NOTE: for this we use the expanded config because there may be additional
+    # environments that use the same board but have different flags,
+    # and we want to capture all of them.
+    # NOTE: PlatformIO does not allow duplicate environment names, so we can safely assume that
+    # each environment name maps to a single board.
     for pio_env_name in pio_config_expanded.envs():
         pio_env_to_board[pio_env_name] = pio_config_expanded.get(
             "env:{}".format(pio_env_name), "board"
         )
 
-    return pio_config_file, downloaded_pio_config, board_to_pio_env, pio_env_to_board
+    return (
+        pio_config_file,
+        downloaded_pio_config,
+        board_to_pio_env,
+        board_to_pio_platform,
+        pio_env_to_board,
+    )
 
 
 if __name__ == "__main__":
@@ -134,26 +166,31 @@ if __name__ == "__main__":
     }
 
     # Download board conversion file
-    pio_to_acli_file = download_board_conversion_file(
+    pio_to_acli_file, pio_to_acli = load_pio_to_arduino_mapping(
         dirs["ci_path"], dirs["artifact_path"]
     )
     config["pio_to_acli_file"] = pio_to_acli_file
+    config["pio_to_acli"] = pio_to_acli
 
     # Setup Arduino CLI config
-    arduino_cli_config, arduino_cli_format, downloaded_arduino_cli_config = (
-        setup_arduino_cli_config(dirs["ci_path"], dirs["artifact_path"])
+    arduino_cli_config, downloaded_arduino_cli_config = load_arduino_cli_config(
+        dirs["ci_path"], dirs["artifact_path"]
     )
     config["arduino_cli_config"] = arduino_cli_config
-    config["arduino_cli_format"] = arduino_cli_format
     config["downloaded_arduino_cli_config"] = downloaded_arduino_cli_config
 
     # Setup PlatformIO config
-    pio_config_file, downloaded_pio_config, board_to_pio_env, pio_env_to_board = (
-        setup_platformio_config(dirs["ci_path"], dirs["artifact_path"])
-    )
+    (
+        pio_config_file,
+        downloaded_pio_config,
+        board_to_pio_env,
+        board_to_pio_platform,
+        pio_env_to_board,
+    ) = load_platformio_config(dirs["ci_path"], dirs["artifact_path"])
     config["pio_config_file"] = pio_config_file
     config["downloaded_pio_config"] = downloaded_pio_config
     config["board_to_pio_env"] = board_to_pio_env
+    config["board_to_pio_platform"] = board_to_pio_platform
     config["pio_env_to_board"] = pio_env_to_board
 
     # Save to file for next script

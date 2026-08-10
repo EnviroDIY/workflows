@@ -124,12 +124,12 @@ def validate_boards(
 
         if board not in pio_to_acli and board not in acli_skip_boards:
             print(
-                f"::warning::Cannot find matching Arduino FQBN for {board}. This board will not be compiled with Arduino CLI"
+                f"\n::warning::Cannot find matching Arduino FQBN for {board}. This board will not be compiled with Arduino CLI"
             )
 
         if board not in board_to_pio_env and board not in pio_skip_boards:
             print(
-                f"::warning::No matching environment was found in platformio.ini for {board}. This board will be compiled with no reference to a specific environment."
+                f"\n::warning::No matching environment was found in platformio.ini for {board}. This board will be compiled with no reference to a specific environment."
             )
 
         valid_boards.append(board)
@@ -216,18 +216,15 @@ if __name__ == "__main__":
         os.environ.get("ARTIFACT_PATH", "continuous_integration_artifacts"),
         "matrix_config.json",
     )
+    print(f"Loading overall configuration from: {config_file}")
     with open(config_file, "r") as f:
         config = json.load(f)
-
-    # Load board conversion data
-    with open(config["pio_to_acli_file"], "r") as f:
-        pio_to_acli = json.load(f)
 
     # Parse all inputs
     examples_to_build = parse_examples_to_build(
         config["examples_path"], config["extras_path"]
     )
-    boards = parse_boards_to_build(config["board_to_pio_env"], pio_to_acli)
+    boards = parse_boards_to_build(config["board_to_pio_env"], config["pio_to_acli"])
 
     # Validate boards
     acli_skip_boards = os.environ.get("ACLI_SKIP_BOARDS", "uno_pic32,genuino101").split(
@@ -238,7 +235,7 @@ if __name__ == "__main__":
     ).split(",")
     boards = validate_boards(
         boards,
-        pio_to_acli,
+        config["pio_to_acli"],
         config["board_to_pio_env"],
         acli_skip_boards,
         pio_skip_boards,
@@ -256,7 +253,6 @@ if __name__ == "__main__":
     config["compiler_flags"] = compiler_flags
     config["job_grouping_fields"] = job_grouping_fields
     config["log_grouping_fields"] = log_grouping_fields
-    config["pio_to_acli"] = pio_to_acli
     config["acli_skip_boards"] = acli_skip_boards
     config["pio_skip_boards"] = pio_skip_boards
 

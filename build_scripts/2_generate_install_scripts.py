@@ -17,13 +17,9 @@ import json
 from collections import OrderedDict
 from typing import List, Union
 from matrix_utils import (
-    get_ci_directories,
     get_working_directories,
     load_library_dependencies,
     load_example_dependencies,
-    load_board_to_pio_mapping,
-    load_pio_to_arduino_boards_mapping,
-    print_verbose,
 )
 
 try:
@@ -329,17 +325,21 @@ if __name__ == "__main__":
 
     # Validate boards
     for board in boards[:]:  # Use slice to iterate over a copy
-        if board not in pio_to_acli.keys() and board not in ACLI_SKIP_BOARDS:
+        if board not in pio_to_acli.keys() and board not in config.get(
+            "acli_skip_boards", []
+        ):
             print(
-                f"""::error:: file=platformio_to_arduino_boards.json,title=No matching Arduino board::
+                f"""\n::error:: file=platformio_to_arduino_boards.json,title=No matching Arduino board::
 Cannot find matching Arduino FQBN for {board}.
 No core will be installed or cached for this board.
 Please check the spelling of your board name or add an entry to the Arduino/PlatformIO board conversion file."""
             )
             boards.remove(board)
-        elif board not in board_to_pio_platform.keys() and board not in PIO_SKIP_BOARDS:
+        elif board not in board_to_pio_platform.keys() and board not in config.get(
+            "pio_skip_boards", []
+        ):
             print(
-                f"""::warning:: file=platformio.ini,title=No matching PlatformIO environment::
+                f"""\n::warning:: file=platformio.ini,title=No matching PlatformIO environment::
 Cannot find matching environment in platformio.ini for {board}.
 No platforms or tools will be installed or built for this board.
 Please check the spelling of your board name or add an entry to your platformio.ini if not expected."""
@@ -351,7 +351,8 @@ Please check the spelling of your board name or add an entry to your platformio.
             [
                 pio_to_acli[board]["fqbn"].rsplit(":", 1)[0]
                 for board in boards
-                if board in pio_to_acli.keys() and board not in ACLI_SKIP_BOARDS
+                if board in pio_to_acli.keys()
+                and board not in config.get("acli_skip_boards", [])
             ]
         )
     )
@@ -369,7 +370,7 @@ Please check the spelling of your board name or add an entry to your platformio.
                 board_to_pio_platform[board]
                 for board in boards
                 if board in board_to_pio_platform.keys()
-                and board not in PIO_SKIP_BOARDS
+                and board not in config.get("pio_skip_boards", [])
             ]
         )
     )
