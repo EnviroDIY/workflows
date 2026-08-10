@@ -32,43 +32,41 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"Warning: Could not load config file: {e}")
 
-        for cleanup_dir in [artifact_path, ci_path]:
-            if os.path.exists(cleanup_dir):
-                # always remove the platformio_to_arduino_boards.json file
-                files_to_remove = [
-                    os.path.join(cleanup_dir, "platformio_to_arduino_boards.json"),
-                ]
+        if os.path.exists(ci_path):
+            # always remove the platformio_to_arduino_boards.json file
+            files_to_remove = [
+                os.path.join(ci_path, "platformio_to_arduino_boards.json"),
+            ]
 
-                # Only remove arduino_cli.yaml if it was downloaded
-                if config.get("downloaded_arduino_cli_config", False):
-                    files_to_remove.append(
-                        os.path.join(cleanup_dir, "arduino_cli.yaml")
-                    )
+            # Only remove arduino_cli.yaml if it was downloaded
+            if config.get("downloaded_arduino_cli_config", False):
+                files_to_remove.append(os.path.join(ci_path, "arduino_cli.yaml"))
 
-                # Only remove platformio.ini if it was downloaded
-                if config.get("downloaded_pio_config", False):
-                    files_to_remove.append(os.path.join(cleanup_dir, "platformio.ini"))
+            # Only remove platformio.ini if it was downloaded
+            if config.get("downloaded_pio_config", False):
+                files_to_remove.append(os.path.join(ci_path, "platformio.ini"))
 
-                for file_path in files_to_remove:
-                    if os.path.exists(file_path):
-                        try:
-                            print(f"Removing file: {file_path}")
-                            os.remove(file_path)
-                        except Exception as e:
-                            print(f"Warning: Could not remove {file_path}: {e}")
+            for file_path in files_to_remove:
+                if os.path.exists(file_path):
+                    try:
+                        print(f"Removing file: {file_path}")
+                        os.remove(file_path)
+                    except Exception as e:
+                        print(f"Warning: Could not remove {file_path}: {e}")
 
-                # remove the whole directory if it 's now empty
-                try:
-                    print(f"Removing {cleanup_dir} if it's empty")
-                    os.rmdir(cleanup_dir)
-                except Exception as e:
-                    print(f"Warning: Could not remove {cleanup_dir}: {e}")
-
+            # remove the whole directory if it 's now empty
             try:
-                print(f"Removing artifact directory, empty or not: {artifact_path}")
-                shutil.rmtree(artifact_path)
+                print(f"Removing {ci_path} if it's empty")
+                os.rmdir(ci_path)
             except Exception as e:
-                print(f"Warning: Could not remove {artifact_path}: {e}")
+                print(f"Warning: Could not remove {ci_path}: {e}")
+
+        # Remove the artifact directory regardless of whether it is empty or not.
+        try:
+            print(f"Removing artifact directory, empty or not: {artifact_path}")
+            shutil.rmtree(artifact_path)
+        except Exception as e:
+            print(f"Warning: Could not remove {artifact_path}: {e}")
 
         print("Cleanup complete")
     else:
