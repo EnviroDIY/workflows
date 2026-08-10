@@ -202,10 +202,9 @@ endlocal
 :cleanup_downloads
 echo Cleaning up downloaded files...
 if exist "%ARTIFACTS_DIR%\matrix_utils.py" del "%ARTIFACTS_DIR%\matrix_utils.py" >nul 2>&1
-if exist "%ARTIFACTS_DIR%\0_setup_ci_platforms.py" del "%ARTIFACTS_DIR%\0_setup_ci_platforms.py" >nul 2>&1
-if exist "%ARTIFACTS_DIR%\0_generate_install_scripts.py" del "%ARTIFACTS_DIR%\0_generate_install_scripts.py" >nul 2>&1
-if exist "%ARTIFACTS_DIR%\1_configure_matrix.py" del "%ARTIFACTS_DIR%\1_configure_matrix.py" >nul 2>&1
-if exist "%ARTIFACTS_DIR%\2_parse_inputs.py" del "%ARTIFACTS_DIR%\2_parse_inputs.py" >nul 2>&1
+if exist "%ARTIFACTS_DIR%\0_configure_workspace.py" del "%ARTIFACTS_DIR%\0_configure_workspace.py" >nul 2>&1
+if exist "%ARTIFACTS_DIR%\1_parse_inputs.py" del "%ARTIFACTS_DIR%\1_parse_inputs.py" >nul 2>&1
+if exist "%ARTIFACTS_DIR%\2_generate_install_scripts.py" del "%ARTIFACTS_DIR%\2_generate_install_scripts.py" >nul 2>&1
 if exist "%ARTIFACTS_DIR%\3_build_matrix.py" del "%ARTIFACTS_DIR%\3_build_matrix.py" >nul 2>&1
 if exist "%ARTIFACTS_DIR%\4_build_jobs.py" del "%ARTIFACTS_DIR%\4_build_jobs.py" >nul 2>&1
 if exist "%ARTIFACTS_DIR%\5_output_results.py" del "%ARTIFACTS_DIR%\5_output_results.py" >nul 2>&1
