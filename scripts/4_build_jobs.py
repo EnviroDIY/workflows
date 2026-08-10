@@ -301,7 +301,16 @@ if __name__ == "__main__":
         print("::warning::No command blocks to process!")
         sys.exit(0)
 
-    log_groupers = list(final_matrix[0].keys())
+    # Use log_grouping_fields from config, or default to all keys
+    if (
+        "log_grouping_fields" in config
+        and len(config["log_grouping_fields"]) > 0
+    ):
+        log_groupers = config["log_grouping_fields"]
+        print(f"Using log grouping fields from config: {log_groupers}")
+    else:
+        log_groupers = list(final_matrix[0].keys())
+        print(f"Using all matrix keys as log grouping fields: {log_groupers}")
     grouped_command_matrix: dict[str, dict] = {}
 
     for matrix_item in complete_command_matrix:
@@ -343,7 +352,16 @@ if __name__ == "__main__":
     print(f"Total log groups: {len(grouped_command_matrix)}")
 
     # Group into jobs
-    job_groupers = ["compiler", "board"]
+    # Use job_grouping_fields from config, or default to ["compiler", "board"]
+    if (
+        "job_grouping_fields" in config
+        and len(config["job_grouping_fields"]) > 0
+    ):
+        job_groupers = config["job_grouping_fields"]
+        print(f"Using job grouping fields from config: {job_groupers}")
+    else:
+        job_groupers = ["compiler", "board"]
+        print(f"Using default job grouping fields: {job_groupers}")
     grouped_job_matrix = {}
 
     for l_key, group_dict in grouped_command_matrix.items():

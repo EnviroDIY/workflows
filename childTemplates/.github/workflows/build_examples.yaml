@@ -34,4 +34,10 @@ jobs:
       
       # Specify boards to skip for PlatformIO compilation
       # pio_skip_boards: "esp32-c6-devkitm-1,arduino_nano_esp32"
+      
+      # Specify fields to group jobs by (default: compiler,board)
+      # job_grouping_fields: "compiler,board,example"
+      
+      # Specify fields to group logs by (leave empty to use all matrix fields)
+      # log_grouping_fields: "board,example"
     secrets: inherit

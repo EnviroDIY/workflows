@@ -43,6 +43,16 @@ on:
         default: "esp32-c6-devkitm-1,arduino_nano_esp32"
         required: false
         type: string
+      job_grouping_fields:
+        description: "A comma-separated list of fields to group jobs by (e.g., board,example)"
+        default: "compiler,board"
+        required: false
+        type: string
+      log_grouping_fields:
+        description: "A comma-separated list of fields to group logs by (leave empty to use all matrix fields)"
+        default: ""
+        required: false
+        type: string
 
 jobs:
   generate_scripts:
@@ -61,6 +71,8 @@ jobs:
       COMPILER_FLAGS: ${{ inputs.compiler_flags }}
       ACLI_SKIP_BOARDS: ${{ inputs.acli_skip_boards }}
       PIO_SKIP_BOARDS: ${{ inputs.pio_skip_boards }}
+      JOB_GROUPING_FIELDS: ${{ inputs.job_grouping_fields }}
+      LOG_GROUPING_FIELDS: ${{ inputs.log_grouping_fields }}
 
     steps:
       - name: Checkout code

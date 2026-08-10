@@ -9,6 +9,8 @@ Parses:
 - BOARDS_TO_IGNORE: Comma-separated list of boards to ignore
 - INLINE_FLAGS: Comma-separated list of inline compiler flags (e.g., -DFLAG=value)
 - COMPILER_FLAGS: Comma-separated list of compiler flags
+- JOB_GROUPING_FIELDS: Comma-separated list of fields to group jobs by
+- LOG_GROUPING_FIELDS: Comma-separated list of fields to group logs by
 """
 
 import os
@@ -168,6 +170,40 @@ def parse_compiler_flags():
     return compiler_flags
 
 
+def parse_job_grouping_fields():
+    """Parse job grouping fields from environment"""
+    if "JOB_GROUPING_FIELDS" in os.environ.keys() and os.environ.get(
+        "JOB_GROUPING_FIELDS", ""
+    ) not in [""]:
+        job_grouping_fields = [
+            field.strip()
+            for field in os.environ.get("JOB_GROUPING_FIELDS", "").split(",")
+        ]
+        print(f"Using {len(job_grouping_fields)} job grouping fields")
+    else:
+        job_grouping_fields = []
+        print("No job grouping fields specified")
+
+    return job_grouping_fields
+
+
+def parse_log_grouping_fields():
+    """Parse log grouping fields from environment"""
+    if "LOG_GROUPING_FIELDS" in os.environ.keys() and os.environ.get(
+        "LOG_GROUPING_FIELDS", ""
+    ) not in [""]:
+        log_grouping_fields = [
+            field.strip()
+            for field in os.environ.get("LOG_GROUPING_FIELDS", "").split(",")
+        ]
+        print(f"Using {len(log_grouping_fields)} log grouping fields")
+    else:
+        log_grouping_fields = []
+        print("No log grouping fields specified")
+
+    return log_grouping_fields
+
+
 if __name__ == "__main__":
     # Load config from previous script
     config_file = os.path.join(
@@ -204,12 +240,16 @@ if __name__ == "__main__":
 
     inline_flags = parse_inline_flags()
     compiler_flags = parse_compiler_flags()
+    job_grouping_fields = parse_job_grouping_fields()
+    log_grouping_fields = parse_log_grouping_fields()
 
     # Save parsed inputs to config file
     config["examples_to_build"] = examples_to_build
     config["boards"] = boards
     config["inline_flags"] = inline_flags
     config["compiler_flags"] = compiler_flags
+    config["job_grouping_fields"] = job_grouping_fields
+    config["log_grouping_fields"] = log_grouping_fields
     config["pio_to_acli"] = pio_to_acli
     config["acli_skip_boards"] = acli_skip_boards
     config["pio_skip_boards"] = pio_skip_boards
