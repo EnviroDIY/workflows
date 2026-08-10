@@ -78,7 +78,7 @@ jobs:
 
       - name: Pull the requirements file
         run: |
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/doxygen_mcss_requirements.txt -o requirements.txt
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/doxygen_scripts/doxygen_mcss_requirements.txt -o requirements.txt
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -150,7 +150,7 @@ jobs:
             set -x # Print command traces before executing command.
           fi
           cd ${{ github.workspace }}/
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-graphviz.sh -o build-install-graphviz.sh
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/doxygen_scripts/build-install-graphviz.sh -o build-install-graphviz.sh
           chmod +x build-install-graphviz.sh
           bash build-install-graphviz.sh
           echo "${LD_LIBRARY_PATH}"
@@ -180,7 +180,7 @@ jobs:
           DOXYGEN_VERSION: ${{ inputs.doxygen_version }}
         run: |
           cd ${{ github.workspace }}/
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/check-doxygen-version.sh -o check-doxygen-version.sh
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/doxygen_scripts/check-doxygen-version.sh -o check-doxygen-version.sh
           chmod +x check-doxygen-version.sh
           bash check-doxygen-version.sh 2>&1
 
@@ -266,7 +266,7 @@ jobs:
           DOXYGEN_TAG: ${{ steps.parse_doxygen_version.outputs.doxygen_tag }}
         run: |
           cd ${{ github.workspace }}/
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/build-install-doxygen.sh -o build-install-doxygen.sh
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/doxygen_scripts/build-install-doxygen.sh -o build-install-doxygen.sh
           chmod +x build-install-doxygen.sh
           bash build-install-doxygen.sh
           doxygen -v
@@ -295,7 +295,7 @@ jobs:
             echo ::endgroup::
           fi
           cd ${{ github.workspace }}/${{ env.DOC_ROOT }}/
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate-documentation.sh -o generate-documentation.sh
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/doxygen_scripts/generate-documentation.sh -o generate-documentation.sh
           chmod +x generate-documentation.sh
           bash generate-documentation.sh
 

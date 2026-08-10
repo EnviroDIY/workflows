@@ -60,7 +60,7 @@ if not os.path.exists(artifact_dir):
 
 # Translation between board names on PlatformIO and the Arduino CLI
 response = requests.get(
-    "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio_to_arduino_boards.json"
+    "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/platformio_to_arduino_boards.json"
 )
 with open(os.path.join(ci_path, "platformio_to_arduino_boards.json"), "wb") as f:
     f.write(response.content)
@@ -69,7 +69,7 @@ with open(os.path.join(ci_path, "platformio_to_arduino_boards.json")) as f:
 
 # Tools per platform
 response = requests.get(
-    "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio_platform_tools.json"
+    "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/platformio_platform_tools.json"
 )
 with open(os.path.join(ci_path, "platformio_platform_tools.json"), "wb") as f:
     f.write(response.content)
@@ -87,7 +87,7 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
     if not os.path.isfile(arduino_cli_config):
         # download the default file
         response = requests.get(
-            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml"
+            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/arduino_cli.yaml"
         )
         # copy to the CI directory
         with open(os.path.join(ci_path, "arduino_cli.yaml"), "wb") as f:
@@ -108,7 +108,7 @@ pio_config_file = os.path.join(ci_path, "platformio.ini")
 if not os.path.isfile(pio_config_file):
     # download the default file
     response = requests.get(
-        "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/platformio.ini"
+        "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/platformio.ini"
     )
     # make a directory for it and copy it there
     with open(os.path.join(ci_path, "platformio.ini"), "wb") as f:

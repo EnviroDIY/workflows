@@ -139,7 +139,7 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
     if not os.path.isfile(arduino_cli_config):
         # download the default file
         response = requests.get(
-            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml"
+            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/arduino_cli.yaml"
         )
         # copy to the CI directory
         with open(os.path.join(ci_path, "arduino_cli.yaml"), "wb") as f:
