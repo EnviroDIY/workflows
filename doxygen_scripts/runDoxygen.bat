@@ -26,7 +26,7 @@ set MCSS_DIR=%GITHUB_BASE_DIR%\SRGDamia1\m.css
 echo mcss Directory: %MCSS_DIR%
 set REPO_DIR=%GITHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%
 echo Repository Directory: %REPO_DIR%
-set WORKFLOW_DIR=%GITHUB_BASE_DIR%\EnviroDIY\workflows\docs
+set WORKFLOW_DIR=%GITHUB_BASE_DIR%\EnviroDIY\workflows\doxygen_scripts
 echo Workflows Directory: %WORKFLOW_DIR%
 
 @REM Delete any old versions of the documentation and css

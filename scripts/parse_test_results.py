@@ -129,11 +129,12 @@ def parse_pio_output(result_str: str) -> dict[str, int | None] | None:
 
 
 def get_job_info_from_filename(filename: str) -> dict:
-    name_parts = os.path.basename(filename).split("_")
+    base_name = os.path.splitext(os.path.basename(filename))[0]
+    name_parts = base_name.split("_")
     assumed_vals = {
         "compiler": name_parts[0],
         "board": name_parts[1],
-        "example": name_parts[2].rsplit(".", 1)[0],
+        "example": name_parts[2],
     }
     for n, v in enumerate(name_parts[3:]):
         assumed_vals[f"flag_{n+1}"] = v

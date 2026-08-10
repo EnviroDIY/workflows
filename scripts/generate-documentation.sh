@@ -16,7 +16,7 @@ fi
 # Set directory links
 MCSS_DIR=$GITHUB_WORKSPACE/code_docs/m.css/
 REPO_DIR=$GITHUB_WORKSPACE/code_docs/${GITHUB_REPOSITORY#*/}
-WORKFLOW_DIR=https://raw.githubusercontent.com/EnviroDIY/workflows/main/docs/
+WORKFLOW_DIR=https://raw.githubusercontent.com/EnviroDIY/workflows/main/doxygen_scripts/
 
 # Check versions of stuff
 echo -e "\e[36mCurrent Doxygen version...\e[0m"
@@ -223,7 +223,7 @@ echo "::endgroup::"
 
 # # Generate Arduino keywords using doxygen2keywords.xsl and Saxon
 # echo -e "\e[36mConverting the Doxygen output to an Arduino keywords file\e[0m"
-# java  -jar "C:\Users\sdamiano\Downloads\SaxonHE12-4J\saxon-he-12.4.jar" -o:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt" -s:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensorsDoxygen\xml\index.xml" -xsl:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\workflows\docs\doxygen2keywords.xsl"
+# java  -jar "C:\Users\sdamiano\Downloads\SaxonHE12-4J\saxon-he-12.4.jar" -o:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt" -s:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensorsDoxygen\xml\index.xml" -xsl:"C:\Users\sdamiano\Documents\GitHub\EnviroDIY\workflows\doxygen_scripts\doxygen2keywords.xsl"
 # perl -i -ne 'print if ! $x{$_}++' "C:\Users\sdamiano\Documents\GitHub\EnviroDIY\ModularSensors\keywords.txt"
 
 

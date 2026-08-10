@@ -22,7 +22,7 @@ echo GitHub Orgs Directory: %GITHUB_BASE_DIR%
 @REM Set directory links
 set REPO_DIR=%GITHUB_BASE_DIR%\EnviroDIY\%GITHUB_REPOSITORY%
 echo Repository Directory: %REPO_DIR%
-set WORKFLOW_DIR=%GITHUB_BASE_DIR%\EnviroDIY\workflows\docs
+set WORKFLOW_DIR=%GITHUB_BASE_DIR%\EnviroDIY\workflows\doxygen_scripts
 echo Workflows Directory: %WORKFLOW_DIR%
 
 @REM Delete old keywords_duplicates file if it exists

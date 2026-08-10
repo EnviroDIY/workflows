@@ -12,29 +12,34 @@ if "GITHUB_WORKSPACE" in os.environ.keys() and "DOC_ROOT" in os.environ.keys():
     relative_dir = f"../../../../{repo_name}/"
 else:
     docbuild_dir = os.getcwd()
-    if (
-        docbuild_dir.lower()
-        == "c:\\users\\sdamiano\\documents\\github\\envirodiy\\workflows\\docs"
-    ):
-        docbuild_dir = (
-            "C:\\Users\\sdamiano\\Documents\\GitHub\\EnviroDIY\\ModularSensors\\docs"
+    expected_path = os.path.join(
+        os.path.expanduser("~"),
+        "Documents",
+        "GitHub",
+        "EnviroDIY",
+        "workflows",
+        "doxygen_scripts",
+    )
+    if docbuild_dir.lower() == expected_path.lower():
+        docbuild_dir = os.path.join(
+            os.path.expanduser("~"), "Documents", "GitHub", "EnviroDIY", "ModularSensors", "docs"
         )
-    repo_name = docbuild_dir.replace("\\\\", "/").replace("\\", "/").split("/")[-2]
-    relative_dir = f"../../{repo_name}/"
+    repo_name = os.path.normpath(docbuild_dir).split(os.sep)[-2]
+    relative_dir = os.path.join("..", "..", repo_name) + os.sep
 
 # %%
 # where to write the file
-output_file = relative_dir + "docs/examples.dox"
+output_file = os.path.join(relative_dir, "docs", "examples.dox")
 output_file = os.path.join(docbuild_dir, output_file)  # type: ignore
 output_file = os.path.abspath(os.path.realpath(output_file))
 
 # The examples directory
-examples_dir = relative_dir + "examples/"
+examples_dir = os.path.join(relative_dir, "examples")
 examples_path = os.path.join(docbuild_dir, examples_dir)  # type: ignore
 examples_path = os.path.abspath(os.path.realpath(examples_path))
 
 # The extras directory
-extras_dir = relative_dir + "extras/"
+extras_dir = os.path.join(relative_dir, "extras")
 extras_path = os.path.join(docbuild_dir, extras_dir)  # type: ignore
 extras_path = os.path.abspath(os.path.realpath(extras_path))
 
