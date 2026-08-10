@@ -6,11 +6,11 @@ import re
 import json
 
 import pandas as pd
-from matrix_utils import setup_ci_directories, print_verbose
+from matrix_utils import get_ci_directories, print_verbose
 
 # %%
 # Setup working directories and verbose mode
-dirs = setup_ci_directories()
+dirs = get_ci_directories()
 workspace_dir = dirs["workspace_dir"]
 workspace_path = dirs["workspace_path"]
 ci_path = dirs["ci_path"]

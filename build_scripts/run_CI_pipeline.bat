@@ -55,39 +55,21 @@ echo [Step 0] Downloading matrix_utils.py...
 call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py" "%ARTIFACTS_DIR%\matrix_utils.py"
 if errorlevel 1 goto :error
 
-REM Step 0a: Download and run 0_setup_ci_platforms.py
+REM Step 1: Download and run configuration scripts
 echo.
-echo [Step 0a] Downloading and running 0_setup_ci_platforms.py...
-call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_setup_ci_platforms.py" "%ARTIFACTS_DIR%\0_setup_ci_platforms.py"
+echo [Step 1] Downloading pipeline scripts 0-2...
+call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_configure_workspace.py" "%ARTIFACTS_DIR%\0_configure_workspace.py"
 if errorlevel 1 goto :error
 
-python "%ARTIFACTS_DIR%\0_setup_ci_platforms.py"
-if errorlevel 1 (
-    echo Error: 0_setup_ci_platforms.py failed with exit code !errorlevel!
-    goto :error
-)
+call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/1_parse_inputs.py" "%ARTIFACTS_DIR%\1_parse_inputs.py"
+if errorlevel 1 goto :error
 
-REM Step 0b: Download and run 0_generate_install_scripts.py
+call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/2_generate_install_scripts.py" "%ARTIFACTS_DIR%\2_generate_install_scripts.py"
+if errorlevel 1 goto :error
+
+REM Step 2: Download matrix generation scripts
 echo.
-echo [Step 0b] Downloading and running 0_generate_install_scripts.py...
-call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_generate_install_scripts.py" "%ARTIFACTS_DIR%\0_generate_install_scripts.py"
-if errorlevel 1 goto :error
-
-python "%ARTIFACTS_DIR%\0_generate_install_scripts.py"
-if errorlevel 1 (
-    echo Error: 0_generate_install_scripts.py failed with exit code !errorlevel!
-    goto :error
-)
-
-REM Step 1: Download pipeline scripts
-echo.
-echo [Step 1] Downloading pipeline scripts 1-6...
-call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/1_configure_matrix.py" "%ARTIFACTS_DIR%\1_configure_matrix.py"
-if errorlevel 1 goto :error
-
-call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/2_parse_inputs.py" "%ARTIFACTS_DIR%\2_parse_inputs.py"
-if errorlevel 1 goto :error
-
+echo [Step 2] Downloading pipeline scripts 3-6...
 call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/3_build_matrix.py" "%ARTIFACTS_DIR%\3_build_matrix.py"
 if errorlevel 1 goto :error
 
@@ -100,23 +82,31 @@ if errorlevel 1 goto :error
 call :download_file "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/6_cleanup.py" "%ARTIFACTS_DIR%\6_cleanup.py"
 if errorlevel 1 goto :error
 
-REM Step 2: Run pipeline scripts in sequence
+REM Step 3: Run pipeline scripts in sequence
 echo.
-echo [Step 2] Running pipeline scripts...
+echo [Step 3] Running pipeline scripts...
 
 echo.
-echo Running 1_configure_matrix.py...
-python "%ARTIFACTS_DIR%\1_configure_matrix.py"
+echo Running 0_configure_workspace.py...
+python "%ARTIFACTS_DIR%\0_configure_workspace.py"
 if errorlevel 1 (
-    echo Error: 1_configure_matrix.py failed with exit code !errorlevel!
+    echo Error: 0_configure_workspace.py failed with exit code !errorlevel!
     goto :error
 )
 
 echo.
-echo Running 2_parse_inputs.py...
-python "%ARTIFACTS_DIR%\2_parse_inputs.py"
+echo Running 1_parse_inputs.py...
+python "%ARTIFACTS_DIR%\1_parse_inputs.py"
 if errorlevel 1 (
-    echo Error: 2_parse_inputs.py failed with exit code !errorlevel!
+    echo Error: 1_parse_inputs.py failed with exit code !errorlevel!
+    goto :error
+)
+
+echo.
+echo Running 2_generate_install_scripts.py...
+python "%ARTIFACTS_DIR%\2_generate_install_scripts.py"
+if errorlevel 1 (
+    echo Error: 2_generate_install_scripts.py failed with exit code !errorlevel!
     goto :error
 )
 
@@ -144,10 +134,10 @@ if errorlevel 1 (
     goto :error
 )
 
-REM Step 3: Run cleanup (only runs locally, not in GitHub Actions, and only if --cleanup argument is provided)
+REM Step 4: Run cleanup (only runs locally, not in GitHub Actions, and only if --cleanup argument is provided)
 if "%~1"=="--cleanup" (
     echo.
-    echo [Step 3] Running cleanup script...
+    echo [Step 4] Running cleanup script...
     python "%ARTIFACTS_DIR%\6_cleanup.py"
     if errorlevel 1 (
         echo Warning: 6_cleanup.py failed with exit code !errorlevel!
@@ -155,7 +145,7 @@ if "%~1"=="--cleanup" (
     )
 ) else (
     echo.
-    echo [Step 3] Skipping cleanup script (use --cleanup argument to enable)
+    echo [Step 4] Skipping cleanup script (use --cleanup argument to enable)
 )
 
 echo.

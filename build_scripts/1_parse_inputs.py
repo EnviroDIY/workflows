@@ -11,6 +11,8 @@ Parses:
 - COMPILER_FLAGS: Comma-separated list of compiler flags
 - JOB_GROUPING_FIELDS: Comma-separated list of fields to group jobs by
 - LOG_GROUPING_FIELDS: Comma-separated list of fields to group logs by
+
+Step 1 in the CI Build Pipeline sequence.
 """
 
 import os
@@ -205,6 +207,10 @@ def parse_log_grouping_fields():
 
 
 if __name__ == "__main__":
+    print("=" * 60)
+    print("CI Build Pipeline: Step 1 - Parse Workflow Inputs")
+    print("=" * 60)
+
     # Load config from previous script
     config_file = os.path.join(
         os.environ.get("ARTIFACT_PATH", "continuous_integration_artifacts"),
@@ -257,6 +263,7 @@ if __name__ == "__main__":
     with open(config_file, "w") as f:
         json.dump(config, f, indent=2)
 
-    print(f"\nParsed inputs saved to: {config_file}")
+    print(f"\n✓ Parsed inputs saved to: {config_file}")
+    print("✓ Workflow inputs parsed successfully")
 
 # cSpell:ignore DFLAG

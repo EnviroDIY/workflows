@@ -7,10 +7,10 @@ Writes:
 - GitHub outputs for matrices
 - Summary information
 """
+
 import os
 import json
 from matrix_utils import save_json_file
-
 
 if __name__ == "__main__":
     # Load config
@@ -36,7 +36,9 @@ if __name__ == "__main__":
     # Output to GitHub
     if "GITHUB_OUTPUT" in os.environ.keys():
         with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-            print("arduino_job_matrix={}".format(json.dumps(arduino_job_matrix)), file=fh)
+            print(
+                "arduino_job_matrix={}".format(json.dumps(arduino_job_matrix)), file=fh
+            )
             print("pio_job_matrix={}".format(json.dumps(pio_job_matrix)), file=fh)
         print("Outputs written to GITHUB_OUTPUT")
     else:

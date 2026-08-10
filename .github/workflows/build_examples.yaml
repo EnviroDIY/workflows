@@ -81,16 +81,16 @@ jobs:
       - name: Setup PlatformIO
         uses: EnviroDIY/setup-platformio-action@v1.0.3
 
-      - name: Generate Platform Installation Script
-        id: py_platforms
+      - name: Configure Matrix Workspace
+        id: py_config
         run: |
-          echo "Generating CI platform configurations"
+          echo "Configuring CI workspace and downloading configurations"
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_setup_ci_platforms.py -o 0_setup_ci_platforms.py
-          python -u 0_setup_ci_platforms.py
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_configure_workspace.py -o 0_configure_workspace.py
+          python -u 0_configure_workspace.py
 
-      - name: Generate Library Installation Script
-        id: py_libraries
+      - name: Parse Workflow Inputs
+        id: py_inputs
         run: |
           set -e
           if [ "$RUNNER_DEBUG" = "1" ]; then
@@ -98,10 +98,22 @@ jobs:
               set -v
               set -x
           fi
-          echo "Generating library and platform installation scripts"
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_generate_install_scripts.py -o 0_generate_install_scripts.py
-          python -u 0_generate_install_scripts.py
+          echo "Parsing workflow inputs"
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/1_parse_inputs.py -o 1_parse_inputs.py
+          python -u 1_parse_inputs.py
+
+      - name: Generate Installation Scripts
+        id: py_install
+        run: |
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+          echo "Generating platform and library installation scripts"
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/2_generate_install_scripts.py -o 2_generate_install_scripts.py
+          python -u 2_generate_install_scripts.py
 
       - name: Generate Example Build Matrices
         id: py_matrix
@@ -124,16 +136,12 @@ jobs:
 
             # Download CI Build Pipeline utilities and scripts
             curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/1_configure_matrix.py -o 1_configure_matrix.py
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/2_parse_inputs.py -o 2_parse_inputs.py
             curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/3_build_matrix.py -o 3_build_matrix.py
             curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/4_build_jobs.py -o 4_build_jobs.py
             curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/5_output_results.py -o 5_output_results.py
             curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/6_cleanup.py -o 6_cleanup.py
 
             # Run the CI Build Pipeline
-            python -u 1_configure_matrix.py
-            python -u 2_parse_inputs.py
             python -u 3_build_matrix.py
             python -u 4_build_jobs.py
             python -u 5_output_results.py

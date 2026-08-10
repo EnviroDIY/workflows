@@ -21,18 +21,17 @@ The original monolithic `generate_job_matrix.py` script (900+ lines) has been sp
 ```
 build_scripts/
 ├── matrix_utils.py                     # Shared utilities and helper functions
-├── 0_setup_ci_platforms.py             # Setup platform and board configurations
-├── 0_generate_install_scripts.py       # Generate library installation scripts
-├── 1_configure_matrix.py               # Setup CI directories and download configs
-├── 2_parse_inputs.py                   # Parse workflow inputs
+├── 0_configure_workspace.py            # Setup CI directories and download configs
+├── 1_parse_inputs.py                   # Parse workflow inputs
+├── 2_generate_install_scripts.py       # Generate platform and library installation scripts
 ├── 3_build_matrix.py                   # Build job matrix (supports custom builders)
 ├── 4_build_jobs.py                     # Generate jobs and bash scripts
 ├── 5_output_results.py                 # Output to GitHub and artifacts
 ├── 6_cleanup.py                        # Cleanup generated files (local only)
 ├── generate_job_matrix.py              # Wrapper script (entry point)
 ├── generate_job_matrix_orchestrator.py # Optional orchestrator (for testing)
-├── generate_platform_installation_script.py  # Deprecated (use 0_setup_ci_platforms.py)
-├── generate_library_installation_script.py   # Deprecated (use 0_generate_install_scripts.py)
+├── generate_platform_installation_script.py  # Deprecated (functionality merged into 2_generate_install_scripts.py)
+├── generate_library_installation_script.py   # Deprecated (functionality merged into 2_generate_install_scripts.py)
 └── parse_test_results.py               # Post-build results parsing
 ```
 
@@ -40,21 +39,23 @@ build_scripts/
 
 The workflow in `.github/workflows/build_examples.yaml` executes the pipeline in stages:
 
-**Stage 1: Platform Setup**
+**Stage 1: Workspace Setup**
 
-1. Downloads and runs `0_setup_ci_platforms.py` to configure platforms
+1. Downloads and runs `0_configure_workspace.py` to setup workspace directories and configurations
 
-**Stage 2: Dependency Script Generation**
+**Stage 2: Input Parsing**
 
-1. Downloads and runs `0_generate_install_scripts.py` to generate installation scripts
+1. Downloads and runs `1_parse_inputs.py` to parse workflow inputs
 
-**Stage 3: Job Matrix Generation**
+**Stage 3: Dependency Script Generation**
+
+1. Downloads and runs `2_generate_install_scripts.py` to generate platform and library installation scripts
+
+**Stage 4: Job Matrix Generation**
 
 1. Checks for a custom generator (`continuous_integration/generate_job_matrix.py`)
 2. If found, runs it (backward compatibility)
 3. If not found, runs the modular pipeline:
-   - `1_configure_matrix.py` - Setup workspace
-   - `2_parse_inputs.py` - Parse inputs
    - `3_build_matrix.py` - Build matrix
    - `4_build_jobs.py` - Generate jobs
    - `5_output_results.py` - Output results
@@ -69,8 +70,8 @@ Shared utilities used by all scripts:
 
 - `setup_verbose_mode()` - Initialize verbose mode from RUNNER_DEBUG
 - `get_workspace_path()` - Get workspace directory (handles GitHub Actions and local)
-- `setup_ci_directories()` - Setup workspace, CI, and artifact directories
-- `setup_full_directories()` - Setup all directories including examples and extras
+- `get_ci_directories()` - Setup workspace, CI, and artifact directories
+- `get_working_directories()` - Setup all directories including examples and extras
 
 **Platform and Board Functions**:
 
@@ -97,39 +98,7 @@ Shared utilities used by all scripts:
 
 Configures platforms and board mappings for the CI build system.
 
-**Outputs**:
-
-- Downloads and validates board configuration files
-- Verifies Arduino CLI and PlatformIO mappings
-
-**Key Functions**:
-
-- `validate_boards()` - Validate boards have valid configurations
-- Uses `load_pio_to_arduino_boards_mapping()` from matrix_utils
-- Uses `load_board_to_pio_mapping()` from matrix_utils
-
-**Dependencies**: matrix_utils, platformio, requests
-
-### 0_generate_install_scripts.py
-
-Generates platform and library installation scripts for build jobs.
-
-**Outputs**: Four bash scripts in artifacts directory:
-
-- `install-library-libdeps-arduino-cli.sh` - Library dependencies for Arduino CLI
-- `install-example-libdeps-arduino-cli.sh` - Example dependencies for Arduino CLI
-- `install-library-libdeps-platformio.sh` - Library dependencies for PlatformIO
-- `install-example-libdeps-platformio.sh` - Example dependencies for PlatformIO
-
-**Key Functions**:
-
-- `get_package_spec()` - Convert dependency dict to PackageSpec
-- `create_arduino_cli_lib_command()` - Generate Arduino CLI install commands
-- Uses dependency loaders from matrix_utils
-
-**Dependencies**: matrix_utils, platformio (optional)
-
-### 1_configure_matrix.py
+### 0_configure_workspace.py
 
 Configures the CI workspace and prepares configuration files.
 
@@ -149,7 +118,7 @@ Configures the CI workspace and prepares configuration files.
 
 **Dependencies**: matrix_utils, requests, platformio
 
-### 2_parse_inputs.py
+### 1_parse_inputs.py
 
 Parses workflow inputs from environment variables.
 
@@ -174,6 +143,29 @@ Parses workflow inputs from environment variables.
 - `parse_inline_flags()` / `parse_compiler_flags()` - Parse flags
 
 **Dependencies**: matrix_utils
+
+### 2_generate_install_scripts.py
+
+Generates platform and library installation scripts for build jobs.
+
+**Outputs**: Six bash scripts in artifacts directory:
+
+- `install-platforms-arduino-cli.sh` - Arduino cores for requested boards
+- `install-platforms-platformio.sh` - PlatformIO platforms and tools for requested boards
+- `install-library-libdeps-arduino-cli.sh` - Library dependencies for Arduino CLI
+- `install-example-libdeps-arduino-cli.sh` - Example dependencies for Arduino CLI
+- `install-library-libdeps-platformio.sh` - Library dependencies for PlatformIO
+- `install-example-libdeps-platformio.sh` - Example dependencies for PlatformIO
+
+**Key Functions**:
+
+- `get_package_spec()` - Convert dependency dict to PackageSpec
+- `create_arduino_cli_lib_command()` - Generate Arduino CLI library install commands
+- `create_arduino_cli_core_command()` - Generate Arduino CLI core install commands
+- `create_pio_ci_core_command()` - Generate PlatformIO platform/tool install commands
+- Uses dependency loaders and board configuration from matrix_utils
+
+**Dependencies**: matrix_utils, platformio (optional)
 
 ### 3_build_matrix.py
 

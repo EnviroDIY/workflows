@@ -22,6 +22,7 @@ import sys
 import subprocess
 from pathlib import Path
 
+
 def main():
     """Run the matrix generation pipeline"""
     # Determine if we're in GitHub Actions

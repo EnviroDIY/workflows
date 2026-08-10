@@ -23,10 +23,11 @@ use_verbose = False
 def setup_verbose_mode() -> bool:
     """
     Initialize verbose mode from RUNNER_DEBUG environment variable.
-    
+
     Returns:
         bool: True if verbose mode is enabled
     """
+
     global use_verbose
     if "RUNNER_DEBUG" in os.environ.keys() and os.environ["RUNNER_DEBUG"] == "1":
         use_verbose = True
@@ -42,12 +43,13 @@ setup_verbose_mode()
 def get_workspace_path() -> str:
     """
     Get the workspace directory path.
-    
+
     Handles both GitHub Actions and local development environments.
-    
+
     Returns:
         str: Absolute path to the workspace directory
     """
+
     if "GITHUB_WORKSPACE" in os.environ.keys():
         workspace_dir = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
     else:
@@ -60,10 +62,10 @@ def get_workspace_path() -> str:
     return workspace_path
 
 
-def setup_ci_directories() -> Dict[str, str]:
+def get_ci_directories() -> Dict[str, str]:
     """
-    Setup common CI directory paths (workspace, CI, and artifacts).
-    
+    Get CI directory paths (workspace, CI, and artifacts) and create folders if they do not exist.
+
     Returns:
         dict: Dictionary with keys:
             - workspace_path: Root workspace directory
@@ -71,15 +73,20 @@ def setup_ci_directories() -> Dict[str, str]:
             - artifact_path: Artifacts output directory
             - workspace_dir: Relative workspace directory
     """
+
     workspace_path = get_workspace_path()
-    workspace_dir = os.path.dirname(workspace_path) if workspace_path != os.path.dirname(workspace_path) else os.path.dirname(workspace_path)
-    
+    workspace_dir = (
+        os.path.dirname(workspace_path)
+        if workspace_path != os.path.dirname(workspace_path)
+        else os.path.dirname(workspace_path)
+    )
+
     # Get back to the actual workspace_dir for relative paths
     if "GITHUB_WORKSPACE" in os.environ.keys():
         workspace_dir = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
     else:
         workspace_dir = os.getcwd()
-    
+
     if os.path.basename(os.path.normpath(workspace_dir)) == "continuous_integration":
         workspace_dir = os.path.dirname(workspace_dir)
 
@@ -110,10 +117,10 @@ def setup_ci_directories() -> Dict[str, str]:
     }
 
 
-def setup_full_directories() -> Dict[str, str]:
+def get_working_directories() -> Dict[str, str]:
     """
-    Setup all workspace directories including examples and extras.
-    
+    Gets all workspace directories including examples and extras.
+
     Returns:
         dict: Dictionary with keys:
             - workspace_path: Root workspace directory
@@ -123,7 +130,8 @@ def setup_full_directories() -> Dict[str, str]:
             - ci_path: Continuous integration directory
             - artifact_path: Artifacts output directory
     """
-    dirs = setup_ci_directories()
+
+    dirs = get_ci_directories()
     workspace_dir = dirs["workspace_dir"]
 
     # The examples directory
@@ -142,6 +150,8 @@ def setup_full_directories() -> Dict[str, str]:
     dirs["extras_path"] = extras_path
 
     return dirs
+
+
 # Source - https://stackoverflow.com/a/40623158
 # Posted by Tarrasch, modified by community. See post 'Timeline' for change history
 # Retrieved 2026-08-09, License - CC BY-SA 4.0
@@ -254,16 +264,17 @@ def print_verbose(msg: str) -> None:
 def load_board_to_pio_mapping(ci_path: str) -> tuple[dict[str, str], dict[str, str]]:
     """
     Load PlatformIO board-to-environment and platform mappings.
-    
+
     Returns:
         tuple: (board_to_pio_env, board_to_pio_platform) dictionaries
     """
+
     import shutil
     import requests
     from platformio.project.config import ProjectConfig
-    
+
     pio_config_file = os.path.join(ci_path, "platformio.ini")
-    
+
     # Download default platformio.ini if not present
     if not os.path.isfile(pio_config_file):
         response = requests.get(
@@ -272,38 +283,45 @@ def load_board_to_pio_mapping(ci_path: str) -> tuple[dict[str, str], dict[str, s
         with open(pio_config_file, "wb") as f:
             f.write(response.content)
         # Also copy to artifacts
-        artifact_dir = os.path.join(os.path.dirname(ci_path), "continuous_integration_artifacts")
+        artifact_dir = os.path.join(
+            os.path.dirname(ci_path), "continuous_integration_artifacts"
+        )
         if os.path.exists(artifact_dir):
-            shutil.copyfile(pio_config_file, os.path.join(artifact_dir, "platformio.ini"))
-    
+            shutil.copyfile(
+                pio_config_file, os.path.join(artifact_dir, "platformio.ini")
+            )
+
     pio_config = ProjectConfig(pio_config_file)
     board_to_pio_env = {}
     board_to_pio_platform = {}
-    
+
     for pio_env_name in pio_config.envs():
         board = pio_config.get("env:{}".format(pio_env_name), "board")
         board_to_pio_env[board] = pio_env_name
-        board_to_pio_platform[board] = pio_config.get("env:{}".format(pio_env_name), "platform")
-    
+        board_to_pio_platform[board] = pio_config.get(
+            "env:{}".format(pio_env_name), "platform"
+        )
+
     return board_to_pio_env, board_to_pio_platform
 
 
 def load_pio_to_arduino_boards_mapping(ci_path: str) -> dict:
     """
     Load mapping of PlatformIO boards to Arduino CLI FQBNs.
-    
+
     Returns:
         dict: Mapping of board names to Arduino FQBNs
     """
+
     import requests
-    
+
     response = requests.get(
         "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/platformio_to_arduino_boards.json"
     )
     conversion_file = os.path.join(ci_path, "platformio_to_arduino_boards.json")
     with open(conversion_file, "wb") as f:
         f.write(response.content)
-    
+
     with open(conversion_file) as f:
         return json.load(f)
 
@@ -311,27 +329,32 @@ def load_pio_to_arduino_boards_mapping(ci_path: str) -> dict:
 def load_arduino_cli_config(ci_path: str) -> str:
     """
     Load or download Arduino CLI configuration file.
-    
+
     Returns:
         str: Path to arduino_cli.yaml
     """
+
     import requests
     import shutil
-    
+
     arduino_cli_config = os.path.join(ci_path, "arduino_cli.yaml")
-    
+
     if not os.path.isfile(arduino_cli_config):
         response = requests.get(
             "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/arduino_cli.yaml"
         )
         with open(arduino_cli_config, "wb") as f:
             f.write(response.content)
-        
+
         # Also copy to artifacts
-        artifact_dir = os.path.join(os.path.dirname(ci_path), "continuous_integration_artifacts")
+        artifact_dir = os.path.join(
+            os.path.dirname(ci_path), "continuous_integration_artifacts"
+        )
         if os.path.exists(artifact_dir):
-            shutil.copyfile(arduino_cli_config, os.path.join(artifact_dir, "arduino_cli.yaml"))
-    
+            shutil.copyfile(
+                arduino_cli_config, os.path.join(artifact_dir, "arduino_cli.yaml")
+            )
+
     return arduino_cli_config
 
 
@@ -342,12 +365,13 @@ def load_arduino_cli_config(ci_path: str) -> str:
 def load_library_dependencies(workspace_dir: str) -> dict:
     """
     Load library dependencies from library.json.
-    
+
     Returns:
         dict: Library specification with 'dependencies' key
     """
+
     library_json_file = os.path.join(workspace_dir, "library.json")
-    
+
     if os.path.isfile(library_json_file):
         with open(library_json_file) as f:
             return json.load(f)
@@ -357,13 +381,14 @@ def load_library_dependencies(workspace_dir: str) -> dict:
 def load_example_dependencies(workspace_dir: str) -> dict:
     """
     Load example dependencies from examples/example_dependencies.json.
-    
+
     Returns:
         dict: Example specification with 'dependencies' key
     """
+
     examples_dir = os.path.join(workspace_dir, "examples")
     examples_deps_file = os.path.join(examples_dir, "example_dependencies.json")
-    
+
     if os.path.isfile(examples_deps_file):
         with open(examples_deps_file) as f:
             return json.load(f)

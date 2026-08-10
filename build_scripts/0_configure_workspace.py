@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 """
-Configure working directories and download necessary configuration files.
+Configure CI workspace and download necessary configuration files.
+
+This is the first step of the CI Build Pipeline. It sets up all necessary
+directories and downloads configuration files needed for the build process.
 
 Sets up:
 - workspace_path: The root workspace directory
@@ -13,6 +16,8 @@ Downloads (if needed):
 - Board conversion JSON (platformio_to_arduino_boards.json)
 - Arduino CLI configuration
 - PlatformIO configuration
+
+Step 0 in the CI Build Pipeline sequence.
 """
 
 import os
@@ -21,60 +26,7 @@ import requests
 import shutil
 from pathlib import Path
 from typing import Any
-from matrix_utils import print_verbose
-
-
-def setup_workspace_dirs():
-    """Configure and validate all workspace directories"""
-    # The workspace directory
-    if "GITHUB_WORKSPACE" in os.environ.keys():
-        workspace_dir = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
-    else:
-        workspace_dir = os.getcwd()
-
-    if os.path.basename(os.path.normpath(workspace_dir)) == "continuous_integration":
-        workspace_dir = os.path.dirname(workspace_dir)
-
-    workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
-    print(f"Workspace Path: {workspace_path}")
-
-    # The examples directory
-    examples_dir = "./examples/"
-    examples_path = os.path.join(workspace_dir, examples_dir)
-    examples_path = os.path.abspath(os.path.realpath(examples_path))
-    print(f"Examples Path: {examples_path}")
-
-    # The extras directory
-    extras_dir = "./extras/"
-    extras_path = os.path.join(workspace_dir, extras_dir)
-    extras_path = os.path.abspath(os.path.realpath(extras_path))
-    print(f"Extras Path: {extras_path}")
-
-    # The continuous integration directory
-    ci_dir = "./continuous_integration/"
-    ci_path = os.path.join(workspace_dir, ci_dir)
-    ci_path = os.path.abspath(os.path.realpath(ci_path))
-    print(f"Continuous Integration Path: {ci_path}")
-    if not os.path.exists(ci_path):
-        print(f"Creating the directory for CI: {ci_path}")
-        os.makedirs(ci_path, exist_ok=True)
-
-    # A directory of files to save and upload as artifacts
-    artifact_dir = os.path.join(workspace_dir, "continuous_integration_artifacts")
-    artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
-    print(f"Artifact Path: {artifact_path}")
-    if not os.path.exists(artifact_dir):
-        print(f"Creating the directory for artifacts: {artifact_path}")
-        os.makedirs(artifact_dir)
-
-    return {
-        "workspace_path": workspace_path,
-        "examples_path": examples_path,
-        "extras_path": extras_path,
-        "ci_path": ci_path,
-        "artifact_path": artifact_path,
-        "workspace_dir": workspace_dir,
-    }
+from matrix_utils import print_verbose, get_working_directories
 
 
 def download_board_conversion_file(ci_path: str, artifact_path: str):
@@ -166,7 +118,11 @@ def setup_platformio_config(ci_path: str, artifact_path: str):
 
 
 if __name__ == "__main__":
-    dirs = setup_workspace_dirs()
+    print("=" * 60)
+    print("CI Build Pipeline: Step 0 - Configure Matrix Workspace")
+    print("=" * 60)
+
+    dirs = get_working_directories()
 
     # Save directory config to JSON for use by other scripts
     config: dict[str, Any] = {
@@ -205,6 +161,7 @@ if __name__ == "__main__":
     with open(config_file, "w") as f:
         json.dump(config, f, indent=2)
 
-    print(f"\nConfiguration saved to: {config_file}")
+    print(f"\n✓ Configuration saved to: {config_file}")
+    print("✓ Workspace setup complete")
 
 # CSpell:ignore pio_to_acli_file
