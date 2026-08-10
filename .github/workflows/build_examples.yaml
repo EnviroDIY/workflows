@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       boards_to_build:
-        description: "A comma-separated list of PlatformIO board names to build"
+        description: "A comma-separated list of PlatformIO board names to build (leave empty to build all)"
         default: ""
         required: false
         type: string
@@ -14,13 +14,33 @@ on:
         required: false
         type: string
       examples_to_build:
-        description: "A comma-separated list of examples to build"
+        description: "A comma-separated list of examples to build (leave empty to build all)"
         default: ""
         required: false
         type: string
       examples_to_ignore:
         description: "A comma-separated list of examples to ignore. Mutually exclusive with examples_to_build"
         default: ""
+        required: false
+        type: string
+      inline_flags:
+        description: "A comma-separated list of inline compiler flags (e.g., -DFLAG=value,-DOTHER_FLAG). These are expanded as part of the matrix"
+        default: ""
+        required: false
+        type: string
+      compiler_flags:
+        description: "A comma-separated list of compiler flags to pass to the build system"
+        default: ""
+        required: false
+        type: string
+      acli_skip_boards:
+        description: "A comma-separated list of board names to skip when building with Arduino CLI"
+        default: "uno_pic32,genuino101"
+        required: false
+        type: string
+      pio_skip_boards:
+        description: "A comma-separated list of board names to skip when building with PlatformIO"
+        default: "esp32-c6-devkitm-1,arduino_nano_esp32"
         required: false
         type: string
 
@@ -37,6 +57,10 @@ jobs:
       BOARDS_TO_IGNORE: ${{ inputs.boards_to_ignore }}
       EXAMPLES_TO_BUILD: ${{ inputs.examples_to_build }}
       EXAMPLES_TO_IGNORE: ${{ inputs.examples_to_ignore }}
+      INLINE_FLAGS: ${{ inputs.inline_flags }}
+      COMPILER_FLAGS: ${{ inputs.compiler_flags }}
+      ACLI_SKIP_BOARDS: ${{ inputs.acli_skip_boards }}
+      PIO_SKIP_BOARDS: ${{ inputs.pio_skip_boards }}
 
     steps:
       - name: Checkout code

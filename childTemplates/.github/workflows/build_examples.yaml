@@ -13,5 +13,25 @@ jobs:
     if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
     uses: EnviroDIY/workflows/.github/workflows/build_examples.yaml@main
     with:
+      # Specify which boards to build (leave empty to build all)
       boards_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
+      # Alternatively, ignore specific boards
+      # boards_to_ignore: "board_name_to_skip"
+      
+      # Specify which examples to build (leave empty to build all)
+      # examples_to_build: "example1,example2"
+      # Alternatively, ignore specific examples
+      # examples_to_ignore: "example_to_skip"
+      
+      # Add inline compiler flags to expand the matrix (e.g., different build configurations)
+      # inline_flags: "-DFLAG1=value1,-DFLAG2=value2"
+      
+      # Add compiler flags that are passed to every build
+      # compiler_flags: "-Wall,-Wextra"
+      
+      # Specify boards to skip for Arduino CLI compilation
+      # acli_skip_boards: "uno_pic32,genuino101"
+      
+      # Specify boards to skip for PlatformIO compilation
+      # pio_skip_boards: "esp32-c6-devkitm-1,arduino_nano_esp32"
     secrets: inherit
