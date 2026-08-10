@@ -48,9 +48,10 @@ jobs:
       - name: Generate Platform Installation Script
         id: py_platforms
         run: |
-          echo "Generating script to install Platforms"
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_platform_installation_script.py -o generate_platform_installation_script.py
-          python -u generate_platform_installation_script.py
+          echo "Generating CI platform configurations"
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_setup_ci_platforms.py -o 0_setup_ci_platforms.py
+          python -u 0_setup_ci_platforms.py
 
       - name: Generate Library Installation Script
         id: py_libraries
@@ -61,21 +62,46 @@ jobs:
               set -v
               set -x
           fi
-          echo "Generating dependency library installation scripts"
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_library_installation_script.py -o generate_library_installation_script.py
-          python -u generate_library_installation_script.py
+          echo "Generating library and platform installation scripts"
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_generate_install_scripts.py -o 0_generate_install_scripts.py
+          python -u 0_generate_install_scripts.py
 
       - name: Generate Example Build Matrices
         id: py_matrix
         run: |
+          set -e
+          if [ "$RUNNER_DEBUG" = "1" ]; then
+              echo "Enabling debugging!"
+              set -v
+              set -x
+          fi
+
+          # Check if using custom generator
           if [ -e continuous_integration/generate_job_matrix.py ]
           then
-            echo "Generating job matrix from library specific generator code"
+            echo "Generating job matrix from library-specific CI pipeline code"
+            echo "Note: Custom generators should also provide a build_job_matrix.py in continuous_integration/"
             python -u continuous_integration/generate_job_matrix.py
           else
-            echo "Generating job matrix from standard workflow"
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/generate_job_matrix.py -o generate_job_matrix.py
-            python -u generate_job_matrix.py
+            echo "Generating job matrix from standard modular CI Build Pipeline"
+
+            # Download CI Build Pipeline utilities and scripts
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/1_configure_matrix.py -o 1_configure_matrix.py
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/2_parse_inputs.py -o 2_parse_inputs.py
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/3_build_matrix.py -o 3_build_matrix.py
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/4_build_jobs.py -o 4_build_jobs.py
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/5_output_results.py -o 5_output_results.py
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/6_cleanup.py -o 6_cleanup.py
+
+            # Run the CI Build Pipeline
+            python -u 1_configure_matrix.py
+            python -u 2_parse_inputs.py
+            python -u 3_build_matrix.py
+            python -u 4_build_jobs.py
+            python -u 5_output_results.py
+            # 6_cleanup.py is skipped in GitHub Actions
           fi
 
       - name: Store generated examples
@@ -150,5 +176,7 @@ jobs:
               set -v
               set -x
           fi
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/parse_test_results.py -o parse_test_results.py
+          echo "Parsing CI build results and generating reports"
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/parse_test_results.py -o parse_test_results.py
           python parse_test_results.py

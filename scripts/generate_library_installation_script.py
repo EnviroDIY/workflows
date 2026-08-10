@@ -1,5 +1,16 @@
 #!/usr/bin/env python
-# %%
+"""
+DEPRECATED: This script is maintained for backward compatibility.
+
+Use 0_generate_install_scripts.py instead, which is part of the CI Build Pipeline.
+
+Generate library and platform installation scripts for CI build jobs.
+Creates bash scripts for installing dependencies using both Arduino CLI
+and PlatformIO from library.json and example_dependencies.json.
+
+See CI_BUILD_PIPELINE.md for documentation on the modular CI Build Pipeline.
+"""
+
 import os
 import sys
 from typing import List, Union

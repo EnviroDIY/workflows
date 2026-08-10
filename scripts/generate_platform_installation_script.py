@@ -1,5 +1,16 @@
 #!/usr/bin/env python
-# %%
+"""
+DEPRECATED: This script is maintained for backward compatibility.
+
+Use 0_setup_ci_platforms.py instead, which is part of the CI Build Pipeline.
+
+Generate platform installation scripts and validate board configurations.
+This script downloads board mappings and validates that requested boards
+have valid configurations in both Arduino CLI and PlatformIO.
+
+See CI_BUILD_PIPELINE.md for documentation on the modular CI Build Pipeline.
+"""
+
 import os
 from collections import OrderedDict
 from typing import List

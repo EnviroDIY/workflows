@@ -65,7 +65,7 @@ jobs:
         run: |
           if [ ! -e ./continuous_integration/arduino_cli.yaml ]
           then
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
+            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/arduino_cli.yaml -o continuous_integration/arduino_cli.yaml
           fi
 
       - &restore_cores
@@ -188,7 +188,7 @@ jobs:
       - name: Install the testing version of the library for the Arduino CLI
         id: install_test_library
         run: |
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/scripts/install-test-version-arduino-cli.sh -o install-test-version-arduino-cli.sh
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/install-test-version-arduino-cli.sh -o install-test-version-arduino-cli.sh
           chmod +x install-test-version-arduino-cli.sh
           sh install-test-version-arduino-cli.sh
 

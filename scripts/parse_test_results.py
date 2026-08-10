@@ -6,34 +6,15 @@ import re
 import json
 
 import pandas as pd
+from matrix_utils import setup_ci_directories, print_verbose
 
 # %%
-# The workspace directory
-workspace_dir = os.getcwd()
-if "\\continuous_integration" in workspace_dir:
-    workspace_dir = workspace_dir.replace("\\continuous_integration", "")
-
-workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
-print(f"Workspace Path: {workspace_path}")
-
-
-# %%
-# The continuous integration directory
-ci_dir = "./continuous_integration/"
-ci_path = os.path.join(workspace_dir, ci_dir)
-ci_path = os.path.abspath(os.path.realpath(ci_path))
-print(f"Continuous Integration Path: {ci_path}")
-if not os.path.exists(ci_path):
-    print(f"Creating the directory for CI: {ci_path}")
-    os.makedirs(ci_path, exist_ok=True)
-
-
-# %%
-# A directory of files to save and upload as artifacts to use in future jobs
-artifact_dir = os.path.join(
-    os.path.join(workspace_dir, "continuous_integration_artifacts")
-)
-artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
+# Setup working directories and verbose mode
+dirs = setup_ci_directories()
+workspace_dir = dirs["workspace_dir"]
+workspace_path = dirs["workspace_path"]
+ci_path = dirs["ci_path"]
+artifact_path = dirs["artifact_path"]
 
 
 # %%
@@ -217,4 +198,4 @@ if "GITHUB_WORKSPACE" in os.environ.keys():
 
 
 # %%
-# cSpell:words devkitm acli genuino bluepill fqbn fqbns pipestatus jsons endgroup DTINY_GSM_RX_BUFFER Wextra
+# cSpell:ignore tablefmt
