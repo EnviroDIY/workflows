@@ -11,7 +11,6 @@ from matrix_utils import get_ci_directories, print_verbose
 # %%
 # Setup working directories and verbose mode
 dirs = get_ci_directories()
-workspace_dir = dirs["workspace_dir"]
 workspace_path = dirs["workspace_path"]
 ci_path = dirs["ci_path"]
 artifact_path = dirs["artifact_path"]

@@ -33,9 +33,11 @@ if __name__ == "__main__":
                 print(f"Warning: Could not load config file: {e}")
 
         if os.path.exists(ci_path):
-            # always remove the platformio_to_arduino_boards.json file
+            # always remove the platformio_to_arduino_boards.json and
+            # platformio_platform_tools.json files
             files_to_remove = [
                 os.path.join(ci_path, "platformio_to_arduino_boards.json"),
+                os.path.join(ci_path, "platformio_platform_tools.json"),
             ]
 
             # Only remove arduino_cli.yaml if it was downloaded

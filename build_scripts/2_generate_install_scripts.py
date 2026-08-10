@@ -22,14 +22,7 @@ from matrix_utils import (
     load_example_dependencies,
 )
 
-try:
-    from platformio.package.meta import PackageSpec
-except ImportError:
-    print(
-        "::warning::PlatformIO not installed, skipping PlatformIO dependency generation"
-    )
-    PackageSpec = None
-
+from platformio.package.meta import PackageSpec
 
 # Configuration
 # Boards to always skip on each platform
@@ -144,8 +137,6 @@ mv home/arduino/downloads/SoftwareSerial_ExtInts-master/* home/arduino/user/libr
 
 def get_package_spec(dependency: dict):
     """Convert dependency dict to PackageSpec"""
-    if PackageSpec is None:
-        return None
 
     spec = PackageSpec(
         id=dependency.get("id"),
@@ -222,6 +213,33 @@ def create_arduino_cli_lib_command(library: dict, include_version: bool = True) 
         return " ".join(arduino_command_args)
 
 
+def create_pio_ci_lib_command(
+    library: str | dict | PackageSpec,
+    update: bool = True,
+    include_version: bool = True,
+) -> str:
+    pio_command_args = [
+        "pio",
+        "pkg",
+        "update" if update else "install",
+        "--skip-dependencies",
+        "-g",
+        "--library",
+    ]
+    if isinstance(library, PackageSpec):
+        # NOTE: if we get a PackageSpec, we always include the version, since it's part of the spec
+        pio_command_args.append(f'"{library.as_dependency()}"')
+    elif isinstance(library, dict):
+        pio_command_args.append(
+            f'"{convert_dep_dict_to_str(library, include_version)}"'
+        )
+    elif isinstance(library, str):
+        # NOTE if we get a string, we don't try to guess if the version is included, we just use it as is
+        pio_command_args.append(f'"{library}"')
+
+    return " ".join(pio_command_args)
+
+
 def create_arduino_cli_core_command(core_name: str, arduino_cli_config: str) -> str:
     """Generate Arduino CLI core installation command"""
     arduino_command_args = [
@@ -273,31 +291,26 @@ if __name__ == "__main__":
     dirs = get_working_directories()
     ci_path = dirs["ci_path"]
     artifact_path = dirs["artifact_path"]
-    workspace_dir = dirs["workspace_dir"]
+    workspace_path = dirs["workspace_path"]
 
+    # %%
     # Load configuration from previous step
     config_file = os.path.join(artifact_path, "matrix_config.json")
+    print(f"\nLoading configurations from {config_file}...")
     with open(config_file, "r") as f:
         config = json.load(f)
 
     # Load platform configurations from config
-    print("\nLoading platform configurations...")
     pio_to_acli = config.get("pio_to_acli", {})
     board_to_pio_env = config.get("board_to_pio_env", {})
     board_to_pio_platform = config.get("board_to_pio_platform", {})
     arduino_cli_config = os.path.join(ci_path, "arduino_cli.yaml")
-
-    # Try to load platform tools configuration
-    platform_tools_file = os.path.join(ci_path, "platformio_platform_tools.json")
-    platformio_platform_tools = {}
-    if os.path.exists(platform_tools_file):
-        with open(platform_tools_file, "r") as f:
-            platformio_platform_tools = json.load(f)
+    platformio_platform_tools = config.get("pio_tools", {})
 
     # Load dependencies
     print("Loading dependencies...")
-    library_specs = load_library_dependencies(workspace_dir)
-    example_specs = load_example_dependencies(workspace_dir)
+    library_specs = load_library_dependencies(workspace_path)
+    example_specs = load_example_dependencies(workspace_path)
 
     # Ensure dependencies key exists
     if "dependencies" not in library_specs:
@@ -480,50 +493,43 @@ Please check the spelling of your board name or add an entry to your platformio.
         print(f"✓ Generated {bash_file_name}")
 
         # Generate PlatformIO scripts (if available)
-        if PackageSpec is not None:
-            print("\nGenerating PlatformIO installation scripts...")
+        print("\nGenerating PlatformIO installation scripts...")
 
-            # Library dependencies for PlatformIO
-            bash_file_name = "install-library-libdeps-platformio.sh"
-            with open(os.path.join(artifact_path, bash_file_name), "w") as f:
-                f.write("#!/bin/bash\n\n")
-                f.write(DEBUG_TEXT)
-                f.write(PIO_LIBRARY_START_TEXT)
-                for library in library_specs["dependencies"]:
-                    spec = get_package_spec(library)
-                    if spec:
-                        install_str = convert_dep_dict_to_str(library)
-                        install_command = (
-                            f"pio pkg install --skip-dependencies -g '{install_str}'"
-                        )
-                        command_with_log = add_log_to_command(
-                            install_command, f"Installing {library['name']}"
-                        )
-                        f.write("\n".join(command_with_log))
-                        f.write("\n")
-                f.write(PIO_LIBRARY_END_TEXT)
-            print(f"✓ Generated {bash_file_name}")
+        # Library dependencies for PlatformIO
+        bash_file_name = "install-library-libdeps-platformio.sh"
+        with open(os.path.join(artifact_path, bash_file_name), "w") as f:
+            f.write("#!/bin/bash\n\n")
+            f.write(DEBUG_TEXT)
+            f.write(PIO_LIBRARY_START_TEXT)
+            for library in library_specs["dependencies"]:
+                # spec = get_package_spec(library)
+                # if spec:
+                install_command = create_pio_ci_lib_command(library)
+                command_with_log = add_log_to_command(
+                    install_command, f"Installing {library['name']}"
+                )
+                f.write("\n".join(command_with_log))
+                f.write("\n")
+            f.write(PIO_LIBRARY_END_TEXT)
+        print(f"✓ Generated {bash_file_name}")
 
-            # Example dependencies for PlatformIO
-            bash_file_name = "install-example-libdeps-platformio.sh"
-            with open(os.path.join(artifact_path, bash_file_name), "w") as f:
-                f.write("#!/bin/bash\n\n")
-                f.write(DEBUG_TEXT)
-                f.write(PIO_LIBRARY_START_TEXT)
-                for library in example_specs["dependencies"]:
-                    spec = get_package_spec(library)
-                    if spec:
-                        install_str = convert_dep_dict_to_str(library)
-                        install_command = (
-                            f"pio pkg install --skip-dependencies -g '{install_str}'"
-                        )
-                        command_with_log = add_log_to_command(
-                            install_command, f"Installing {library['name']}"
-                        )
-                        f.write("\n".join(command_with_log))
-                        f.write("\n")
-                f.write(PIO_LIBRARY_END_TEXT)
-            print(f"✓ Generated {bash_file_name}")
+        # Example dependencies for PlatformIO
+        bash_file_name = "install-example-libdeps-platformio.sh"
+        with open(os.path.join(artifact_path, bash_file_name), "w") as f:
+            f.write("#!/bin/bash\n\n")
+            f.write(DEBUG_TEXT)
+            f.write(PIO_LIBRARY_START_TEXT)
+            for library in example_specs["dependencies"]:
+                # spec = get_package_spec(library)
+                # if spec:
+                install_command = create_pio_ci_lib_command(library)
+                command_with_log = add_log_to_command(
+                    install_command, f"Installing {library['name']}"
+                )
+                f.write("\n".join(command_with_log))
+                f.write("\n")
+            f.write(PIO_LIBRARY_END_TEXT)
+        print(f"✓ Generated {bash_file_name}")
 
     print("\n✓ Installation scripts generated successfully")
     print("✓ Ready for job matrix building and compilation")

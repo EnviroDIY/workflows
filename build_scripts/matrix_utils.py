@@ -71,30 +71,18 @@ def get_ci_directories() -> Dict[str, str]:
             - workspace_path: Root workspace directory
             - ci_path: Continuous integration directory
             - artifact_path: Artifacts output directory
-            - workspace_dir: Relative workspace directory
     """
 
     workspace_path = get_workspace_path()
-    workspace_dir = (
-        os.path.dirname(workspace_path)
-        if workspace_path != os.path.dirname(workspace_path)
-        else os.path.dirname(workspace_path)
-    )
 
-    # Get back to the actual workspace_dir for relative paths
-    if "GITHUB_WORKSPACE" in os.environ.keys():
-        workspace_dir = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
-    else:
-        workspace_dir = os.getcwd()
-
-    if os.path.basename(os.path.normpath(workspace_dir)) == "continuous_integration":
-        workspace_dir = os.path.dirname(workspace_dir)
+    if os.path.basename(os.path.normpath(workspace_path)) == "continuous_integration":
+        workspace_path = os.path.dirname(workspace_path)
 
     print(f"Workspace Path: {workspace_path}")
 
     # The continuous integration directory
     ci_dir = "./continuous_integration/"
-    ci_path = os.path.join(workspace_dir, ci_dir)
+    ci_path = os.path.join(workspace_path, ci_dir)
     ci_path = os.path.abspath(os.path.realpath(ci_path))
     print(f"Continuous Integration Path: {ci_path}")
     if not os.path.exists(ci_path):
@@ -102,7 +90,7 @@ def get_ci_directories() -> Dict[str, str]:
         os.makedirs(ci_path, exist_ok=True)
 
     # Artifacts directory
-    artifact_dir = os.path.join(workspace_dir, "continuous_integration_artifacts")
+    artifact_dir = os.path.join(workspace_path, "continuous_integration_artifacts")
     artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
     print(f"Artifact Path: {artifact_path}")
     if not os.path.exists(artifact_path):
@@ -113,7 +101,6 @@ def get_ci_directories() -> Dict[str, str]:
         "workspace_path": workspace_path,
         "ci_path": ci_path,
         "artifact_path": artifact_path,
-        "workspace_dir": workspace_dir,
     }
 
 
@@ -124,7 +111,6 @@ def get_working_directories() -> Dict[str, str]:
     Returns:
         dict: Dictionary with keys:
             - workspace_path: Root workspace directory
-            - workspace_dir: Relative workspace directory
             - examples_path: Examples directory
             - extras_path: Extras directory
             - ci_path: Continuous integration directory
@@ -132,17 +118,17 @@ def get_working_directories() -> Dict[str, str]:
     """
 
     dirs = get_ci_directories()
-    workspace_dir = dirs["workspace_dir"]
+    workspace_path = dirs["workspace_path"]
 
     # The examples directory
     examples_dir = "./examples/"
-    examples_path = os.path.join(workspace_dir, examples_dir)
+    examples_path = os.path.join(workspace_path, examples_dir)
     examples_path = os.path.abspath(os.path.realpath(examples_path))
     print(f"Examples Path: {examples_path}")
 
     # The extras directory
     extras_dir = "./extras/"
-    extras_path = os.path.join(workspace_dir, extras_dir)
+    extras_path = os.path.join(workspace_path, extras_dir)
     extras_path = os.path.abspath(os.path.realpath(extras_path))
     print(f"Extras Path: {extras_path}")
 
@@ -265,7 +251,7 @@ def print_verbose(msg: str) -> None:
 # Dependency loading and parsing utilities
 
 
-def load_library_dependencies(workspace_dir: str) -> dict:
+def load_library_dependencies(workspace_path: str) -> dict:
     """
     Load library dependencies from library.json.
 
@@ -273,7 +259,7 @@ def load_library_dependencies(workspace_dir: str) -> dict:
         dict: Library specification with 'dependencies' key
     """
 
-    library_json_file = os.path.join(workspace_dir, "library.json")
+    library_json_file = os.path.join(workspace_path, "library.json")
 
     if os.path.isfile(library_json_file):
         with open(library_json_file) as f:
@@ -281,7 +267,7 @@ def load_library_dependencies(workspace_dir: str) -> dict:
     return {"dependencies": []}
 
 
-def load_example_dependencies(workspace_dir: str) -> dict:
+def load_example_dependencies(workspace_path: str) -> dict:
     """
     Load example dependencies from examples/example_dependencies.json.
 
@@ -289,7 +275,7 @@ def load_example_dependencies(workspace_dir: str) -> dict:
         dict: Example specification with 'dependencies' key
     """
 
-    examples_dir = os.path.join(workspace_dir, "examples")
+    examples_dir = os.path.join(workspace_path, "examples")
     examples_deps_file = os.path.join(examples_dir, "example_dependencies.json")
 
     if os.path.isfile(examples_deps_file):

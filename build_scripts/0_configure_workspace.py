@@ -27,6 +27,7 @@ import shutil
 from typing import Any
 from matrix_utils import get_working_directories
 
+
 def load_pio_to_arduino_mapping(ci_path: str, artifact_path: str):
     """Download the platformio_to_arduino_boards.json file"""
     print("Downloading board conversion file...")
@@ -149,6 +150,28 @@ def load_platformio_config(ci_path: str, artifact_path: str):
     )
 
 
+def load_pio_tools(ci_path: str, artifact_path: str):
+    """Download the platformio_platform_tools.json file"""
+    print("Downloading tools file...")
+    response = requests.get(
+        "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/platformio_platform_tools.json"
+    )
+    pio_tools_file = os.path.join(ci_path, "platformio_platform_tools.json")
+    print("Saving tools file to: {}".format(pio_tools_file))
+    with open(pio_tools_file, "wb") as f:
+        f.write(response.content)
+    # Also copy to artifacts for debugging
+    shutil.copyfile(
+        pio_tools_file,
+        os.path.join(artifact_path, "platformio_platform_tools.json"),
+    )
+
+    with open(pio_tools_file) as f:
+        pio_tools = json.load(f)
+
+    return pio_tools_file, pio_tools
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("CI Build Pipeline: Step 0 - Configure Matrix Workspace")
@@ -171,6 +194,10 @@ if __name__ == "__main__":
     )
     config["pio_to_acli_file"] = pio_to_acli_file
     config["pio_to_acli"] = pio_to_acli
+
+    pio_tools_file, pio_tools = load_pio_tools(dirs["ci_path"], dirs["artifact_path"])
+    config["pio_tools_file"] = pio_tools_file
+    config["pio_tools"] = pio_tools
 
     # Setup Arduino CLI config
     arduino_cli_config, downloaded_arduino_cli_config = load_arduino_cli_config(
