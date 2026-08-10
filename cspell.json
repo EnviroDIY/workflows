@@ -9,6 +9,7 @@
     "bluepill",
     "deepcopy",
     "devkitm",
+    "DFLAG",
     "docbuild",
     "Doxyfile",
     "doxymcss",
@@ -38,7 +39,8 @@
     "stylesheet",
     "svgs",
     "Tarrasch",
-    "texlive"
+    "texlive",
+    "Wextra"
   ],
   "ignoreWords": [],
   "import": []

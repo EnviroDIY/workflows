@@ -5,8 +5,8 @@ home/
 archive/
 scripts/arduino_cli.log
 .github/workflows/sync.ffs_db
-arduino_cli_logs/arduino_cli.log
-scripts/arduino_cli_local.yaml
-scripts/generate_local_tests.py
-scripts/get_open_flag_fields.py
+**/arduino_cli.log
+build_scripts/arduino_cli_local.yaml
+build_scripts/generate_local_tests.py
+build_scripts/get_open_flag_fields.py
 doxygen_scripts/SaxonHE12-10J/*
