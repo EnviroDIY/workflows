@@ -214,9 +214,10 @@ def create_command_list_from_matrix(
             board if board in pio_to_acli else config["pio_env_to_board"].get(board)
         )
         if acli_board not in pio_to_acli or board in acli_skip_boards:
-            print(
-                f"Skipping {example} for {board} because no matching Arduino FQBN was found."
-            )
+            if use_verbose:
+                print(
+                    f"Skipping {example} for {board} because no matching Arduino FQBN was found."
+                )
             return None
         fqbn = pio_to_acli[acli_board]["fqbn"]
         build_command = create_arduino_cli_compile_command(
@@ -231,9 +232,10 @@ def create_command_list_from_matrix(
         pio_skip_boards = config["pio_skip_boards"]
 
         if board in pio_skip_boards:
-            print(
-                f"Skipping {example} for {board} because it is in the list of boards to skip for PlatformIO."
-            )
+            if use_verbose:
+                print(
+                    f"Skipping {example} for {board} because it is in the list of boards to skip for PlatformIO."
+                )
             return None
 
         pio_board_or_env = board
@@ -302,10 +304,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # Use log_grouping_fields from config, or default to all keys
-    if (
-        "log_grouping_fields" in config
-        and len(config["log_grouping_fields"]) > 0
-    ):
+    if "log_grouping_fields" in config and len(config["log_grouping_fields"]) > 0:
         log_groupers = config["log_grouping_fields"]
         print(f"Using log grouping fields from config: {log_groupers}")
     else:
@@ -353,10 +352,7 @@ if __name__ == "__main__":
 
     # Group into jobs
     # Use job_grouping_fields from config, or default to ["compiler", "board"]
-    if (
-        "job_grouping_fields" in config
-        and len(config["job_grouping_fields"]) > 0
-    ):
+    if "job_grouping_fields" in config and len(config["job_grouping_fields"]) > 0:
         job_groupers = config["job_grouping_fields"]
         print(f"Using job grouping fields from config: {job_groupers}")
     else:
@@ -402,7 +398,8 @@ if __name__ == "__main__":
     for job_tag, matrix_job in grouped_job_matrix.items():
         bash_file_name = job_tag + ".sh"
         bash_file_path = os.path.join(artifact_path, bash_file_name)
-        print(f"Writing bash script to {bash_file_path}")
+        if use_verbose:
+            print(f"Writing bash script to {bash_file_path}")
 
         with open(bash_file_path, "w") as bash_out:
             bash_out.write("#!/bin/bash\n\n")

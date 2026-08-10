@@ -96,32 +96,26 @@ def download_board_conversion_file(ci_path: str, artifact_path: str):
 
 def setup_arduino_cli_config(ci_path: str, artifact_path: str):
     """Setup Arduino CLI configuration file"""
-    arduino_cli_config = None
-    downloaded_arduino_cli_config = False
 
-    if "GITHUB_WORKSPACE" in os.environ.keys():
-        arduino_cli_config = os.path.join(ci_path, "arduino_cli.yaml")
-        arduino_cli_format = "json"
-        if not os.path.isfile(arduino_cli_config):
-            downloaded_arduino_cli_config = True
-            print("Downloading default Arduino CLI configuration...")
-            # download the default file
-            response = requests.get(
-                "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/arduino_cli.yaml"
-            )
-            # copy to the CI directory
-            with open(os.path.join(ci_path, "arduino_cli.yaml"), "wb") as f:
-                f.write(response.content)
-            # also copy to the artifacts directory
-            shutil.copyfile(
-                os.path.join(ci_path, "arduino_cli.yaml"),
-                os.path.join(artifact_path, "arduino_cli.yaml"),
-            )
-    else:
-        arduino_cli_config = os.path.abspath(
-            os.path.join(ci_path, "arduino_cli_local.yaml")
+    downloaded_arduino_cli_config = False
+    arduino_cli_config = os.path.join(ci_path, "arduino_cli.yaml")
+    arduino_cli_format = "json"
+
+    if not os.path.isfile(arduino_cli_config):
+        downloaded_arduino_cli_config = True
+        print("Downloading default Arduino CLI configuration...")
+        # download the default file
+        response = requests.get(
+            "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/arduino_cli.yaml"
         )
-        arduino_cli_format = "json"
+        # copy to the CI directory
+        with open(os.path.join(ci_path, "arduino_cli.yaml"), "wb") as f:
+            f.write(response.content)
+        # also copy to the artifacts directory
+        shutil.copyfile(
+            os.path.join(ci_path, "arduino_cli.yaml"),
+            os.path.join(artifact_path, "arduino_cli.yaml"),
+        )
 
     return arduino_cli_config, arduino_cli_format, downloaded_arduino_cli_config
 
