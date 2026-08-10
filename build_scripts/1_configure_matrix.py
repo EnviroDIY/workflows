@@ -130,10 +130,10 @@ def setup_platformio_config(ci_path: str, artifact_path: str):
     """Setup PlatformIO configuration file"""
     from platformio.project.config import ProjectConfig
 
-    default_pio_config_file = False
+    downloaded_pio_config = False
     pio_config_file = os.path.join(ci_path, "platformio.ini")
     if not os.path.isfile(pio_config_file):
-        default_pio_config_file = True
+        downloaded_pio_config = True
         print("Downloading default PlatformIO configuration...")
         # download the default file
         response = requests.get(
@@ -168,7 +168,7 @@ def setup_platformio_config(ci_path: str, artifact_path: str):
             "env:{}".format(pio_env_name), "board"
         )
 
-    return pio_config_file, default_pio_config_file, board_to_pio_env, pio_env_to_board
+    return pio_config_file, downloaded_pio_config, board_to_pio_env, pio_env_to_board
 
 
 if __name__ == "__main__":
@@ -198,11 +198,11 @@ if __name__ == "__main__":
     config["downloaded_arduino_cli_config"] = downloaded_arduino_cli_config
 
     # Setup PlatformIO config
-    pio_config_file, default_pio_config_file, board_to_pio_env, pio_env_to_board = (
+    pio_config_file, downloaded_pio_config, board_to_pio_env, pio_env_to_board = (
         setup_platformio_config(dirs["ci_path"], dirs["artifact_path"])
     )
     config["pio_config_file"] = pio_config_file
-    config["default_pio_config_file"] = default_pio_config_file
+    config["downloaded_pio_config"] = downloaded_pio_config
     config["board_to_pio_env"] = board_to_pio_env
     config["pio_env_to_board"] = pio_env_to_board
 

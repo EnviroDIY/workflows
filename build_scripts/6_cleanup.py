@@ -5,10 +5,11 @@ Clean up generated files when running locally (not in GitHub Actions).
 Removes:
 - Continuous integration directory
 - Generated artifacts
-- Downloaded config files
+- Downloaded config files (conditionally based on configuration flags)
 """
 
 import os
+import json
 import shutil
 
 if __name__ == "__main__":
@@ -20,6 +21,16 @@ if __name__ == "__main__":
         ci_path = os.environ.get("CI_PATH", "continuous_integration")
 
         print("Running locally - cleaning up generated files...")
+
+        # Load configuration to check which files were downloaded
+        config = {}
+        config_file = os.path.join(artifact_path, "matrix_config.json")
+        if os.path.isfile(config_file):
+            try:
+                with open(config_file, "r") as f:
+                    config = json.load(f)
+            except Exception as e:
+                print(f"Warning: Could not load config file: {e}")
 
         # Remove artifact directory
         if os.path.exists(artifact_path):
@@ -33,9 +44,15 @@ if __name__ == "__main__":
         if os.path.exists(ci_path):
             files_to_remove = [
                 os.path.join(ci_path, "platformio_to_arduino_boards.json"),
-                os.path.join(ci_path, "arduino_cli.yaml"),
-                os.path.join(ci_path, "platformio.ini"),
             ]
+
+            # Only remove arduino_cli.yaml if it was downloaded
+            if config.get("downloaded_arduino_cli_config", False):
+                files_to_remove.append(os.path.join(ci_path, "arduino_cli.yaml"))
+
+            # Only remove platformio.ini if it was downloaded
+            if config.get("downloaded_pio_config", False):
+                files_to_remove.append(os.path.join(ci_path, "platformio.ini"))
 
             for file_path in files_to_remove:
                 if os.path.exists(file_path):
