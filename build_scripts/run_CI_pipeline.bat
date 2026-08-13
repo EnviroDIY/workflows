@@ -1,7 +1,7 @@
 @echo off
 REM Windows batch script for running the CI Build Pipeline locally
 
-call conda activate pio_ci_test
+call conda activate arduino_pio
 
 setlocal enabledelayedexpansion
 
@@ -48,24 +48,16 @@ echo ============================================
 echo.
 
 echo.
-echo Running 0_configure_workspace.py...
-python -u "%SCRIPT_DIR%\0_configure_workspace.py"
+echo Running 1_configure_workspace.py...
+python -u "%SCRIPT_DIR%\1_configure_workspace.py" %*
 if errorlevel 1 (
-    echo Error: 0_configure_workspace.py failed with exit code !errorlevel!
-    goto :error
-)
-
-echo.
-echo Running 1_parse_inputs.py...
-python -u "%SCRIPT_DIR%\1_parse_inputs.py"
-if errorlevel 1 (
-    echo Error: 1_parse_inputs.py failed with exit code !errorlevel!
+    echo Error: 1_configure_workspace.py failed with exit code !errorlevel!
     goto :error
 )
 
 echo.
 echo Running 2_generate_install_scripts.py...
-python -u "%SCRIPT_DIR%\2_generate_install_scripts.py"
+python -u "%SCRIPT_DIR%\2_generate_install_scripts.py" %*
 if errorlevel 1 (
     echo Error: 2_generate_install_scripts.py failed with exit code !errorlevel!
     goto :error
@@ -73,7 +65,7 @@ if errorlevel 1 (
 
 echo.
 echo Running 3_build_matrix.py...
-python -u "%SCRIPT_DIR%\3_build_matrix.py"
+python -u "%SCRIPT_DIR%\3_build_matrix.py" %*
 if errorlevel 1 (
     echo Error: 3_build_matrix.py failed with exit code !errorlevel!
     goto :error
@@ -81,32 +73,19 @@ if errorlevel 1 (
 
 echo.
 echo Running 4_build_jobs.py...
-python -u "%SCRIPT_DIR%\4_build_jobs.py"
+python -u "%SCRIPT_DIR%\4_build_jobs.py" %*
 if errorlevel 1 (
     echo Error: 4_build_jobs.py failed with exit code !errorlevel!
     goto :error
 )
 
-echo.
-echo Running 5_output_results.py...
-python -u "%SCRIPT_DIR%\5_output_results.py"
-if errorlevel 1 (
-    echo Error: 5_output_results.py failed with exit code !errorlevel!
-    goto :error
-)
-
 REM Step 4: Run cleanup (only runs locally, not in GitHub Actions, and only if --cleanup argument is provided)
-if "%~1"=="--cleanup" (
-    echo.
-    echo [Step 4] Running cleanup script...
-    python -u "%SCRIPT_DIR%\6_cleanup.py"
-    if errorlevel 1 (
-        echo Warning: 6_cleanup.py failed with exit code !errorlevel!
-        REM Don't exit on cleanup failure
-    )
-) else (
-    echo.
-    echo [Step 4] Skipping cleanup script (use --cleanup argument to enable)
+echo.
+echo [Step 4] Running cleanup script...
+python -u "%SCRIPT_DIR%\5_cleanup.py" %*
+if errorlevel 1 (
+    echo Warning: 5_cleanup.py failed with exit code !errorlevel!
+    REM Don't exit on cleanup failure
 )
 
 echo.

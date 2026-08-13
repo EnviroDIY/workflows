@@ -3,54 +3,89 @@ name: Build Library Examples
 on:
   workflow_call:
     inputs:
-      boards_to_build:
-        description: "A comma-separated list of PlatformIO board names to build (leave empty to build all)"
+      working_path:
+        description: "Working workspace path as an absolute path (e.g., /home/runner/work/EnviroDIY/EnviroDIY). If not provided, the default is the GitHub Actions workspace path."
         default: ""
         required: false
         type: string
-      boards_to_ignore:
-        description: "A comma-separated list of PlatformIO board names to ignore. Mutually exclusive with boards_to_build"
-        default: ""
+      ci_path:
+        description: "Continuous integration path, relative to the workspace path"
+        default: "continuous_integration"
+        required: false
+        type: string
+      artifact_path:
+        description: "Path to store artifacts, relative to the workspace path"
+        default: "continuous_integration_artifacts"
+        required: false
+        type: string
+      examples_path:
+        description: "Path to examples, relative to the workspace path"
+        default: "examples"
+        required: false
+        type: string
+      extras_path:
+        description: "Path to extras, relative to the workspace path"
+        default: "extras"
+        required: false
+        type: string
+      config_file_name:
+        description: "Filename for the configuration file (not the full path)"
+        default: "matrix_config.json"
+        required: false
+        type: string
+      compiler_list:
+        description: "Comma-separated list of compilers to use (arduino-cli, platformio, or both)"
+        default: "arduino-cli,platformio"
         required: false
         type: string
       examples_to_build:
-        description: "A comma-separated list of examples to build (leave empty to build all)"
-        default: ""
+        description: "Comma-separated list of examples to build (or 'all' for all). Mutually exclusive with examples_to_ignore"
+        default: "all"
         required: false
         type: string
       examples_to_ignore:
-        description: "A comma-separated list of examples to ignore. Mutually exclusive with examples_to_build"
+        description: "Comma-separated list of examples to ignore. Mutually exclusive with examples_to_build"
         default: ""
         required: false
         type: string
-      inline_flags:
-        description: "A comma-separated list of inline compiler flags (e.g., -DFLAG=value,-DOTHER_FLAG). These are expanded as part of the matrix"
+      arduino_boards_to_build:
+        description: "Comma-separated list of boards to build with Arduino CLI (or 'all' for all). Mutually exclusive with arduino_boards_to_ignore"
+        default: "all"
+        required: false
+        type: string
+      arduino_boards_to_ignore:
+        description: "Comma-separated list of board names to skip when building with Arduino CLI"
+        default: "uno_pic32,genuino101"
+        required: false
+        type: string
+      pio_envs_to_build:
+        description: "Comma-separated list of PlatformIO environments to build (or 'all' for all). Mutually exclusive with pio_envs_to_ignore"
+        default: "all"
+        required: false
+        type: string
+      pio_envs_to_ignore:
+        description: "Comma-separated list of PlatformIO environments to skip when building"
+        default: "esp32-c6-devkitm-1,arduino_nano_esp32"
+        required: false
+        type: string
+      inline_defines:
+        description: "Semicolon-separated list of comma-separated inline defines (e.g., DEBUG,VERSION=1.0;VERSION=2.0)"
         default: ""
         required: false
         type: string
       compiler_flags:
-        description: "A comma-separated list of compiler flags to pass to the build system"
+        description: "Semicolon-separated list of comma-separated compiler flags (e.g., -Wall,-Wextra;-O2,-g)"
         default: ""
-        required: false
-        type: string
-      acli_skip_boards:
-        description: "A comma-separated list of board names to skip when building with Arduino CLI"
-        default: "uno_pic32,genuino101"
-        required: false
-        type: string
-      pio_skip_boards:
-        description: "A comma-separated list of board names to skip when building with PlatformIO"
-        default: "esp32-c6-devkitm-1,arduino_nano_esp32"
-        required: false
-        type: string
-      job_grouping_fields:
-        description: "A comma-separated list of fields to group jobs by (e.g., board,example)"
-        default: "compiler,board"
         required: false
         type: string
       log_grouping_fields:
-        description: "A comma-separated list of fields to group logs by (leave empty to use all matrix fields)"
-        default: ""
+        description: "Comma-separated list of fields to group logs by"
+        default: "compiler,board,example,inline_defines"
+        required: false
+        type: string
+      job_grouping_fields:
+        description: "Comma-separated list of fields to group jobs by"
+        default: "compiler,board"
         required: false
         type: string
 
@@ -62,19 +97,63 @@ jobs:
     outputs:
       arduino_job_matrix: ${{ steps.py_matrix.outputs.arduino_job_matrix }}
       pio_job_matrix: ${{ steps.py_matrix.outputs.pio_job_matrix }}
-    env:
-      BOARDS_TO_BUILD: ${{ inputs.boards_to_build }}
-      BOARDS_TO_IGNORE: ${{ inputs.boards_to_ignore }}
-      EXAMPLES_TO_BUILD: ${{ inputs.examples_to_build }}
-      EXAMPLES_TO_IGNORE: ${{ inputs.examples_to_ignore }}
-      INLINE_FLAGS: ${{ inputs.inline_flags }}
-      COMPILER_FLAGS: ${{ inputs.compiler_flags }}
-      ACLI_SKIP_BOARDS: ${{ inputs.acli_skip_boards }}
-      PIO_SKIP_BOARDS: ${{ inputs.pio_skip_boards }}
-      JOB_GROUPING_FIELDS: ${{ inputs.job_grouping_fields }}
-      LOG_GROUPING_FIELDS: ${{ inputs.log_grouping_fields }}
 
     steps:
+      - name: Set environment variables from inputs
+        env:
+          INPUT_WORKING_PATH: ${{ inputs.working_path }}
+          INPUT_CI_PATH: ${{ inputs.ci_path }}
+          INPUT_ARTIFACT_PATH: ${{ inputs.artifact_path }}
+          INPUT_EXAMPLES_PATH: ${{ inputs.examples_path }}
+          INPUT_EXTRAS_PATH: ${{ inputs.extras_path }}
+          INPUT_CONFIG_FILE_NAME: ${{ inputs.config_file_name }}
+          INPUT_COMPILER_LIST: ${{ inputs.compiler_list }}
+          INPUT_EXAMPLES_TO_BUILD: ${{ inputs.examples_to_build }}
+          INPUT_EXAMPLES_TO_IGNORE: ${{ inputs.examples_to_ignore }}
+          INPUT_ARDUINO_BOARDS_TO_BUILD: ${{ inputs.arduino_boards_to_build }}
+          INPUT_ARDUINO_BOARDS_TO_IGNORE: ${{ inputs.arduino_boards_to_ignore }}
+          INPUT_PIO_ENVS_TO_BUILD: ${{ inputs.pio_envs_to_build }}
+          INPUT_PIO_ENVS_TO_IGNORE: ${{ inputs.pio_envs_to_ignore }}
+          INPUT_INLINE_DEFINES: ${{ inputs.inline_defines }}
+          INPUT_COMPILER_FLAGS: ${{ inputs.compiler_flags }}
+          INPUT_LOG_GROUPING_FIELDS: ${{ inputs.log_grouping_fields }}
+          INPUT_JOB_GROUPING_FIELDS: ${{ inputs.job_grouping_fields }}
+        run: |
+          [[ -n "$INPUT_WORKING_PATH" ]] && echo "WORKING_PATH=$INPUT_WORKING_PATH" >> $GITHUB_ENV || true
+          [[ -n "$INPUT_CI_PATH" ]] && echo "CI_PATH=$INPUT_CI_PATH" >> $GITHUB_ENV || true
+          [[ -n "$INPUT_ARTIFACT_PATH" ]] && echo "ARTIFACT_PATH=$INPUT_ARTIFACT_PATH" >> $GITHUB_ENV || true
+          [[ -n "$INPUT_EXAMPLES_PATH" ]] && echo "EXAMPLES_PATH=$INPUT_EXAMPLES_PATH" >> $GITHUB_ENV || true
+          [[ -n "$INPUT_EXTRAS_PATH" ]] && echo "EXTRAS_PATH=$INPUT_EXTRAS_PATH" >> $GITHUB_ENV || true
+          [[ -n "$INPUT_CONFIG_FILE_NAME" ]] && echo "CONFIG_FILE_NAME=$INPUT_CONFIG_FILE_NAME" >> $GITHUB_ENV || true
+          [[ -n "$INPUT_COMPILER_LIST" ]] && echo "COMPILER_LIST=$INPUT_COMPILER_LIST" >> $GITHUB_ENV || true
+
+          # Handle mutually exclusive examples pair: prioritize ignore over build
+          if [[ -n "$INPUT_EXAMPLES_TO_IGNORE" ]]; then
+            echo "EXAMPLES_TO_IGNORE=$INPUT_EXAMPLES_TO_IGNORE" >> $GITHUB_ENV
+          else
+            [[ -n "$INPUT_EXAMPLES_TO_BUILD" ]] && echo "EXAMPLES_TO_BUILD=$INPUT_EXAMPLES_TO_BUILD" >> $GITHUB_ENV || true
+          fi
+
+          # Handle mutually exclusive Arduino boards pair: prioritize ignore over build
+          if [[ -n "$INPUT_ARDUINO_BOARDS_TO_IGNORE" ]]; then
+            echo "ARDUINO_BOARDS_TO_IGNORE=$INPUT_ARDUINO_BOARDS_TO_IGNORE" >> $GITHUB_ENV
+          else
+            [[ -n "$INPUT_ARDUINO_BOARDS_TO_BUILD" ]] && echo "ARDUINO_BOARDS_TO_BUILD=$INPUT_ARDUINO_BOARDS_TO_BUILD" >> $GITHUB_ENV || true
+          fi
+
+          # Handle mutually exclusive PlatformIO envs pair: prioritize ignore over build
+          if [[ -n "$INPUT_PIO_ENVS_TO_IGNORE" ]]; then
+            echo "PIO_ENVS_TO_IGNORE=$INPUT_PIO_ENVS_TO_IGNORE" >> $GITHUB_ENV
+          else
+            [[ -n "$INPUT_PIO_ENVS_TO_BUILD" ]] && echo "PIO_ENVS_TO_BUILD=$INPUT_PIO_ENVS_TO_BUILD" >> $GITHUB_ENV || true
+          fi
+
+          [[ -n "$INPUT_INLINE_DEFINES" ]] && echo "INLINE_DEFINES=$INPUT_INLINE_DEFINES" >> $GITHUB_ENV || true
+          [[ -n "$INPUT_COMPILER_FLAGS" ]] && echo "COMPILER_FLAGS=$INPUT_COMPILER_FLAGS" >> $GITHUB_ENV || true
+          [[ -n "$INPUT_LOG_GROUPING_FIELDS" ]] && echo "LOG_GROUPING_FIELDS=$INPUT_LOG_GROUPING_FIELDS" >> $GITHUB_ENV || true
+          [[ -n "$INPUT_JOB_GROUPING_FIELDS" ]] && echo "JOB_GROUPING_FIELDS=$INPUT_JOB_GROUPING_FIELDS" >> $GITHUB_ENV || true
+        shell: bash
+
       - name: Checkout code
         uses: actions/checkout@v7
 
@@ -84,23 +163,17 @@ jobs:
       - name: Configure Matrix Workspace
         id: py_config
         run: |
-          echo "Configuring CI workspace and downloading configurations"
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_configure_workspace.py -o 0_configure_workspace.py
-          python -u 0_configure_workspace.py
-
-      - name: Parse Workflow Inputs
-        id: py_inputs
-        run: |
           set -e
           if [ "$RUNNER_DEBUG" = "1" ]; then
               echo "Enabling debugging!"
               set -v
               set -x
           fi
-          echo "Parsing workflow inputs"
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/1_parse_inputs.py -o 1_parse_inputs.py
-          python -u 1_parse_inputs.py
+          echo "Configuring CI workspace and downloading configurations"
+          curl -SfL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/build_config.py -o build_config.py
+          curl -SfL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/build_utils.py -o build_utils.py
+          curl -SfL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/1_configure_workspace.py -o 1_configure_workspace.py
+          python -u 1_configure_workspace.py
 
       - name: Generate Installation Scripts
         id: py_install
@@ -135,17 +208,13 @@ jobs:
             echo "Generating job matrix from standard modular CI Build Pipeline"
 
             # Download CI Build Pipeline utilities and scripts
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/3_build_matrix.py -o 3_build_matrix.py
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/4_build_jobs.py -o 4_build_jobs.py
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/5_output_results.py -o 5_output_results.py
-            curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/6_cleanup.py -o 6_cleanup.py
+            curl -SfL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/build_utils.py -o build_utils.py
+            curl -SfL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/3_build_matrix.py -o 3_build_matrix.py
+            curl -SfL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/4_build_jobs.py -o 4_build_jobs.py
 
             # Run the CI Build Pipeline
             python -u 3_build_matrix.py
             python -u 4_build_jobs.py
-            python -u 5_output_results.py
-            # 6_cleanup.py is skipped in GitHub Actions
           fi
 
       - name: Store generated examples
@@ -181,12 +250,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ always() && ! contains(github.event.head_commit.message, 'ci skip') }}
     steps:
-      - name: Write the requirements file
+      - name: Pull the requirements file
         run: |
-          echo "wheel" > requirements.txt
-          echo "requests" >> requirements.txt
-          echo "pandas" >> requirements.txt
-          echo "tabulate" >> requirements.txt
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/requirements.txt -o requirements.txt
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -221,6 +287,6 @@ jobs:
               set -x
           fi
           echo "Parsing CI build results and generating reports"
-          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py -o matrix_utils.py
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/build_utils.py -o build_utils.py
           curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/parse_test_results.py -o parse_test_results.py
           python parse_test_results.py

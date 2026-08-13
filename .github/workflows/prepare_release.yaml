@@ -51,12 +51,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Write the requirements file
+      - name: Pull the requirements file
         run: |
-          echo "wheel" > requirements.txt
-          echo "adafruit-nrfutil" >> requirements.txt
-          echo "platformio" >> requirements.txt
-          echo "requests" >> requirements.txt
+          curl -SL https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/requirements.txt -o requirements.txt
 
       - name: Set up Python
         uses: actions/setup-python@v7

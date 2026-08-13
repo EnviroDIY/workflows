@@ -13,31 +13,62 @@ jobs:
     if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
     uses: EnviroDIY/workflows/.github/workflows/build_examples.yaml@main
     with:
-      # Specify which boards to build (leave empty to build all)
-      boards_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
-      # Alternatively, ignore specific boards
-      # boards_to_ignore: "board_name_to_skip"
-      
-      # Specify which examples to build (leave empty to build all)
-      # examples_to_build: "example1,example2"
-      # Alternatively, ignore specific examples
-      # examples_to_ignore: "example_to_skip"
-      
-      # Add inline compiler flags to expand the matrix (e.g., different build configurations)
-      # inline_flags: "-DFLAG1=value1,-DFLAG2=value2"
-      
-      # Add compiler flags that are passed to every build
-      # compiler_flags: "-Wall,-Wextra"
-      
-      # Specify boards to skip for Arduino CLI compilation
-      # acli_skip_boards: "uno_pic32,genuino101"
-      
-      # Specify boards to skip for PlatformIO compilation
-      # pio_skip_boards: "esp32-c6-devkitm-1,arduino_nano_esp32"
-      
-      # Specify fields to group jobs by (default: compiler,board)
-      # job_grouping_fields: "compiler,board,example"
-      
-      # Specify fields to group logs by (leave empty to use all matrix fields)
-      # log_grouping_fields: "board,example"
+
+      # # Workspace path as an absolute path (default: workspace root)
+      # workspace_path: ""
+
+      # # Continuous integration path, relative to the workspace path (default: continuous_integration)
+      # ci_path: "continuous_integration"
+
+      # # Path to store artifacts, relative to the workspace path (default: continuous_integration_artifacts)
+      # artifact_path: "continuous_integration_artifacts"
+
+      # # Path to examples, relative to the workspace path (default: examples)
+      # examples_path: "examples"
+
+      # # Path to extras, relative to the workspace path (default: extras)
+      # extras_path: "extras"
+
+      # # Filename for the configuration file (default: matrix_config.json)
+      # config_file_name: "matrix_config.json"
+
+      # # Comma-separated list of compilers to use: arduino-cli, platformio, or both (default: arduino-cli,platformio)
+      # compiler_list: "arduino-cli,platformio"
+
+      # # Comma-separated list of examples to build or "all" for all (default: all)
+      # examples_to_build: "examples/example1,examples/example2"
+
+      # # Comma-separated list of examples to ignore (mutually exclusive with examples_to_build)
+      # examples_to_ignore: "examples/example_to_skip"
+
+      # # Comma-separated list of boards to build with Arduino CLI or "all" for all (default: all)
+      # # Mutually exclusive with arduino_boards_to_ignore
+      # arduino_boards_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
+      # # Comma-separated list of Arduino boards to skip (default: uno_pic32,genuino101)
+      # # Mutually exclusive with arduino_boards_to_build
+      # arduino_boards_to_ignore: "uno_pic32,genuino101"
+
+      # # Comma-separated list of PlatformIO environments to build or "all" for all (default: all)
+      # # Mutually exclusive with pio_envs_to_ignore
+      # pio_envs_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
+      # # Comma-separated list of PlatformIO environments to skip (default: esp32-c6-devkitm-1,arduino_nano_esp32)
+      # # Mutually exclusive with pio_envs_to_build
+      # pio_envs_to_ignore: "esp32-c6-devkitm-1,arduino_nano_esp32"
+
+      # # Semicolon-separated list of comma-separated inline defines to expand the matrix
+      # # To set a value, use the format: NAME=VALUE.
+      # # These will be written to the top of the example code as #define statements.
+      # # These will NOT be passed to the compiler!
+      # inline_defines: "DEBUG,VERSION=1.0;VERSION=2.0"
+
+      # # Semicolon-separated list of comma-separated compiler flags to expand the matrix
+      # # For the Arduino CLI, these will be passed to the compiler
+      # # For PlatformIO, these will be ignored and must be set in the platformio.ini file for each environment.
+      # compiler_flags: "-Wall,-Wextra;-O2,-g"
+
+      # # Comma-separated list of fields to group logs by (default: compiler,board,example,inline_defines)
+      # log_grouping_fields: "compiler,board,example,inline_defines"
+
+      # # Comma-separated list of fields to group jobs by (default: compiler,board)
+      # job_grouping_fields: "compiler,board"
     secrets: inherit

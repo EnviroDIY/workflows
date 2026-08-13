@@ -7,42 +7,38 @@ It runs all matrix generation steps in sequence and handles output.
 
 Usage:
     python generate_job_matrix.py
-
-Environment Variables:
-    BOARDS_TO_BUILD: Comma-separated list of boards to build (optional)
-    BOARDS_TO_IGNORE: Comma-separated list of boards to ignore (optional)
-    EXAMPLES_TO_BUILD: Comma-separated list of examples to build (optional)
-    EXAMPLES_TO_IGNORE: Comma-separated list of examples to ignore (optional)
-    RUNNER_DEBUG: Set to "1" for verbose output (optional)
-    GITHUB_WORKSPACE: Automatically set in GitHub Actions (optional)
 """
 
 import os
 import sys
 import subprocess
-from pathlib import Path
-
+from build_config import get_extended_config, set_verbose_mode, print_verbose
 
 def main():
     """Run the matrix generation pipeline"""
+    print("=" * 60)
+    print("Running the matrix generation pipeline")
+    print("=" * 60)
+
+    print_verbose(
+        "Reading configuration from environment variables, command line arguments, and the config file..."
+    )
+    args = get_extended_config()
+    set_verbose_mode(args.verbose)
+
+    # Get the directory containing this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
     # Determine if we're in GitHub Actions
     in_github = "GITHUB_WORKSPACE" in os.environ
 
-    # Get the script directory
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Set artifact path for all scripts
-    artifact_path = "continuous_integration_artifacts"
-    os.makedirs(artifact_path, exist_ok=True)
-
     # Prepare environment for child processes
     env = os.environ.copy()
-    env["ARTIFACT_PATH"] = os.path.abspath(artifact_path)
     env["PYTHONPATH"] = script_dir + ":" + env.get("PYTHONPATH", "")
 
     print(f"Matrix Generation Pipeline")
     print(f"Script directory: {script_dir}")
-    print(f"Artifact path: {env['ARTIFACT_PATH']}")
+    print(f"Artifact path: {args.artifact_path}")
     print(f"Running in GitHub Actions: {in_github}\n")
 
     # Check for custom generator first
@@ -61,29 +57,27 @@ def main():
 
     # Run modular scripts
     scripts = [
-        "1_configure_matrix.py",
-        "2_parse_inputs.py",
-        "3_build_matrix.py",
-        "4_build_jobs.py",
-        "5_output_results.py",
+        ("1. Configure Workspace", "1_configure_workspace.py"),
+        ("2. Generate Install Scripts", "2_generate_install_scripts.py"),
+        ("3. Build Matrix", "3_build_matrix.py"),
+        ("4. Build Jobs", "4_build_jobs.py"),
     ]
-
-    for script_name in scripts:
-        script_path = os.path.join(script_dir, script_name)
+    for script_name, script_filename in scripts:
+        script_path = os.path.join(script_dir, script_filename)
 
         if not os.path.exists(script_path):
             print(f"ERROR: Script not found: {script_path}")
             print(f"Trying to download from GitHub...\n")
 
             # Try to download from GitHub
-            url = f"https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/{script_name}"
+            url = f"https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/{script_filename}"
             download_result = subprocess.run(
                 ["curl", "-SL", url, "-o", script_path],
                 env=env,
             )
 
             if download_result.returncode != 0:
-                print(f"ERROR: Could not download {script_name}")
+                print(f"ERROR: Could not download {script_filename}")
                 return 1
 
         print(f"\n{'='*60}")
@@ -103,10 +97,10 @@ def main():
     # Run cleanup only if not in GitHub Actions
     if not in_github:
         print(f"\n{'='*60}")
-        print("Running: 6_cleanup.py")
+        print("Running: 5_cleanup.py")
         print(f"{'='*60}\n")
 
-        cleanup_script = os.path.join(script_dir, "6_cleanup.py")
+        cleanup_script = os.path.join(script_dir, "5_cleanup.py")
         if os.path.exists(cleanup_script):
             subprocess.run(
                 [sys.executable, "-u", cleanup_script],
@@ -119,6 +113,7 @@ def main():
     print(f"\n{'='*60}")
     print("Matrix generation completed successfully!")
     print(f"{'='*60}\n")
+
     return 0
 
 

@@ -39,29 +39,29 @@ def build_custom_matrix(config):
             - compiler_list: List of compilers to use
             - examples_to_build: List of examples
             - boards: List of boards
-            - inline_flags: List of inline flags
+            - inline_defines: List of inline flags
             - compiler_flags: List of compiler flags
             - pio_to_acli: Board conversion mapping
             - board_to_pio_env: PlatformIO environment mapping
             - pio_env_to_board: Reverse mapping
-            - acli_skip_boards: Boards to skip for Arduino CLI
-            - pio_skip_boards: Boards to skip for PlatformIO
+            - arduino_boards_to_ignore: Boards to skip for Arduino CLI
+            - pio_envs_to_ignore: Boards to skip for PlatformIO
 
     Returns:
         list[dict]: List of matrix items with keys:
             - compiler: "arduino-cli" or "pio"
             - example: example path
             - board: board name
-            - inline_flags: list of flags
+            - inline_defines: list of flags
             - compiler_flags: list of flags
             - (optional) any other keys for grouping
     """
-    from matrix_utils import dict_product, remove_duplicate_dicts
+    from build_utils import dict_product, remove_nested_duplicates
 
     compiler_list = config.get("compiler_list", ["arduino-cli", "pio"])
     examples_to_build = config["examples_to_build"]
     boards = config["boards"]
-    inline_flags = config["inline_flags"]
+    inline_defines = config["inline_defines"]
     compiler_flags = config["compiler_flags"]
 
     # Custom logic example: exclude certain combinations
@@ -73,7 +73,7 @@ def build_custom_matrix(config):
                 "compiler": compiler_list,
                 "example": examples_to_build,
                 "board": boards,
-                "inline_flags": inline_flags,
+                "inline_defines": inline_defines,
                 "compiler_flags": compiler_flags,
             }
         )
@@ -96,7 +96,7 @@ def build_custom_matrix(config):
             x["compiler"],
             x["board"],
             x["example"],
-            x["inline_flags"],
+            x["inline_defines"],
             x["compiler_flags"],
         ),
     )
@@ -155,10 +155,10 @@ def build_custom_matrix(config):
     from copy import deepcopy
     final_matrix = []
     for combo in specific_combos:
-        for inline_flag in config["inline_flags"]:
+        for inline_flag in config["inline_defines"]:
             for compiler_flag in config["compiler_flags"]:
                 item = deepcopy(combo)
-                item["inline_flags"] = inline_flag if isinstance(inline_flag, list) else [inline_flag]
+                item["inline_defines"] = inline_flag if isinstance(inline_flag, list) else [inline_flag]
                 item["compiler_flags"] = compiler_flag if isinstance(compiler_flag, list) else [compiler_flag]
                 final_matrix.append(item)
 
@@ -231,8 +231,7 @@ python build_scripts/1_configure_matrix.py
 python build_scripts/2_parse_inputs.py
 python build_scripts/3_build_matrix.py
 python build_scripts/4_build_jobs.py
-python build_scripts/5_output_results.py
-python build_scripts/6_cleanup.py  # Only runs locally
+python build_scripts/5_cleanup.py  # Only runs locally
 ```
 
 The generated matrices and scripts will be in `continuous_integration_artifacts/`.
@@ -266,7 +265,7 @@ Default keys in each matrix item:
 - `compiler`: "arduino-cli" or "pio"
 - `example`: relative path to example
 - `board`: board name
-- `inline_flags`: list of inline #define flags
+- `inline_defines`: list of inline #define flags
 - `compiler_flags`: list of compiler flags
 
 You can add additional keys for custom grouping logic.

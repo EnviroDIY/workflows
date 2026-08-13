@@ -20,14 +20,13 @@ The original monolithic `generate_job_matrix.py` script (900+ lines) has been sp
 
 ```
 build_scripts/
-├── matrix_utils.py                     # Shared utilities and helper functions
-├── 0_configure_workspace.py            # Setup CI directories and download configs
-├── 1_parse_inputs.py                   # Parse workflow inputs
+├── build_config.py                     # Shared config parser
+├── build_utils.py                      # Shared utilities and helper functions
+├── 1_configure_workspace.py            # Setup CI directories and download configs
 ├── 2_generate_install_scripts.py       # Generate platform and library installation scripts
 ├── 3_build_matrix.py                   # Build job matrix (supports custom builders)
 ├── 4_build_jobs.py                     # Generate jobs and bash scripts
-├── 5_output_results.py                 # Output to GitHub and artifacts
-├── 6_cleanup.py                        # Cleanup generated files (local only)
+├── 5_cleanup.py                        # Cleanup generated files (local only)
 ├── generate_job_matrix.py              # Wrapper script (entry point)
 ├── generate_job_matrix_orchestrator.py # Optional orchestrator (for testing)
 ├── generate_platform_installation_script.py  # Deprecated (functionality merged into 2_generate_install_scripts.py)
@@ -41,28 +40,23 @@ The workflow in `.github/workflows/build_examples.yaml` executes the pipeline in
 
 **Stage 1: Workspace Setup**
 
-1. Downloads and runs `0_configure_workspace.py` to setup workspace directories and configurations
+1. Downloads and runs `1_configure_workspace.py` (and the helpers build_config.py and build_utils.py) to setup workspace directories and configurations
 
-**Stage 2: Input Parsing**
-
-1. Downloads and runs `1_parse_inputs.py` to parse workflow inputs
-
-**Stage 3: Dependency Script Generation**
+**Stage 2: Dependency Script Generation**
 
 1. Downloads and runs `2_generate_install_scripts.py` to generate platform and library installation scripts
 
-**Stage 4: Job Matrix Generation**
+**Stage 3: Job Matrix Generation**
 
 1. Checks for a custom generator (`continuous_integration/generate_job_matrix.py`)
 2. If found, runs it (backward compatibility)
 3. If not found, runs the modular pipeline:
    - `3_build_matrix.py` - Build matrix
    - `4_build_jobs.py` - Generate jobs
-   - `5_output_results.py` - Output results
 
 ## Module Descriptions
 
-### matrix_utils.py
+### build_utils.py
 
 Shared utilities used by all scripts:
 
@@ -92,13 +86,9 @@ Shared utilities used by all scripts:
 - `load_json_file()` / `save_json_file()` - JSON I/O helpers
 - `print_verbose()` - Debug output
 
-**Dependencies**: requests, platformio (optional)
+**Dependencies**: requests
 
-### 0_setup_ci_platforms.py
-
-Configures platforms and board mappings for the CI build system.
-
-### 0_configure_workspace.py
+### build_config.py
 
 Configures the CI workspace and prepares configuration files.
 
@@ -116,33 +106,7 @@ Configures the CI workspace and prepares configuration files.
 - `setup_arduino_cli_config()` - Arduino CLI config setup
 - `setup_platformio_config()` - PlatformIO config setup
 
-**Dependencies**: matrix_utils, requests, platformio
-
-### 1_parse_inputs.py
-
-Parses workflow inputs from environment variables.
-
-**Inputs (Environment Variables)**:
-
-- `EXAMPLES_TO_BUILD` - Comma-separated list or empty for all
-- `EXAMPLES_TO_IGNORE` - Comma-separated list to exclude
-- `BOARDS_TO_BUILD` - Comma-separated list or empty for all
-- `BOARDS_TO_IGNORE` - Comma-separated list to exclude
-- `INLINE_FLAGS` - Compiler flags (preprocessor defines)
-- `COMPILER_FLAGS` - Build flags
-- `ACLI_SKIP_BOARDS` - Boards to skip for Arduino CLI
-- `PIO_SKIP_BOARDS` - Boards to skip for PlatformIO
-
-**Outputs**: Updates `matrix_config.json` with parsed inputs
-
-**Key Functions**:
-
-- `parse_examples_to_build()` - Find or parse examples
-- `parse_boards_to_build()` - Get boards from config
-- `validate_boards()` - Check board compatibility
-- `parse_inline_flags()` / `parse_compiler_flags()` - Parse flags
-
-**Dependencies**: matrix_utils
+**Dependencies**: build_utils, requests, platformio
 
 ### 2_generate_install_scripts.py
 
@@ -163,9 +127,9 @@ Generates platform and library installation scripts for build jobs.
 - `create_arduino_cli_lib_command()` - Generate Arduino CLI library install commands
 - `create_arduino_cli_core_command()` - Generate Arduino CLI core install commands
 - `create_pio_ci_core_command()` - Generate PlatformIO platform/tool install commands
-- Uses dependency loaders and board configuration from matrix_utils
+- Uses dependency loaders and board configuration from build_utils
 
-**Dependencies**: matrix_utils, platformio (optional)
+**Dependencies**: build_utils, platformio (optional)
 
 ### 3_build_matrix.py
 
@@ -185,7 +149,7 @@ Builds the job matrix from parsed inputs.
 - `build_default_matrix()` - Create matrix from inputs
 - `build_custom_matrix()` - Load external custom builder
 
-**Dependencies**: matrix_utils
+**Dependencies**: build_utils, build_config, requests
 
 ### 4_build_jobs.py
 
@@ -195,29 +159,17 @@ Generates individual build jobs and compilation bash scripts.
 
 - Job lists for GitHub Actions matrix
 - Bash compilation scripts in artifacts
-
-**Key Functions**:
-
-- Job generation from matrix
-- Build script generation with compiler flags
-
-**Dependencies**: matrix_utils
-
-### 5_output_results.py
-
-Outputs generated configuration to GitHub Actions and artifacts.
-
-**Outputs**:
-
 - GitHub Actions output variables (job matrices)
 - Configuration files to artifacts directory
 
 **Key Functions**:
 
+- Job generation from matrix
+- Build script generation with compiler flags
 - Format job matrices for GitHub
 - Write configuration to files
 
-**Dependencies**: matrix_utils
+**Dependencies**: build_utils, build_config
 
 ### parse_test_results.py
 
@@ -229,7 +181,7 @@ Post-build results processing and beautification (run after compilation).
 - Generate test result reports
 - Format logs for GitHub Actions
 
-**Dependencies**: matrix_utils, pandas, requests
+**Dependencies**: build_utils, build_config, pandas, requests
 
 ## Migration from Single Script
 
@@ -246,27 +198,6 @@ To use a custom matrix builder, create:
 - `continuous_integration/generate_job_matrix.py` with a `build_custom_matrix(config)` function
 
 The pipeline will automatically detect and use it instead of the default builder.
-
-## Running Locally
-
-```bash
-# Download utilities
-curl -O https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/matrix_utils.py
-
-# Download and run pipeline
-curl -O https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_setup_ci_platforms.py
-python 0_setup_ci_platforms.py
-
-curl -O https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/0_generate_install_scripts.py
-python 0_generate_install_scripts.py
-
-curl -O https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/{1,2,3,4,5,6}_*.py
-python 1_configure_matrix.py
-python 2_parse_inputs.py
-python 3_build_matrix.py
-python 4_build_jobs.py
-python 5_output_results.py
-```
 
 ## Environment Variables
 

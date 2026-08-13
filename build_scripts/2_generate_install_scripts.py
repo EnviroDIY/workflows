@@ -12,22 +12,14 @@ Part of the CI Build Pipeline. This step:
 Step 2 in the CI Build Pipeline sequence.
 """
 
+# %%
 import os
 import json
-from collections import OrderedDict
-from typing import List, Union
-from matrix_utils import (
-    get_working_directories,
-    load_library_dependencies,
-    load_example_dependencies,
-)
+from typing import List
+import requests
+from build_config import get_extended_config, set_verbose_mode, print_verbose
 
 from platformio.package.meta import PackageSpec
-
-# Configuration
-# Boards to always skip on each platform
-PIO_SKIP_BOARDS = ["esp32-c6-devkitm-1", "arduino_nano_esp32"]
-ACLI_SKIP_BOARDS = ["uno_pic32", "genuino101", "bluepill_f103c8"]
 
 
 # %%
@@ -133,6 +125,60 @@ mv home/arduino/downloads/SoftwareSerial_ExtInts-master/* home/arduino/user/libr
 
 # %%
 # Helper functions
+
+
+def load_pio_tools():
+    """Download the platformio_platform_tools.json file"""
+    print("Downloading tools file...")
+    response = requests.get(
+        "https://raw.githubusercontent.com/EnviroDIY/workflows/main/build_scripts/platformio_platform_tools.json",
+        timeout=30,
+    )
+    response.raise_for_status()
+    return response.json()
+    # NOTE: We don't actually need this file, just the data from it.
+    # pio_tools_file = os.path.join(ci_path, "platformio_platform_tools.json")
+    # print("Saving tools file to: {}".format(pio_tools_file))
+    # with open(pio_tools_file, "wb") as f:
+    #     f.write(response.content)
+    # # Also copy to artifacts for debugging
+    # shutil.copyfile(
+    #     pio_tools_file,
+    #     os.path.join(artifact_path, "platformio_platform_tools.json"),
+    # )
+    # with open(pio_tools_file) as f:
+    #     pio_tools = json.load(f)
+
+
+# Dependency loading and parsing utilities
+def load_library_dependencies(workspace_path: str) -> dict:
+    """
+    Load library dependencies from library.json.
+
+    Returns:
+        dict: Library specification with 'dependencies' key
+    """
+
+    library_json_file = os.path.join(workspace_path, "library.json")
+    if os.path.isfile(library_json_file):
+        with open(library_json_file) as f:
+            return json.load(f)
+    return {"dependencies": []}
+
+
+def load_example_dependencies(examples_path: str) -> dict:
+    """
+    Load example dependencies from examples/example_dependencies.json.
+
+    Returns:
+        dict: Example specification with 'dependencies' key
+    """
+
+    examples_deps_file = os.path.join(examples_path, "example_dependencies.json")
+    if os.path.isfile(examples_deps_file):
+        with open(examples_deps_file) as f:
+            return json.load(f)
+    return {"dependencies": []}
 
 
 def get_package_spec(dependency: dict):
@@ -284,123 +330,35 @@ def add_log_to_command(command: str, group_title: str) -> List[str]:
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("CI Build Pipeline: Step 2 - Generate Installation Scripts")
+    print("CI Build Pipeline: Generate Installation Scripts")
     print("=" * 60)
 
-    # Setup directories
-    dirs = get_working_directories()
-    ci_path = dirs["ci_path"]
-    artifact_path = dirs["artifact_path"]
-    workspace_path = dirs["workspace_path"]
-
-    # %%
-    # Load configuration from previous step
-    config_file = os.path.join(artifact_path, "matrix_config.json")
-    print(f"\nLoading configurations from {config_file}...")
-    with open(config_file, "r") as f:
-        config = json.load(f)
-
-    # Load platform configurations from config
-    pio_to_acli = config.get("pio_to_acli", {})
-    board_to_pio_env = config.get("board_to_pio_env", {})
-    board_to_pio_platform = config.get("board_to_pio_platform", {})
-    arduino_cli_config = os.path.join(ci_path, "arduino_cli.yaml")
-    platformio_platform_tools = config.get("pio_tools", {})
-
-    # Load dependencies
-    print("Loading dependencies...")
-    library_specs = load_library_dependencies(workspace_path)
-    example_specs = load_example_dependencies(workspace_path)
-
-    # Ensure dependencies key exists
-    if "dependencies" not in library_specs:
-        library_specs["dependencies"] = []
-    if "dependencies" not in example_specs:
-        example_specs["dependencies"] = []
-
-    print(f"Library dependencies: {len(library_specs['dependencies'])}")
-    print(f"Example dependencies: {len(example_specs['dependencies'])}")
-
-    # %%
-    # Generate platform installation scripts
+    print_verbose(
+        "Reading configuration from environment variables, command line arguments, and the config file..."
+    )
+    args = get_extended_config()
+    set_verbose_mode(args.verbose)
 
     print("\n" + "=" * 60)
-    print("Generating Platform Installation Scripts")
+    print("Generating Platform and Core Installation Scripts")
     print("=" * 60)
 
-    # Load boards from configuration (parsed in step 1)
-    boards = config.get("boards", [])
-    if not boards:
-        print("::error::No boards found in configuration. Did you run step 1?")
-        exit(1)
-
-    print(f"Boards to build: {boards}")
-
-    # Validate boards
-    for board in boards[:]:  # Use slice to iterate over a copy
-        if board not in pio_to_acli.keys() and board not in config.get(
-            "acli_skip_boards", []
-        ):
-            print(
-                f"""\n::error:: file=platformio_to_arduino_boards.json,title=No matching Arduino board::
-Cannot find matching Arduino FQBN for {board}.
-No core will be installed or cached for this board.
-Please check the spelling of your board name or add an entry to the Arduino/PlatformIO board conversion file."""
-            )
-            boards.remove(board)
-        elif board not in board_to_pio_platform.keys() and board not in config.get(
-            "pio_skip_boards", []
-        ):
-            print(
-                f"""\n::warning:: file=platformio.ini,title=No matching PlatformIO environment::
-Cannot find matching environment in platformio.ini for {board}.
-No platforms or tools will be installed or built for this board.
-Please check the spelling of your board name or add an entry to your platformio.ini if not expected."""
-            )
-
-    # Convert boards to cores and platforms
-    arduino_cli_cores = list(
-        OrderedDict.fromkeys(
-            [
-                pio_to_acli[board]["fqbn"].rsplit(":", 1)[0]
-                for board in boards
-                if board in pio_to_acli.keys()
-                and board not in config.get("acli_skip_boards", [])
-            ]
-        )
-    )
-
-    # If EnviroDIY:samd is in the list, also add adafruit:samd (a dependency)
-    if (
-        "EnviroDIY:samd" in arduino_cli_cores
-        and "adafruit:samd" not in arduino_cli_cores
-    ):
-        arduino_cli_cores.append("adafruit:samd")
-
-    pio_platforms = list(
-        OrderedDict.fromkeys(
-            [
-                board_to_pio_platform[board]
-                for board in boards
-                if board in board_to_pio_platform.keys()
-                and board not in config.get("pio_skip_boards", [])
-            ]
-        )
-    )
-
     # Print out the list of platforms/cores
-    print(f"\nPlatformIO platforms to install: {pio_platforms}")
-    print(f"Arduino cores to install: {arduino_cli_cores}")
+    print(f"Arduino cores to install: {len(args.build_cores)}")
+    print_verbose("Cores to install:")
+    for core in args.build_cores:
+        print_verbose(f"  - {core}")
 
     # Write the bash file for Arduino CLI platforms
     bash_file_name = "install-platforms-arduino-cli.sh"
+    arduino_cli_config = os.path.join(args.ci_path, "arduino_cli.yaml")
     print(f"\nWriting {bash_file_name}...")
-    with open(os.path.join(artifact_path, bash_file_name), "w") as bash_out:
+    with open(os.path.join(args.artifact_path, bash_file_name), "w") as bash_out:
         bash_out.write("#!/bin/bash\n\n")
         bash_out.write(DEBUG_TEXT)
         bash_out.write(ACLI_PLATFORM_START_TEXT.format(arduino_cli_config))
 
-        for core in arduino_cli_cores:
+        for core in args.build_cores:
             install_command = create_arduino_cli_core_command(
                 core_name=core,
                 arduino_cli_config=arduino_cli_config,
@@ -414,40 +372,66 @@ Please check the spelling of your board name or add an entry to your platformio.
 
     print(f"✓ Generated {bash_file_name}")
 
+    # Download PlatformIO tools associated with each platform.
+    print_verbose(
+        "Downloading the list of extra tools associated with each PlatformIO platform..."
+    )
+    pio_tools = load_pio_tools()
+
+    print(f"\nPlatformIO platforms to install: {len(args.build_platforms)}")
+    print_verbose("Platforms to install:")
+    for platform in args.build_platforms:
+        print_verbose(f"  - {platform}")
+
     # Write the bash file for PlatformIO platforms
     bash_file_name = "install-platforms-platformio.sh"
     print(f"Writing {bash_file_name}...")
-    with open(os.path.join(artifact_path, bash_file_name), "w") as bash_out:
+    with open(os.path.join(args.artifact_path, bash_file_name), "w") as bash_out:
         bash_out.write("#!/bin/bash\n\n")
         bash_out.write(DEBUG_TEXT)
         bash_out.write(PIO_PLATFORM_START_TEXT)
 
-        for platform in pio_platforms:
+        for platform in args.build_platforms:
             install_command = create_pio_ci_core_command(
                 platform_name=platform, is_tool=False
             )
-            if platform in platformio_platform_tools.keys():
-                for tool in platformio_platform_tools[platform]["tools"]:
+            if platform in pio_tools.keys():
+                for tool in pio_tools[platform]["tools"]:
                     install_command += "\n" + create_pio_ci_core_command(
                         platform_name=tool, is_tool=True
                     )
-                command_with_log = add_log_to_command(
-                    install_command, platformio_platform_tools[platform]["name"]
-                )
+                group_title = pio_tools[platform]["name"]
             else:
-                command_with_log = add_log_to_command(install_command, platform)
+                group_title = platform
+            command_with_log = add_log_to_command(install_command, group_title)
             bash_out.write("\n".join(command_with_log))
 
         bash_out.write(PIO_PLATFORM_END_TEXT)
 
     print(f"✓ Generated {bash_file_name}")
 
-    # %%
     # Generate library installation scripts
 
     print("\n" + "=" * 60)
     print("Generating Library Installation Scripts")
     print("=" * 60)
+
+    # Load dependencies
+    print("Loading dependencies...")
+    library_specs = load_library_dependencies(args.workspace_path)
+    example_specs = load_example_dependencies(args.workspace_path)
+
+    # Ensure dependencies key exists
+    if "dependencies" not in library_specs:
+        library_specs["dependencies"] = []
+    if "dependencies" not in example_specs:
+        example_specs["dependencies"] = []
+
+    print(f"Library dependencies: {len(library_specs['dependencies'])}")
+    print(f"Example dependencies: {len(example_specs['dependencies'])}")
+    print_verbose("Dependencies to install:")
+    for lib in library_specs["dependencies"] + example_specs["dependencies"]:
+        print_verbose(f"  - {lib.get('name') or lib.get('id') or lib}")
 
     if (
         len(library_specs["dependencies"]) == 0
@@ -460,7 +444,7 @@ Please check the spelling of your board name or add an entry to your platformio.
 
         # Library dependencies for Arduino CLI
         bash_file_name = "install-library-libdeps-arduino-cli.sh"
-        with open(os.path.join(artifact_path, bash_file_name), "w") as f:
+        with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
             f.write("#!/bin/bash\n\n")
             f.write(DEBUG_TEXT)
             f.write(ACLI_LIBRARY_START_TEXT.format(arduino_cli_config))
@@ -477,7 +461,7 @@ Please check the spelling of your board name or add an entry to your platformio.
 
         # Example dependencies for Arduino CLI
         bash_file_name = "install-example-libdeps-arduino-cli.sh"
-        with open(os.path.join(artifact_path, bash_file_name), "w") as f:
+        with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
             f.write("#!/bin/bash\n\n")
             f.write(DEBUG_TEXT)
             f.write(ACLI_LIBRARY_START_TEXT.format(arduino_cli_config))
@@ -497,7 +481,7 @@ Please check the spelling of your board name or add an entry to your platformio.
 
         # Library dependencies for PlatformIO
         bash_file_name = "install-library-libdeps-platformio.sh"
-        with open(os.path.join(artifact_path, bash_file_name), "w") as f:
+        with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
             f.write("#!/bin/bash\n\n")
             f.write(DEBUG_TEXT)
             f.write(PIO_LIBRARY_START_TEXT)
@@ -517,7 +501,7 @@ Please check the spelling of your board name or add an entry to your platformio.
 
         # Example dependencies for PlatformIO
         bash_file_name = "install-example-libdeps-platformio.sh"
-        with open(os.path.join(artifact_path, bash_file_name), "w") as f:
+        with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
             f.write("#!/bin/bash\n\n")
             f.write(DEBUG_TEXT)
             f.write(PIO_LIBRARY_START_TEXT)
@@ -537,3 +521,7 @@ Please check the spelling of your board name or add an entry to your platformio.
 
     print("\n✓ Installation scripts generated successfully")
     print("✓ Ready for job matrix building and compilation")
+
+
+# %%
+# CSpell:ignore fqbns

@@ -12,30 +12,54 @@ Creates a matrix by combining:
 Supports custom matrix builders via external scripts.
 """
 
+# %%
 import os
 import json
 import sys
-from matrix_utils import dict_product, remove_duplicate_dicts, print_verbose
+from build_utils import dict_product, remove_nested_duplicates
+from build_config import (
+    get_extended_config,
+    set_verbose_mode,
+    print_verbose,
+    write_config_file,
+)
 
-
-def build_default_matrix(
-    compiler_list, examples_to_build, boards, inline_flags, compiler_flags
-):
+def build_default_matrix(config: dict):
     """Build the default matrix using dict_product"""
     print("Building default job matrix...")
 
-    cart_join = list(
+    workspace_path = config.get("workspace_path", os.getcwd())
+    examples_to_build = config.get("examples_to_build", [])
+    build_envs = config.get("build_envs", [])
+    build_fqbns = config.get("build_fqbns", [])
+    inline_defines = config.get("inline_defines", [])
+    compiler_flags = config.get("compiler_flags", [])
+
+    p_cart_join = list(
         dict_product(
             {
-                "compiler": compiler_list,
+                "compiler": ["platformio"],
                 "example": examples_to_build,
-                "board": boards,
-                "inline_flags": inline_flags,
+                "pio_env": build_envs,
+                "inline_defines": inline_defines,
                 "compiler_flags": compiler_flags,
             }
         )
     )
 
+    a_cart_join = list(
+        dict_product(
+            {
+                "compiler": ["arduino-cli"],
+                "example": examples_to_build,
+                "fqbn": build_fqbns,
+                "inline_defines": inline_defines,
+                "compiler_flags": compiler_flags,
+            }
+        )
+    )
+
+    cart_join = p_cart_join + a_cart_join
     cart_join_list = [json.dumps(e) for e in cart_join]
     print(f"Total possible combinations: {len(cart_join)}")
 
@@ -46,7 +70,9 @@ def build_default_matrix(
         exclusion_list = list(dict_product(exclusion))
         expanded_matrix_exclusions.extend(exclusion_list)
 
-    expanded_matrix_exclusions_set = remove_duplicate_dicts(expanded_matrix_exclusions)
+    expanded_matrix_exclusions_set = remove_nested_duplicates(
+        expanded_matrix_exclusions
+    )
     expanded_matrix_exclusions_list = [
         json.dumps(e) for e in expanded_matrix_exclusions_set
     ]
@@ -59,7 +85,9 @@ def build_default_matrix(
         inclusion_list = list(dict_product(inclusion))
         expanded_matrix_inclusions.extend(inclusion_list)
 
-    expanded_matrix_inclusions_set = remove_duplicate_dicts(expanded_matrix_inclusions)
+    expanded_matrix_inclusions_set = remove_nested_duplicates(
+        expanded_matrix_inclusions
+    )
     expanded_matrix_inclusions_list = [
         json.dumps(e) for e in expanded_matrix_inclusions_set
     ]
@@ -80,42 +108,47 @@ def build_default_matrix(
         assembled_matrix,
         key=lambda x: (
             x["compiler"],
-            x["board"],
+            (
+                x["board"]
+                if "board" in x
+                else x["pio_env"] if "pio_env" in x else x.get("fqbn", "")
+            ),
             x["example"],
-            x["inline_flags"],
+            x["inline_defines"],
             x["compiler_flags"],
         ),
     )
 
-    final_matrix = remove_duplicate_dicts(assembled_matrix)
+    for matrix_entry in assembled_matrix:
+        example = matrix_entry["example"]
+        example_name = os.path.split(example)[-1]
+        example_full_path = os.path.join(workspace_path, example, example_name + ".ino")
+        matrix_entry["other_commands"] = [
+            r"sed -i 's/#define TINY_GSM_MODEM_/\/\/ #define TINY_GSM_MODEM_/g' "
+            + f'"{example_full_path}"'
+        ]
+
+    final_matrix = remove_nested_duplicates(assembled_matrix)
     print(f"Final filtered matrix: {len(final_matrix)}")
 
     return final_matrix
 
 
-def build_custom_matrix(config_path: str) -> list[dict] | None:
+def build_custom_matrix(config: dict) -> list[dict] | None:
     """
     Allow custom matrix builder script.
 
     Looks for: continuous_integration/build_job_matrix.py
     That script should define a function: build_custom_matrix(config) -> list[dict]
     """
-    if not os.path.exists("continuous_integration/build_job_matrix.py"):
+    if not os.path.exists(os.path.join(config["ci_path"], "build_job_matrix.py")):
         return None
-
-    print(
-        "Loading custom matrix builder from continuous_integration/build_job_matrix.py..."
-    )
-
-    # Load the config
-    with open(config_path, "r") as f:
-        config = json.load(f)
 
     # Import and run custom builder
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(
-        "custom_matrix_builder", "continuous_integration/build_job_matrix.py"
+        "custom_matrix_builder", os.path.join(config["ci_path"], "build_job_matrix.py")
     )
     if spec is not None:
         custom_module = importlib.util.module_from_spec(spec)
@@ -129,36 +162,34 @@ def build_custom_matrix(config_path: str) -> list[dict] | None:
     return None
 
 
+# %%
 if __name__ == "__main__":
-    # Load config from previous script
-    artifact_path = os.environ.get("ARTIFACT_PATH", "continuous_integration_artifacts")
-    config_file = os.path.join(artifact_path, "matrix_config.json")
+    print("=" * 60)
+    print("CI Build Pipeline: Build Matrix")
+    print("=" * 60)
 
-    with open(config_file, "r") as f:
-        config = json.load(f)
-
-    # Get compiler list (default: both)
-    compiler_list = os.environ.get("COMPILER_LIST", "arduino-cli,pio").split(",")
-    compiler_list = [c.strip() for c in compiler_list]
+    print_verbose(
+        "Reading configuration from environment variables, command line arguments, and the config file..."
+    )
+    args = get_extended_config()
+    set_verbose_mode(args.verbose)
 
     # Try custom matrix builder first
-    final_matrix = build_custom_matrix(config_file)
+    final_matrix = build_custom_matrix(vars(args))
 
     # Fall back to default
     if final_matrix is None:
-        final_matrix = build_default_matrix(
-            compiler_list,
-            config["examples_to_build"],
-            config["boards"],
-            config["inline_flags"],
-            config["compiler_flags"],
-        )
+        final_matrix = build_default_matrix(vars(args))
 
     # Save matrix to config for next script
-    config["final_matrix"] = final_matrix
-    config["compiler_list"] = compiler_list
+    args.final_matrix = final_matrix
 
-    with open(config_file, "w") as f:
-        json.dump(config, f, indent=2)
+    # Save to file for next script
+    print_verbose("Writing updated configuration to file...")
+    config_file = write_config_file(args)
 
     print(f"\nFinal matrix saved to: {config_file}")
+
+
+# %%
+# CSpell:ignore fqbns

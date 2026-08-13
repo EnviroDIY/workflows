@@ -13,15 +13,24 @@ This script handles:
 - Processing extra commands (like sed for inline flags)
 - Grouping commands for logging
 - Generating bash scripts
+
+Output job matrices to GitHub outputs and artifacts.
+
+Writes:
+- JSON matrices to continuous_integration_artifacts/
+- GitHub outputs for matrices
+- Summary information
 """
 
+# %%
 import os
 import sys
 import re
 import json
 from copy import deepcopy
 from typing import List, Optional
-from matrix_utils import get_filename_slug, print_verbose
+from build_utils import get_filename_slug, save_json_file
+from build_config import get_extended_config, set_verbose_mode, print_verbose
 
 # Global config
 use_verbose = os.environ.get("RUNNER_DEBUG") == "1"
@@ -67,7 +76,7 @@ def create_pio_ci_compile_command(
     workspace_path: str,
     code_subfolder: str,
     pio_board_or_env: str | List[str],
-    pio_config_file: str,
+    pio_config_file: str | None,
     use_pio_config_file: bool,
     compiler_flags: List[str] | None = None,
     use_run: bool = False,
@@ -81,7 +90,7 @@ def create_pio_ci_compile_command(
     ]
     if use_verbose:
         pio_command_args += ["--verbose"]
-    if use_pio_config_file:
+    if use_pio_config_file and pio_config_file is not None:
         pio_command_args += ["--project-conf", f'"{pio_config_file}"']
         if isinstance(pio_board_or_env, str):
             pio_command_args += ["--environment", pio_board_or_env]
@@ -134,7 +143,9 @@ def get_filename_for_log(job: dict, artifact_path: str, name_keys: list) -> str:
         compiler = job["compiler"]
     else:
         compiler = (
-            "arduino-cli" if "arduino-cli" in job.get("command", [""])[0] else "pio"
+            "arduino-cli"
+            if "arduino-cli" in job.get("command", [""])[0]
+            else "platformio"
         )
     extension = "json" if compiler == "arduino-cli" else "log"
 
@@ -196,12 +207,11 @@ def create_command_list_from_matrix(
 
     compiler = matrix_item.get("compiler", "")
     example = matrix_item.get("example", "")
-    board = matrix_item.get("board", "")
     compiler_flags = list(matrix_item.get("compiler_flags", []))
-    inline_flags = list(matrix_item.get("inline_flags", []))
+    inline_defines = list(matrix_item.get("inline_defines", []))
 
     job_dict = deepcopy(matrix_item)
-    job_dict["inline_flags"] = inline_flags
+    job_dict["inline_defines"] = inline_defines
     output_file_name = get_filename_for_log(
         job_dict,
         artifact_path,
@@ -213,45 +223,28 @@ def create_command_list_from_matrix(
     )
 
     if compiler == "arduino-cli":
-        pio_to_acli = config["pio_to_acli"]
-        acli_skip_boards = config["acli_skip_boards"]
-
-        acli_board = (
-            board if board in pio_to_acli else config["pio_env_to_board"].get(board)
-        )
-        if acli_board not in pio_to_acli or board in acli_skip_boards:
-            if use_verbose:
-                print(
-                    f"Skipping {example} for {board} because no matching Arduino FQBN was found."
-                )
-            return None
-        fqbn = pio_to_acli[acli_board]["fqbn"]
         build_command = create_arduino_cli_compile_command(
             workspace_path=workspace_path,
             code_subfolder=example,
-            fqbn=fqbn,
+            fqbn=(
+                matrix_item["fqbn"]
+                if "fqbn" in matrix_item
+                else matrix_item.get("board", "")
+            ),
             arduino_cli_config=config["arduino_cli_config"],
             compiler_flags=compiler_flags,
         )
-    elif compiler == "pio":
-        pio_skip_boards = config["pio_skip_boards"]
-
-        if board in pio_skip_boards:
-            if use_verbose:
-                print(
-                    f"Skipping {example} for {board} because it is in the list of boards to skip for PlatformIO."
-                )
-            return None
-
-        pio_board_or_env = board
-        use_pio_config_file = board in config["pio_env_to_board"].keys()
-
+    elif compiler in ["platformio", "pio"]:
         build_command = create_pio_ci_compile_command(
             workspace_path=workspace_path,
             code_subfolder=example,
-            pio_board_or_env=pio_board_or_env,
+            pio_board_or_env=(
+                matrix_item["pio_env"]
+                if "pio_env" in matrix_item
+                else matrix_item.get("board", "")
+            ),
             pio_config_file=config["pio_config_file"],
-            use_pio_config_file=use_pio_config_file,
+            use_pio_config_file=True if "pio_config_file" in config else False,
             compiler_flags=compiler_flags,
         )
     else:
@@ -261,7 +254,7 @@ def create_command_list_from_matrix(
     example_name = os.path.split(example)[-1]
     example_full_path = os.path.join(workspace_path, example, example_name + ".ino")
     sed_commands: List[str] = []
-    for flag in inline_flags:
+    for flag in inline_defines:
         if len(flag) > 0:
             define_name, _, define_value = flag.partition("=")
             sed_commands.append(
@@ -278,15 +271,60 @@ def create_command_list_from_matrix(
 
 
 if __name__ == "__main__":
-    # Load config
-    artifact_path = os.environ.get("ARTIFACT_PATH", "continuous_integration_artifacts")
-    config_file = os.path.join(artifact_path, "matrix_config.json")
+    print("=" * 60)
+    print("CI Build Pipeline: Build Jobs")
+    print("=" * 60)
 
-    with open(config_file, "r") as f:
-        config = json.load(f)
+    print_verbose(
+        "Reading configuration from environment variables, command line arguments, and the config file..."
+    )
+    args = get_extended_config()
+    set_verbose_mode(args.verbose)
+    config = vars(args)
 
-    workspace_path = config["workspace_path"]
-    final_matrix = config["final_matrix"]
+    workspace_path = args.workspace_path
+    artifact_path = args.artifact_path
+    final_matrix = args.final_matrix
+
+    # if any("board" in matrix_item.keys() for matrix_item in final_matrix):
+    #     import importlib.util
+
+    #     file_name = "1_configure_workspace.py"
+    #     spec = importlib.util.spec_from_file_location("module_name", file_name)
+    #     if spec is None or spec.loader is None:
+    #         raise ImportError(f"Could not load module from {file_name}")
+    #     module = importlib.util.module_from_spec(spec)
+    #     spec.loader.exec_module(module)
+
+    #     # Read the PlatformIO config and build mapping dictionaries for boards and environments
+    #     print_verbose("Reading the PlatformIO config...")
+    #     pio_ini_dir = os.path.dirname(args.pio_config_file)
+    #     pio_config = module.read_platformio_config(pio_ini_dir)
+    #     print_verbose("Building mapping dictionaries...")
+    #     pio_env_to_board, pio_env_to_platform, board_to_pio_env = (
+    #         module.build_pio_mappings(pio_config)
+    #     )
+
+    #     print_verbose("Loading PlatformIO to Arduino board conversion mapping...")
+    #     pio_env_to_fqbn, board_to_fqbn = module.load_pio_to_arduino_mapping()
+
+    #     # Compile the list of Arduino FQBNs to build based on the inputs and the known boards
+    #     print_verbose(
+    #         "Compiling the list of Arduino FQBNs to build based on the inputs and the known boards..."
+    #     )
+    #     build_fqbns, build_cores = module.get_arduino_fqbns_to_build(
+    #         args, pio_env_to_fqbn, board_to_fqbn
+    #     )
+
+    #     for n, matrix_item in enumerate(final_matrix):
+    #         if "board" in matrix_item:
+    #             board = matrix_item["board"]
+    #             fqbn = module.match_board_to_fqbn(board, pio_env_to_fqbn, board_to_fqbn)
+    #             env = module.match_board_to_env(
+    #                 board, pio_env_to_board, board_to_pio_env
+    #             )
+    #             final_matrix[n]["fqbn"] = fqbn
+    #             final_matrix[n]["pio_env"] = env
 
     # Convert matrix to command blocks
     print(f"Converting {len(final_matrix)} matrix items to command blocks...")
@@ -454,16 +492,45 @@ fi
             if vk == "job_name" or vk == "job_tag" or vk == "script"
         }
         for k, v in grouped_job_matrix.items()
-        if v["compiler"] == "pio"
+        if v["compiler"] in ["platformio", "pio"]
     ]
 
-    # Save to config
-    config["arduino_job_matrix"] = arduino_job_matrix
-    config["pio_job_matrix"] = pio_job_matrix
+    # Write matrices to JSON files
+    artifact_path = config["artifact_path"]
+    arduino_matrix_file = os.path.join(artifact_path, "arduino_job_matrix.json")
+    pio_matrix_file = os.path.join(artifact_path, "pio_job_matrix.json")
 
-    with open(config_file, "w") as f:
-        json.dump(config, f, indent=2)
+    save_json_file(arduino_matrix_file, arduino_job_matrix)
+    save_json_file(pio_matrix_file, pio_job_matrix)
 
-    print(f"\nJob matrices saved to: {config_file}")
+    print(f"Arduino job matrix saved to: {arduino_matrix_file}")
+    print(f"PlatformIO job matrix saved to: {pio_matrix_file}")
 
-# cSpell:ignore acli_board
+    # Output to GitHub
+    if "GITHUB_OUTPUT" in os.environ.keys():
+        with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+            print(
+                "arduino_job_matrix={}".format(json.dumps(arduino_job_matrix)), file=fh
+            )
+            print("pio_job_matrix={}".format(json.dumps(pio_job_matrix)), file=fh)
+        print("Outputs written to GITHUB_OUTPUT")
+    else:
+        print("::notice::Not running in GitHub Actions, skipping GITHUB_OUTPUT")
+
+    # Print summary
+    print("\n=== Job Matrix Summary ===")
+    print(f"Arduino CLI jobs: {len(arduino_job_matrix)}")
+    print(f"PlatformIO jobs: {len(pio_job_matrix)}")
+    print(f"Total jobs: {len(arduino_job_matrix) + len(pio_job_matrix)}")
+
+    if len(arduino_job_matrix) > 0:
+        print("\nArduino CLI jobs:")
+        for job in arduino_job_matrix:
+            print(f"  - {job['job_name']}")
+
+    if len(pio_job_matrix) > 0:
+        print("\nPlatformIO jobs:")
+        for job in pio_job_matrix:
+            print(f"  - {job['job_name']}")
+
+# cSpell:ignore fqbns

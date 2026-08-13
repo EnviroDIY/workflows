@@ -1,0 +1,18 @@
+# Requirements for the CI Build Pipeline
+wheel
+
+# for downloading files from the internet
+requests
+
+# for parsing command line arguments
+ConfigArgParse
+
+# for building firmware and reading the manifest file
+platformio
+
+# for building the firmware
+adafruit-nrfutil
+
+# for beautifying output in the console
+pandas
+tabulate

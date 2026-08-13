@@ -6,15 +6,7 @@ import re
 import json
 
 import pandas as pd
-from matrix_utils import get_ci_directories, print_verbose
-
-# %%
-# Setup working directories and verbose mode
-dirs = get_ci_directories()
-workspace_path = dirs["workspace_path"]
-ci_path = dirs["ci_path"]
-artifact_path = dirs["artifact_path"]
-
+from build_config import get_env_config
 
 # %%
 def parse_arduino_output(result_json: dict) -> dict[str, int | None] | None:
@@ -123,6 +115,10 @@ def get_job_info_from_filename(filename: str) -> dict:
 
 
 # %%
+# read the artifact path from the environment variable or config file
+args = get_env_config()
+artifact_path = args.artifact_path
+
 # parse all of the job logs and create a summary CSV file
 pio_logs = glob(os.path.join(artifact_path, "pio_*.log"))
 acli_logs = glob(os.path.join(artifact_path, "arduino_*.json"))
