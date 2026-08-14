@@ -449,8 +449,8 @@ if __name__ == "__main__":
     # Generate bash scripts
     start_job_commands: List[str] = ["status=0"]
     end_job_commands: List[str] = [
-        "\n\nls -R continuous_integration_artifacts/",
-        f"\n\nls -R {artifact_path}/",
+        "\n\nls -R continuous_integration_artifacts",
+        f"\n\nls -R {artifact_path}",
         "\n\nexit $status",
     ]
 
