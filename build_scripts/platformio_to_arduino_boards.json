@@ -1,43 +1,60 @@
 {
-  "mayfly": "EnviroDIY:avr:envirodiy_mayfly",
-  "envirodiy_stonefly_m4": "EnviroDIY:samd:stonefly_m4",
-  "uno": "arduino:avr:uno",
-  "megaatmega2560": "arduino:avr:mega",
-  "leonardo": "arduino:avr:leonardo",
-  "yun": "arduino:avr:yun",
-  "dueUSB": "arduino:sam:arduino_due_x",
-  "zero": "arduino:samd:arduino_zero_native",
-  "zeroUSB": "arduino:samd:mzero_bl",
-  "mkr1000USB": "arduino:samd:mkr1000",
-  "mkrvidor4000": "arduino:samd:mkrvidor4000",
-  "uno_wifi_rev2": "arduino:megaavr:uno2018",
-  "nano_every": "arduino:megaavr:nona4809",
-  "arduino_nano_esp32": "arduino:esp32:nano_nora",
-  "pico": "arduino:mbed_rp2040:pico",
-  "uno_r4_wifi": "arduino:renesas_uno:unor4wifi",
-  "nano33ble": "arduino:mbed_nano:nano33ble",
-  "portenta_h7_m7": "arduino:mbed_portenta:envie_m7",
   "feather328p": "adafruit:avr:feather328p",
   "feather32u4": "adafruit:avr:feather32u4",
+
   "adafruit_feather_m0": "adafruit:samd:adafruit_feather_m0",
   "adafruit_feather_m4": "adafruit:samd:adafruit_feather_m4",
   "adafruit_grandcentral_m4": "adafruit:samd:adafruit_grandcentral_m4",
+
   "adafruit_feather_nrf52840": "adafruit:nrf52:feather52840",
+
   "huzzah": "esp8266:esp8266:huzzah",
-  "featheresp32": "esp32:esp32:featheresp32",
-  "adafruit_feather_f405": "STMicroelectronics:stm32:GenF4",
-  "bluepill_f103c8": "STMicroelectronics:stm32:GenF1",
   "nodemcu": "esp8266:esp8266:nodemcu",
   "nodemcuv2": "esp8266:esp8266:nodemcuv2",
+
+  "featheresp32": "esp32:esp32:featheresp32",
   "esp32dev": "esp32:esp32:esp32",
   "esp32-c3-devkitm-1": "esp32:esp32:esp32c3",
   "esp32-c6-devkitm-1": "esp32:esp32:esp32c6",
   "esp32-s3-devkitm-1": "esp32:esp32:esp32s3",
+
+  "mayfly": "EnviroDIY:avr:envirodiy_mayfly",
+  "envirodiy_stonefly_m4": "EnviroDIY:samd:stonefly_m4",
+
+  "megaatmega2560": "arduino:avr:mega",
+  "leonardo": "arduino:avr:leonardo",
+  "uno": "arduino:avr:uno",
+  "yun": "arduino:avr:yun",
+
+  "dueUSB": "arduino:sam:arduino_due_x",
+
+  "zero": "arduino:samd:arduino_zero_native",
+  "zeroUSB": "arduino:samd:mzero_bl",
+  "mkr1000USB": "arduino:samd:mkr1000",
+  "mkrvidor4000": "arduino:samd:mkrvidor4000",
+
+  "uno_wifi_rev2": "arduino:megaavr:uno2018",
+  "nano_every": "arduino:megaavr:nona4809",
+
+  "arduino_nano_esp32": "arduino:esp32:nano_nora",
+
+  "pico": "arduino:mbed_rp2040:pico",
+
+  "nano33ble": "arduino:mbed_nano:nano33ble",
+  "portenta_h7_m7": "arduino:mbed_portenta:envie_m7",
+
+  "nicla_vision": "arduino:mbed_nicla:nicla_vision",
+  "nicla_sense": "arduino:mbed_nicla:nicla_sense",
+
+  "uno_r4_wifi": "arduino:renesas_uno:unor4wifi",
+
+  "nicla_vision_m4": "arduino:zephyr_main:nicla_vision",
+  "nicla_sense_me": "arduino:zephyr_main:nicla_sense",
+
+  "bluepill_f103c8": "STMicroelectronics:stm32:GenF1",
+  "adafruit_feather_f405": "STMicroelectronics:stm32:GenF4",
+
   "teensy31": "teensy:avr:teensy31",
   "teensy36": "teensy:avr:teensy36",
-  "teensy40": "teensy:avr:teensy40",
-  "nicla_vision": "arduino:mbed_nicla:nicla_vision",
-  "nicla_vision_m4": "arduino:zephyr_main:nicla_vision",
-  "nicla_sense": "arduino:mbed_nicla:nicla_sense",
-  "nicla_sense_me": "arduino:zephyr_main:nicla_sense"
+  "teensy40": "teensy:avr:teensy40"
 }
