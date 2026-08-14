@@ -131,8 +131,10 @@ def get_filename_slug(job_key, value) -> str:
 
     if job_key in ["compiler", "flag"]:
         return replace_all(value)
-    elif job_key in ["board"]:
-        if ":" in value:
+    elif job_key in ["board", "fqbn", "pio_env"]:
+        if ":" in value and "zephyr" in value:
+            return replace_all(value.rsplit(":")[-1]) + "-zephyr"
+        elif ":" in value:
             return replace_all(value.rsplit(":")[-1])
         else:
             return replace_all(value)
