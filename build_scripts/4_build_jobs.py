@@ -29,6 +29,7 @@ import re
 import json
 from copy import deepcopy
 from typing import List, Optional
+from subprocess import list2cmdline
 from build_utils import get_filename_slug, save_json_file
 from build_config import get_extended_config, set_verbose_mode, print_verbose
 
@@ -55,7 +56,7 @@ def create_arduino_cli_compile_command(
         "--warnings",
         "more",
         "--config-file",
-        f'"{arduino_cli_config}"',
+        f"{arduino_cli_config}",
         "--format",
         f"{arduino_cli_format}",
         "--fqbn",
@@ -67,9 +68,9 @@ def create_arduino_cli_compile_command(
             "compiler.cpp.extra_flags=" + " ".join(compiler_flags),
         ]
     arduino_command_args += [
-        f'"{os.path.join(workspace_path, code_subfolder)}"',
+        f"{os.path.join(workspace_path, code_subfolder)}",
     ]
-    return " ".join(arduino_command_args)
+    return list2cmdline(arduino_command_args)
 
 
 def create_pio_ci_compile_command(
@@ -91,7 +92,7 @@ def create_pio_ci_compile_command(
     if use_verbose:
         pio_command_args += ["--verbose"]
     if use_pio_config_file and pio_config_file is not None:
-        pio_command_args += ["--project-conf", f'"{pio_config_file}"']
+        pio_command_args += ["--project-conf", f"{pio_config_file}"]
         if isinstance(pio_board_or_env, str):
             pio_command_args += ["--environment", pio_board_or_env]
         else:
@@ -122,7 +123,7 @@ def create_pio_ci_compile_command(
         )
         pio_command_args += [
             "--project-dir",
-            f'"{os.path.realpath(os.path.join(artifact_dir, "pio_ci_build"))}"',
+            f"{os.path.realpath(os.path.join(artifact_dir, "pio_ci_build"))}",
         ]
     if len(compiler_flags) > 0 and not use_pio_config_file and not use_run:
         pio_command_args += [
@@ -131,10 +132,14 @@ def create_pio_ci_compile_command(
         ]
     if not use_run:
         pio_command_args += [
-            f'"{os.path.join(workspace_path, code_subfolder)}"',
+            f"{os.path.join(workspace_path, code_subfolder)}",
         ]
 
-    return " ".join(pio_command_args)
+    cmd_str = list2cmdline(pio_command_args)
+    if use_run:
+        cmd_str = f'export PLATFORMIO_SRC_DIR="{os.path.join(workspace_path, code_subfolder)}"\n{cmd_str}'
+
+    return cmd_str
 
 
 def get_filename_for_log(job: dict, artifact_path: str, name_keys: list) -> str:
