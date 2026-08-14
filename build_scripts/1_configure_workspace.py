@@ -233,7 +233,7 @@ def match_input_with_known_dicts(
         for k in secondary_dict.keys():
             if input_item.lower() == k.lower():
                 matches.append(k if return_keys else secondary_dict[k])
-                print(
+                print_verbose(
                     f"::notice::Matched input '{input_item}' with '{k if return_keys else secondary_dict[k]}'"
                 )
                 got_match = True
