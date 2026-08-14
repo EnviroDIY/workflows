@@ -30,11 +30,11 @@ if __name__ == "__main__":
         if os.path.exists(args.ci_path):
             files_to_remove = []
             # Only remove arduino_cli.yaml if it was downloaded
-            if args.downloaded_arduino_cli_config:
+            if args.downloaded_arduino_cli_config in [True, "True", "true"]:
                 files_to_remove.append(os.path.join(args.ci_path, "arduino_cli.yaml"))
 
             # Only remove platformio.ini if it was downloaded
-            if args.downloaded_pio_config:
+            if args.downloaded_pio_config in [True, "True", "true"]:
                 files_to_remove.append(os.path.join(args.ci_path, "platformio.ini"))
 
             for file_path in files_to_remove:
