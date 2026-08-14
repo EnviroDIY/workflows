@@ -35,5 +35,7 @@
   "esp32-s3-devkitm-1": "esp32:esp32:esp32s3",
   "teensy31": "teensy:avr:teensy31",
   "teensy36": "teensy:avr:teensy36",
-  "teensy40": "teensy:avr:teensy40"
+  "teensy40": "teensy:avr:teensy40",
+  "nicla_sense_me": "arduino:mbed_nicla:nicla_sense",
+  "nicla_vision": "arduino:mbed_nicla:nicla_vision"
 }
