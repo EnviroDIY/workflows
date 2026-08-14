@@ -354,7 +354,7 @@ if __name__ == "__main__":
     # Use log_grouping_fields from config, or default to all keys
     if "log_grouping_fields" in config and len(config["log_grouping_fields"]) > 0:
         log_groupers = config["log_grouping_fields"]
-        if "build_commands" or "other_commands" in log_groupers:
+        if "build_commands" in log_groupers or "other_commands" in log_groupers:
             print(
                 "::warning::'build_commands' and 'other_commands' should not be used as log grouping fields. They will be ignored."
             )

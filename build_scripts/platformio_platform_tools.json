@@ -83,7 +83,8 @@
       "tool-sreccat",
       "toolchain-gccarmnoneeabi",
       "framework-cmsis",
-      "framework-arduinoadafruitnrf52"
+      "framework-arduinoadafruitnrf52",
+      "tool-scons"
     ]
   },
 
