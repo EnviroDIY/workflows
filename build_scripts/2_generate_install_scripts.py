@@ -21,7 +21,6 @@ from build_config import get_extended_config, set_verbose_mode, print_verbose
 
 from platformio.package.meta import PackageSpec
 
-
 # %%
 # Bash script templates
 
@@ -160,7 +159,9 @@ def load_library_dependencies(workspace_path: str) -> dict:
     """
 
     library_json_file = os.path.join(workspace_path, "library.json")
+    print_verbose(f"Looking for library file at: {library_json_file}")
     if os.path.isfile(library_json_file):
+        print_verbose(f"Found library file at: {library_json_file}, loading...")
         with open(library_json_file) as f:
             return json.load(f)
     return {"dependencies": []}
@@ -175,7 +176,11 @@ def load_example_dependencies(examples_path: str) -> dict:
     """
 
     examples_deps_file = os.path.join(examples_path, "example_dependencies.json")
+    print_verbose(f"Looking for examples dependencies file at: {examples_deps_file}")
     if os.path.isfile(examples_deps_file):
+        print_verbose(
+            f"Found examples dependencies file at: {examples_deps_file}, loading..."
+        )
         with open(examples_deps_file) as f:
             return json.load(f)
     return {"dependencies": []}
@@ -419,7 +424,7 @@ if __name__ == "__main__":
     # Load dependencies
     print("Loading dependencies...")
     library_specs = load_library_dependencies(args.workspace_path)
-    example_specs = load_example_dependencies(args.workspace_path)
+    example_specs = load_example_dependencies(args.examples_path)
 
     # Ensure dependencies key exists
     if "dependencies" not in library_specs:
@@ -438,86 +443,90 @@ if __name__ == "__main__":
         and len(example_specs["dependencies"]) == 0
     ):
         print("\n✓ No dependencies to install")
-    else:
-        # Generate Arduino CLI scripts
-        print("\nGenerating Arduino CLI installation scripts...")
 
-        # Library dependencies for Arduino CLI
-        bash_file_name = "install-library-libdeps-arduino-cli.sh"
-        with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
-            f.write("#!/bin/bash\n\n")
-            f.write(DEBUG_TEXT)
-            f.write(ACLI_LIBRARY_START_TEXT.format(arduino_cli_config))
-            for library in library_specs["dependencies"]:
-                install_command = create_arduino_cli_lib_command(library)
-                command_with_log = add_log_to_command(
-                    install_command.format(arduino_cli_config),
-                    f"Installing {library['name']}",
-                )
-                f.write("\n".join(command_with_log))
-                f.write("\n")
-            f.write(ACLI_LIBRARY_END_TEXT.format(arduino_cli_config))
-        print(f"✓ Generated {bash_file_name}")
+    # NOTE: We still need to generate the install scripts even if there are no dependencies,
+    # because the build architecture expects them to exist.
+    # So we will generate empty scripts if there are no dependencies.
 
-        # Example dependencies for Arduino CLI
-        bash_file_name = "install-example-libdeps-arduino-cli.sh"
-        with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
-            f.write("#!/bin/bash\n\n")
-            f.write(DEBUG_TEXT)
-            f.write(ACLI_LIBRARY_START_TEXT.format(arduino_cli_config))
-            for library in example_specs["dependencies"]:
-                install_command = create_arduino_cli_lib_command(library)
-                command_with_log = add_log_to_command(
-                    install_command.format(arduino_cli_config),
-                    f"Installing {library['name']}",
-                )
-                f.write("\n".join(command_with_log))
-                f.write("\n")
-            f.write(ACLI_LIBRARY_END_TEXT.format(arduino_cli_config))
-        print(f"✓ Generated {bash_file_name}")
+    # Generate Arduino CLI scripts
+    print("\nGenerating Arduino CLI installation scripts...")
 
-        # Generate PlatformIO scripts (if available)
-        print("\nGenerating PlatformIO installation scripts...")
+    # Library dependencies for Arduino CLI
+    bash_file_name = "install-library-libdeps-arduino-cli.sh"
+    with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
+        f.write("#!/bin/bash\n\n")
+        f.write(DEBUG_TEXT)
+        f.write(ACLI_LIBRARY_START_TEXT.format(arduino_cli_config))
+        for library in library_specs["dependencies"]:
+            install_command = create_arduino_cli_lib_command(library)
+            command_with_log = add_log_to_command(
+                install_command.format(arduino_cli_config),
+                f"Installing {library['name']}",
+            )
+            f.write("\n".join(command_with_log))
+            f.write("\n")
+        f.write(ACLI_LIBRARY_END_TEXT.format(arduino_cli_config))
+    print(f"✓ Generated {bash_file_name}")
 
-        # Library dependencies for PlatformIO
-        bash_file_name = "install-library-libdeps-platformio.sh"
-        with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
-            f.write("#!/bin/bash\n\n")
-            f.write(DEBUG_TEXT)
-            f.write(PIO_LIBRARY_START_TEXT)
-            for library in library_specs["dependencies"]:
-                # spec = get_package_spec(library)
-                # if spec:
-                install_command = create_pio_ci_lib_command(
-                    library, update=False, include_version=True
-                )
-                command_with_log = add_log_to_command(
-                    install_command, f"Installing {library['name']}"
-                )
-                f.write("\n".join(command_with_log))
-                f.write("\n")
-            f.write(PIO_LIBRARY_END_TEXT)
-        print(f"✓ Generated {bash_file_name}")
+    # Example dependencies for Arduino CLI
+    bash_file_name = "install-example-libdeps-arduino-cli.sh"
+    with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
+        f.write("#!/bin/bash\n\n")
+        f.write(DEBUG_TEXT)
+        f.write(ACLI_LIBRARY_START_TEXT.format(arduino_cli_config))
+        for library in example_specs["dependencies"]:
+            install_command = create_arduino_cli_lib_command(library)
+            command_with_log = add_log_to_command(
+                install_command.format(arduino_cli_config),
+                f"Installing {library['name']}",
+            )
+            f.write("\n".join(command_with_log))
+            f.write("\n")
+        f.write(ACLI_LIBRARY_END_TEXT.format(arduino_cli_config))
+    print(f"✓ Generated {bash_file_name}")
 
-        # Example dependencies for PlatformIO
-        bash_file_name = "install-example-libdeps-platformio.sh"
-        with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
-            f.write("#!/bin/bash\n\n")
-            f.write(DEBUG_TEXT)
-            f.write(PIO_LIBRARY_START_TEXT)
-            for library in example_specs["dependencies"]:
-                # spec = get_package_spec(library)
-                # if spec:
-                install_command = create_pio_ci_lib_command(
-                    library, update=False, include_version=True
-                )
-                command_with_log = add_log_to_command(
-                    install_command, f"Installing {library['name']}"
-                )
-                f.write("\n".join(command_with_log))
-                f.write("\n")
-            f.write(PIO_LIBRARY_END_TEXT)
-        print(f"✓ Generated {bash_file_name}")
+    # Generate PlatformIO scripts (if available)
+    print("\nGenerating PlatformIO installation scripts...")
+
+    # Library dependencies for PlatformIO
+    bash_file_name = "install-library-libdeps-platformio.sh"
+    with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
+        f.write("#!/bin/bash\n\n")
+        f.write(DEBUG_TEXT)
+        f.write(PIO_LIBRARY_START_TEXT)
+        for library in library_specs["dependencies"]:
+            # spec = get_package_spec(library)
+            # if spec:
+            install_command = create_pio_ci_lib_command(
+                library, update=False, include_version=True
+            )
+            command_with_log = add_log_to_command(
+                install_command, f"Installing {library['name']}"
+            )
+            f.write("\n".join(command_with_log))
+            f.write("\n")
+        f.write(PIO_LIBRARY_END_TEXT)
+    print(f"✓ Generated {bash_file_name}")
+
+    # Example dependencies for PlatformIO
+    bash_file_name = "install-example-libdeps-platformio.sh"
+    with open(os.path.join(args.artifact_path, bash_file_name), "w") as f:
+        f.write("#!/bin/bash\n\n")
+        f.write(DEBUG_TEXT)
+        f.write(PIO_LIBRARY_START_TEXT)
+        for library in example_specs["dependencies"]:
+            # spec = get_package_spec(library)
+            # if spec:
+            install_command = create_pio_ci_lib_command(
+                library, update=False, include_version=True
+            )
+            command_with_log = add_log_to_command(
+                install_command, f"Installing {library['name']}"
+            )
+            f.write("\n".join(command_with_log))
+            f.write("\n")
+        f.write(PIO_LIBRARY_END_TEXT)
+    print(f"✓ Generated {bash_file_name}")
 
     print("\n✓ Installation scripts generated successfully")
     print("✓ Ready for job matrix building and compilation")
