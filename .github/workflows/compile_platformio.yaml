@@ -64,7 +64,9 @@ jobs:
         with:
           path: |
             ~/.platformio/packages
+            ~/.platformio/dist
             ~/.platformio/platforms
+            ~/.platformio/tools
           key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
           restore-keys: |
             pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}
@@ -98,7 +100,9 @@ jobs:
         with:
           path: |
             ~/.platformio/packages
+            ~/.platformio/dist
             ~/.platformio/platforms
+            ~/.platformio/tools
           key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
 
       - &restore_libraries

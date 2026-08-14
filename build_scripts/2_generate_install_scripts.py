@@ -533,4 +533,4 @@ if __name__ == "__main__":
 
 
 # %%
-# CSpell:ignore fqbns
+# CSpell:ignore

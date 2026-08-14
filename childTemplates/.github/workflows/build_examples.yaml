@@ -41,17 +41,24 @@ jobs:
       # # Comma-separated list of examples to ignore (mutually exclusive with examples_to_build)
       # examples_to_ignore: "examples/example_to_skip"
 
-      # # Comma-separated list of boards to build with Arduino CLI or "all" for all (default: all)
-      # # Mutually exclusive with arduino_boards_to_ignore
-      # arduino_boards_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
-      # # Comma-separated list of Arduino boards to skip (default: uno_pic32,genuino101)
-      # # Mutually exclusive with arduino_boards_to_build
-      # arduino_boards_to_ignore: "uno_pic32,genuino101"
+      # # Comma-separated list of boards to build with all compilers "all" for all (default: all)
+      # # Mutually exclusive with boards_to_ignore
+      # boards_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
+      # # Comma-separated list of boards to skip with any compiler (default: empty)
+      # # Mutually exclusive with boards_to_build
+      # boards_to_ignore: ""
 
-      # # Comma-separated list of PlatformIO environments to build or "all" for all (default: all)
+      # # Comma-separated list of Arduino FQBNs or board names to build with Arduino CLI or "all" for all (default: all)
+      # # Mutually exclusive with arduino_fqbns_to_ignore
+      # arduino_fqbns_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
+      # # Comma-separated list of Arduino FQBNs or board names to skip (default: empty)
+      # # Mutually exclusive with arduino_fqbns_to_build
+      # arduino_fqbns_to_ignore: ""
+
+      # # Comma-separated list of PlatformIO environments or board names to build or "all" for all (default: all)
       # # Mutually exclusive with pio_envs_to_ignore
       # pio_envs_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
-      # # Comma-separated list of PlatformIO environments to skip (default: esp32-c6-devkitm-1,arduino_nano_esp32)
+      # # Comma-separated list of PlatformIO environments or board names to skip (default: esp32-c6-devkitm-1,arduino_nano_esp32)
       # # Mutually exclusive with pio_envs_to_build
       # pio_envs_to_ignore: "esp32-c6-devkitm-1,arduino_nano_esp32"
 

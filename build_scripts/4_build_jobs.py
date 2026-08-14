@@ -449,8 +449,6 @@ if __name__ == "__main__":
     # Generate bash scripts
     start_job_commands: List[str] = ["status=0"]
     end_job_commands: List[str] = [
-        "\n\nls -R continuous_integration_artifacts",
-        f"\n\nls -R {artifact_path}",
         "\n\nexit $status",
     ]
 
@@ -537,4 +535,4 @@ fi
         for job in pio_job_matrix:
             print(f"  - {job['job_name']}")
 
-# cSpell:ignore fqbns
+# cSpell:ignore

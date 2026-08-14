@@ -44,7 +44,7 @@ def build_custom_matrix(config):
             - pio_to_acli: Board conversion mapping
             - board_to_pio_env: PlatformIO environment mapping
             - pio_env_to_board: Reverse mapping
-            - arduino_boards_to_ignore: Boards to skip for Arduino CLI
+            - arduino_fqbns_to_ignore: Boards to skip for Arduino CLI
             - pio_envs_to_ignore: Boards to skip for PlatformIO
 
     Returns:

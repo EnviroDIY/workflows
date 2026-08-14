@@ -49,8 +49,10 @@ list_args = [
     "compiler_list",
     "examples_to_build",
     "examples_to_ignore",
-    "arduino_boards_to_build",
-    "arduino_boards_to_ignore",
+    "boards_to_build",
+    "boards_to_ignore",
+    "arduino_fqbns_to_build",
+    "arduino_fqbns_to_ignore",
     "pio_envs_to_build",
     "pio_envs_to_ignore",
     "log_grouping_fields",
@@ -244,29 +246,44 @@ def get_env_parser():
         type=str,
     )
 
-    cli_group = parser.add_mutually_exclusive_group()
+    boards_group = parser.add_argument_group("Board Selections")
+
+    common_boards_group = boards_group.add_mutually_exclusive_group()
+    common_boards_group.add_argument(
+        "--boards-to-build",
+        help='comma-separated list of board names to build with all compilers (or "all" for all)',
+        type=str,
+        default="all",
+    )
+    boards_group.add_argument(
+        "--boards-to-ignore",
+        help="comma-separated list of board names to skip when building with any compilers",
+        type=str,
+    )
+
+    cli_group = boards_group.add_mutually_exclusive_group()
     cli_group.add_argument(
         "--arduino-boards-to-build",
-        help='comma-separated list of boards to build with the Arduino CLI (or "all" for all)',
+        help='comma-separated list of FQBNs or board names to build with the Arduino CLI (or "all" for all)',
         type=str,
         default="all",
     )
     cli_group.add_argument(
         "--arduino-boards-to-ignore",
-        help="comma-separated list of boards to skip when building with the Arduino CLI",
+        help="comma-separated list of FQBNs or board names to skip when building with the Arduino CLI",
         type=str,
     )
 
-    pio_group = parser.add_mutually_exclusive_group()
+    pio_group = boards_group.add_mutually_exclusive_group()
     pio_group.add_argument(
         "--pio-envs-to-build",
-        help='comma-separated list of boards to build with PlatformIO (or "all" for all)',
+        help='comma-separated list of environment names or board names to build with PlatformIO (or "all" for all)',
         type=str,
         default="all",
     )
     pio_group.add_argument(
         "--pio-envs-to-ignore",
-        help="comma-separated list of boards to skip when building with PlatformIO",
+        help="comma-separated list of environment names or board names to skip when building with PlatformIO",
         type=str,
     )
 
@@ -564,4 +581,4 @@ if __name__ == "__main__":
     print("✓ Workflow inputs parsed successfully")
 
 # %%
-# cSpell:ignore DFLAG
+# cSpell:ignore

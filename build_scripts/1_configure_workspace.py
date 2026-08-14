@@ -304,20 +304,20 @@ def get_arduino_fqbns_to_build(
 ):
     """Parse boards from environment or use all available boards"""
 
-    print_verbose(f"Requested boards to build: {len(args.arduino_boards_to_build)}")
-    for board in args.arduino_boards_to_build:
+    print_verbose(f"Requested boards to build: {len(args.arduino_fqbns_to_build)}")
+    for board in args.arduino_fqbns_to_build:
         print_verbose(f"  - {board}")
-    print_verbose(f"Requested boards to ignore: {len(args.arduino_boards_to_ignore)}")
-    for board in args.arduino_boards_to_ignore:
+    print_verbose(f"Requested boards to ignore: {len(args.arduino_fqbns_to_ignore)}")
+    for board in args.arduino_fqbns_to_ignore:
         print_verbose(f"  - {board}")
 
     # NOTE argparser will enforce that the user cannot specify both
-    # arduino_boards_to_build and arduino_boards_to_ignore at the same time.
+    # arduino_fqbns_to_build and arduino_fqbns_to_ignore at the same time.
     build_fqbns = []
-    if args.arduino_boards_to_build not in unset_positive:
+    if args.arduino_fqbns_to_build not in unset_positive:
         print("Building specified Arduino boards.")
         build_fqbns = match_input_with_known_dicts(
-            args.arduino_boards_to_build, pio_env_to_fqbn, board_to_fqbn, "values"
+            args.arduino_fqbns_to_build, pio_env_to_fqbn, board_to_fqbn, "values"
         )
     elif args.downloaded_pio_config in [False, "False", "false"]:
         print(
@@ -326,17 +326,17 @@ def get_arduino_fqbns_to_build(
         build_fqbns = [
             v for k, v in pio_env_to_fqbn.items() if k in board_to_pio_env.keys()
         ]
-        if args.arduino_boards_to_ignore not in unset_negative:
+        if args.arduino_fqbns_to_ignore not in unset_negative:
             ignore_boards = match_input_with_known_dicts(
-                args.arduino_boards_to_ignore, pio_env_to_fqbn, board_to_fqbn, "values"
+                args.arduino_fqbns_to_ignore, pio_env_to_fqbn, board_to_fqbn, "values"
             )
             build_fqbns = list(set(build_fqbns).difference(set(ignore_boards)))
     else:
         print("Building all known Arduino boards except those specified to ignore.")
         build_fqbns = list(pio_env_to_fqbn.values())
-        if args.arduino_boards_to_ignore not in unset_negative:
+        if args.arduino_fqbns_to_ignore not in unset_negative:
             ignore_boards = match_input_with_known_dicts(
-                args.arduino_boards_to_ignore, pio_env_to_fqbn, board_to_fqbn, "values"
+                args.arduino_fqbns_to_ignore, pio_env_to_fqbn, board_to_fqbn, "values"
             )
             build_fqbns = list(
                 set(pio_env_to_fqbn.values()).difference(set(ignore_boards))
@@ -365,10 +365,10 @@ def get_arduino_fqbns_to_build(
     return build_fqbns, build_cores
 
 
-def match_board_to_pio_env(board: str, pio_env_to_board: dict, board_to_pio_env: dict):
+def match_board_to_pio_env(board: str, board_to_pio_env: dict, pio_env_to_board: dict):
     """Match a board name to a PlatformIO environment name using the board_to_pio_env mapping."""
     matched_env = match_input_with_known_dicts(
-        [board], pio_env_to_board, board_to_pio_env, "keys"
+        [board], board_to_pio_env, pio_env_to_board, "keys"
     )
     if len(matched_env) == 0:
         print(
@@ -378,10 +378,10 @@ def match_board_to_pio_env(board: str, pio_env_to_board: dict, board_to_pio_env:
     return matched_env[0]
 
 
-def match_board_to_fqbn(board: str, pio_env_to_fqbn: dict, board_to_fqbn: dict):
+def match_board_to_fqbn(board: str, board_to_fqbn: dict, pio_env_to_fqbn: dict):
     """Match a board name to an Arduino FQBN using the pio_env_to_fqbn."""
     matched_fqbn = match_input_with_known_dicts(
-        [board], pio_env_to_fqbn, board_to_fqbn, "values"
+        [board], board_to_fqbn, pio_env_to_fqbn, "values"
     )
     if len(matched_fqbn) == 0:
         print(f"::warning::Could not match board '{board}' to an Arduino FQBN.")
@@ -651,4 +651,4 @@ if __name__ == "__main__":
 
 
 # %%
-# CSpell:ignore fqbns argparser
+# CSpell:ignore argparser

@@ -22,7 +22,8 @@
       "framework-arduino-samd-sodaq",
       "framework-cmsis",
       "framework-cmsis-atmel",
-      "toolchain-gccarmnoneeabi"
+      "toolchain-gccarmnoneeabi",
+      "tool-scons"
     ]
   },
 
@@ -81,6 +82,7 @@
       "tool-adafruit-nrfutil",
       "tool-sreccat",
       "toolchain-gccarmnoneeabi",
+      "framework-cmsis",
       "framework-arduinoadafruitnrf52"
     ]
   },
@@ -91,7 +93,9 @@
       "framework-arduino-mbed",
       "framework-arduinoststm32",
       "framework-cmsis",
-      "toolchain-gccarmnoneeabi"
+      "framework-framework-cmsis-dsp",
+      "toolchain-gccarmnoneeabi",
+      "tool-scons"
     ]
   },
 
