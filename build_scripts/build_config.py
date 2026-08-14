@@ -62,7 +62,8 @@ unset_positive = ["all", "", ["all"], [""], []]
 # for values with a default of None or "", these are considered unset
 unset_negative = ["", None, [""], [None], []]
 
-
+# %%
+# verbose printing
 use_verbose = (
     False  # set to True to print debug messages (updated by read_env_config())
 )
@@ -235,8 +236,9 @@ def get_env_parser():
     ex_group = parser.add_mutually_exclusive_group()
     ex_group.add_argument(
         "--examples-to-build",
-        help='comma-separated list of examples to build (or "all" for all). '
-        "This should be a list of example folder names, not the .ino file names.",
+        help='comma-separated list of examples to build (or "all" for all)'
+        "\nThis should be a list of example folder names relative to the workspace path, "
+        "not the .ino file names.",
         type=str,
         default="all",
     )
@@ -246,22 +248,25 @@ def get_env_parser():
         type=str,
     )
 
-    boards_group = parser.add_argument_group("Board Selections")
-
-    common_boards_group = boards_group.add_mutually_exclusive_group()
+    common_boards_group = parser.add_argument_group(
+        "Board selections for all compilers"
+    )
     common_boards_group.add_argument(
         "--boards-to-build",
         help='comma-separated list of board names to build with all compilers (or "all" for all)',
         type=str,
         default="all",
     )
-    boards_group.add_argument(
+    common_boards_group.add_argument(
         "--boards-to-ignore",
         help="comma-separated list of board names to skip when building with any compilers",
         type=str,
     )
 
-    cli_group = boards_group.add_mutually_exclusive_group()
+    cli_group = parser.add_argument_group(
+        "Arduino CLI specific board selections"
+        "\nThese will be added to the common boards-to-build list and the common boards-to-ignore list."
+    )
     cli_group.add_argument(
         "--arduino-boards-to-build",
         help='comma-separated list of FQBNs or board names to build with the Arduino CLI (or "all" for all)',
@@ -274,7 +279,10 @@ def get_env_parser():
         type=str,
     )
 
-    pio_group = boards_group.add_mutually_exclusive_group()
+    pio_group = parser.add_argument_group(
+        "PlatformIO specific environment selections"
+        "\nThese will be added to the common boards-to-build list and the common boards-to-ignore list."
+    )
     pio_group.add_argument(
         "--pio-envs-to-build",
         help='comma-separated list of environment names or board names to build with PlatformIO (or "all" for all)',
@@ -289,17 +297,17 @@ def get_env_parser():
 
     parser.add_argument(
         "--inline-defines",
-        help="semicolon separated list of comma-separated lists of defined values that will be written to the top of the example code as #define statements. "
-        "To set a value, use the format: NAME=VALUE. For example: `DEBUG,VERSION=1.0;VERSION=2.0`.  "
-        "These will NOT be passed to the compiler!",
+        help="\nsemicolon separated list of comma-separated lists of defined values that will be written to the top of the example code as #define statements"
+        "\nTo set a value, use the format: NAME=VALUE. For example: `DEBUG,VERSION=1.0;VERSION=2.0`."
+        "\nThese will NOT be passed to the compiler!",
         type=str,
         default="",
         dest="raw_inline_defines",
     )
     parser.add_argument(
         "--compiler-flags",
-        help="semicolon separated list of comma-separated lists of compiler flags that will be passed to the compiler. "
-        "For example: `-Wall,-Wextra,-D DEBUG,-D VERSION=1.0;-Wall,-Wextra,-D VERSION=2.0`",
+        help="semicolon separated list of comma-separated lists of compiler flags that will be passed to the compiler."
+        "\nFor example: `-Wall,-Wextra,-D DEBUG,-D VERSION=1.0;-Wall,-Wextra,-D VERSION=2.0`",
         type=str,
         default="",
         dest="raw_compiler_flags",

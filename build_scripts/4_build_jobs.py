@@ -306,20 +306,20 @@ if __name__ == "__main__":
     #     )
 
     #     print_verbose("Loading PlatformIO to Arduino board conversion mapping...")
-    #     pio_env_to_fqbn, board_to_fqbn = module.load_pio_to_arduino_mapping()
+    #     pio_board_to_fqbn, board_to_fqbn = module.load_pio_to_arduino_mapping()
 
     #     # Compile the list of Arduino FQBNs to build based on the inputs and the known boards
     #     print_verbose(
     #         "Compiling the list of Arduino FQBNs to build based on the inputs and the known boards..."
     #     )
     #     build_fqbns, build_cores = module.get_arduino_fqbns_to_build(
-    #         args, pio_env_to_fqbn, board_to_fqbn
+    #         args, pio_board_to_fqbn, board_to_fqbn
     #     )
 
     #     for n, matrix_item in enumerate(final_matrix):
     #         if "board" in matrix_item:
     #             board = matrix_item["board"]
-    #             fqbn = module.match_board_to_fqbn(board, pio_env_to_fqbn, board_to_fqbn)
+    #             fqbn = module.match_board_to_fqbn(board, pio_board_to_fqbn, board_to_fqbn)
     #             env = module.match_board_to_env(
     #                 board, pio_env_to_board, board_to_pio_env
     #             )
