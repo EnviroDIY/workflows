@@ -45,6 +45,20 @@
       "toolchain-xtensa-esp32",
       "contrib-piohome",
       "framework-arduinoespressif32",
+      "tool-mklittlefs",
+      "toolchain-xtensa-esp-elf"
+    ]
+  },
+
+  "https://github.com/pioarduino/platform-espressif32/releases/download/stable/platform-espressif32.zip": {
+    "name": "Espressif ESP32",
+    "tools": [
+      "tool-esptool",
+      "tool-esptoolpy",
+      "toolchain-riscv32-esp",
+      "toolchain-xtensa-esp32",
+      "contrib-piohome",
+      "framework-arduinoespressif32",
       "framework-arduinoespressif32-libs",
       "tool-mklittlefs",
       "toolchain-xtensa-esp-elf"
