@@ -339,7 +339,7 @@ def match_board_to_fqbn(
 
 def get_boards_to_build(
     args: configargparse.Namespace,
-    compiler_board_dictionaries: list[dict[str, str | list[str]]],
+    compiler_board_dictionaries: list[dict[str, str]],
 ) -> list[str]:
     """Parse boards from environment or use all available boards"""
 
@@ -420,8 +420,12 @@ def get_pio_envs_to_build(
         )
         build_envs = list(set(build_envs).difference(set(ignore_boards)))
 
-    build_platforms = [v for k, v in pio_env_to_platform.items() if k in build_envs]
+    # de-duplicate
+    build_envs = list(set(build_envs))
 
+    # Get matching platforms for the build_envs list
+    build_platforms = [v for k, v in pio_env_to_platform.items() if k in build_envs]
+    # de-duplicate and sort the platforms list
     build_platforms = list(set(build_platforms))
     build_platforms.sort(key=str.casefold)
 
@@ -435,7 +439,7 @@ def get_pio_envs_to_build(
     for env in build_envs:
         print_verbose(f"  - {env}")
 
-    return list(set(build_envs)), build_platforms
+    return build_envs, build_platforms
 
 
 def get_arduino_fqbns_to_build(
@@ -493,6 +497,10 @@ def get_arduino_fqbns_to_build(
         )
         build_fqbns = list(set(build_fqbns).difference(set(ignore_boards)))
 
+    # de-duplicate and sort the FQBNs list
+    build_fqbns = list(set(build_fqbns))
+    build_fqbns.sort(key=str.casefold)
+
     # The core is the first two parts of the FQBN (the part before the last colon).
     build_cores = [v.rsplit(":", 1)[0] for v in build_fqbns]
 
@@ -513,7 +521,7 @@ def get_arduino_fqbns_to_build(
     for fqbn in build_fqbns:
         print_verbose(f"  - {fqbn}")
 
-    return list(set(build_fqbns)), build_cores
+    return build_fqbns, build_cores
 
 
 # %%
@@ -691,10 +699,6 @@ if __name__ == "__main__":
     args: configargparse.Namespace = get_extended_config()
     set_verbose_mode(args.verbose)
 
-    common_boards = get_boards_to_build(
-        args, [args.pio_env_to_board, args.pio_board_to_fqbn]
-    )
-
     # if the user has requested to build PlatformIO environments or if they have not
     # specified any boards to build, we will download the PlatformIO config to get all
     # typical build boards and environments and build the mapping dictionaries.
@@ -722,9 +726,9 @@ if __name__ == "__main__":
     else:
         args.pio_config_file = None
         args.downloaded_pio_config = False
-        pio_env_to_board = {}
-        pio_env_to_platform = {}
-        board_to_pio_env = {}
+        pio_env_to_board: dict[str, str] = {}
+        pio_env_to_platform: dict[str, str] = {}
+        board_to_pio_env: dict[str, str | list[str]] = {}
 
     # if the user has requested to build Arduino boards or if they have not
     # specified any boards to build, we will download the mapping which has all
@@ -735,13 +739,24 @@ if __name__ == "__main__":
         print_verbose("Building mapping dictionaries...")
         pio_board_to_fqbn, board_to_fqbn = build_arduino_mappings(pio_board_to_fqbn)
     else:
-        pio_board_to_fqbn = {}
-        board_to_fqbn = {}
+        pio_board_to_fqbn: dict[str, str] = {}
+        board_to_fqbn: dict[str, str | list[str]] = {}
+
+    if (
+        args.boards_to_build in unset_positive
+        or args.boards_to_ignore not in unset_negative
+    ):
+        print_verbose(
+            "Compiling the list of common boards to build based on the inputs and the known boards..."
+        )
+        common_boards = get_boards_to_build(args, [pio_env_to_board, pio_board_to_fqbn])
+    else:
+        common_boards = []
 
     if "platformio" in args.compiler_list:
         # Compile the list of PlatformIO environments to build based on the inputs and the known boards
         print_verbose(
-            "Compiling the list of PlatformIO environments to build based on the inputs and the known boards..."
+            "Converting common boards to PlatformIO environments and adding specifically requested environments..."
         )
         build_envs, build_platforms = get_pio_envs_to_build(
             args, common_boards, pio_env_to_board, pio_env_to_platform, board_to_pio_env
@@ -755,7 +770,7 @@ if __name__ == "__main__":
     if "arduino-cli" in args.compiler_list:
         # Compile the list of Arduino FQBNs to build based on the inputs and the known boards
         print_verbose(
-            "Compiling the list of Arduino FQBNs to build based on the inputs and the known boards..."
+            "Converting common boards to Arduino FQBNs and adding specifically requested FQBNs..."
         )
         build_fqbns, build_cores = get_arduino_fqbns_to_build(
             args, common_boards, pio_board_to_fqbn, board_to_fqbn
