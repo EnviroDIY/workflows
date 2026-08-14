@@ -36,6 +36,8 @@
   "teensy31": "teensy:avr:teensy31",
   "teensy36": "teensy:avr:teensy36",
   "teensy40": "teensy:avr:teensy40",
-  "nicla_sense_me": "arduino:mbed_nicla:nicla_sense",
-  "nicla_vision": "arduino:mbed_nicla:nicla_vision"
+  "nicla_vision": "arduino:mbed_nicla:nicla_vision",
+  "nicla_vision_m4": "arduino:zephyr_main:nicla_vision",
+  "nicla_sense": "arduino:mbed_nicla:nicla_sense",
+  "nicla_sense_me": "arduino:zephyr_main:nicla_sense"
 }
