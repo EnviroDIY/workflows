@@ -59,7 +59,6 @@
       "toolchain-xtensa-esp32",
       "contrib-piohome",
       "framework-arduinoespressif32",
-      "framework-arduinoespressif32-libs",
       "tool-mklittlefs",
       "toolchain-xtensa-esp-elf"
     ]
