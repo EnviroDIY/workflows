@@ -93,7 +93,7 @@
       "framework-arduino-mbed",
       "framework-arduinoststm32",
       "framework-cmsis",
-      "framework-framework-cmsis-dsp",
+      "framework-cmsis-dsp",
       "toolchain-gccarmnoneeabi",
       "tool-scons"
     ]
