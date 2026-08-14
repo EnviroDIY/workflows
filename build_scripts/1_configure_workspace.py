@@ -299,7 +299,9 @@ def get_pio_envs_to_build(
     return build_envs, list(set(build_platforms))
 
 
-def get_arduino_fqbns_to_build(args, pio_env_to_fqbn: dict, board_to_fqbn: dict):
+def get_arduino_fqbns_to_build(
+    args, pio_env_to_fqbn: dict, board_to_fqbn: dict, board_to_pio_env: dict = {}
+):
     """Parse boards from environment or use all available boards"""
 
     print_verbose(f"Requested boards to build: {len(args.arduino_boards_to_build)}")
@@ -317,6 +319,18 @@ def get_arduino_fqbns_to_build(args, pio_env_to_fqbn: dict, board_to_fqbn: dict)
         build_fqbns = match_input_with_known_dicts(
             args.arduino_boards_to_build, pio_env_to_fqbn, board_to_fqbn, "values"
         )
+    elif args.downloaded_pio_config in [False, "False", "false"]:
+        print(
+            "Building all Arduino boards matched with the custom PlatformIO configuration file, except those specified to ignore."
+        )
+        build_fqbns = [
+            v for k, v in pio_env_to_fqbn.items() if k in board_to_pio_env.keys()
+        ]
+        if args.arduino_boards_to_ignore not in unset_negative:
+            ignore_boards = match_input_with_known_dicts(
+                args.arduino_boards_to_ignore, pio_env_to_fqbn, board_to_fqbn, "values"
+            )
+            build_fqbns = list(set(build_fqbns).difference(set(ignore_boards)))
     else:
         print("Building all known Arduino boards except those specified to ignore.")
         build_fqbns = list(pio_env_to_fqbn.values())
@@ -550,6 +564,42 @@ if __name__ == "__main__":
     args = get_extended_config()
     set_verbose_mode(args.verbose)
 
+    # Download the PlatformIO config
+    # Create mapping dictionaries for boards and environments
+    # Save to args namespace for later use
+    print_verbose("Looking for a PlatformIO config and downloading if needed...")
+    pio_config_file, downloaded_pio_config = load_platformio_config(
+        args.ci_path, args.artifact_path
+    )
+
+    # Read the PlatformIO config and build mapping dictionaries for boards and environments
+    print_verbose("Reading the PlatformIO config...")
+    pio_ini_dir = os.path.dirname(pio_config_file)
+    pio_config = read_platformio_config(pio_ini_dir)
+    print_verbose("Building mapping dictionaries...")
+    pio_env_to_board, pio_env_to_platform, board_to_pio_env = build_pio_mappings(
+        pio_config
+    )
+
+    # Compile the list of PlatformIO environments to build based on the inputs and the known boards
+    print_verbose(
+        "Compiling the list of PlatformIO environments to build based on the inputs and the known boards..."
+    )
+    build_envs, build_platforms = get_pio_envs_to_build(
+        args, pio_env_to_board, pio_env_to_platform, board_to_pio_env
+    )
+
+    if "platformio" in args.compiler_list:
+        args.pio_config_file = pio_config_file
+        args.downloaded_pio_config = downloaded_pio_config
+        args.build_envs = build_envs
+        args.build_platforms = build_platforms
+    else:
+        args.pio_config_file = None
+        args.downloaded_pio_config = False
+        args.build_envs = []
+        args.build_platforms = []
+
     # Download conversion from PlatformIO to Arduino boards
     # Save the file name and content to the args namespace for later use
     if "arduino-cli" in args.compiler_list:
@@ -570,7 +620,7 @@ if __name__ == "__main__":
             "Compiling the list of Arduino FQBNs to build based on the inputs and the known boards..."
         )
         build_fqbns, build_cores = get_arduino_fqbns_to_build(
-            args, pio_env_to_fqbn, board_to_fqbn
+            args, pio_env_to_fqbn, board_to_fqbn, board_to_pio_env
         )
         args.build_fqbns = build_fqbns
         args.build_cores = build_cores
@@ -579,41 +629,6 @@ if __name__ == "__main__":
         args.downloaded_arduino_cli_config = False
         args.build_fqbns = []
         args.build_cores = []
-
-    if "platformio" in args.compiler_list:
-        # Download the PlatformIO config
-        # Create mapping dictionaries for boards and environments
-        # Save to args namespace for later use
-        print_verbose("Looking for a PlatformIO config and downloading if needed...")
-        pio_config_file, downloaded_pio_config = load_platformio_config(
-            args.ci_path, args.artifact_path
-        )
-        args.pio_config_file = pio_config_file
-        args.downloaded_pio_config = downloaded_pio_config
-
-        # Read the PlatformIO config and build mapping dictionaries for boards and environments
-        print_verbose("Reading the PlatformIO config...")
-        pio_ini_dir = os.path.dirname(pio_config_file)
-        pio_config = read_platformio_config(pio_ini_dir)
-        print_verbose("Building mapping dictionaries...")
-        pio_env_to_board, pio_env_to_platform, board_to_pio_env = build_pio_mappings(
-            pio_config
-        )
-
-        # Compile the list of PlatformIO environments to build based on the inputs and the known boards
-        print_verbose(
-            "Compiling the list of PlatformIO environments to build based on the inputs and the known boards..."
-        )
-        build_envs, build_platforms = get_pio_envs_to_build(
-            args, pio_env_to_board, pio_env_to_platform, board_to_pio_env
-        )
-        args.build_envs = build_envs
-        args.build_platforms = build_platforms
-    else:
-        args.pio_config_file = None
-        args.downloaded_pio_config = False
-        args.build_envs = []
-        args.build_platforms = []
 
     # Get the real list of examples to build based on the inputs and the examples found in the examples path
     print_verbose(

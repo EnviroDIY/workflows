@@ -448,7 +448,11 @@ if __name__ == "__main__":
 
     # Generate bash scripts
     start_job_commands: List[str] = ["status=0"]
-    end_job_commands: List[str] = ["\n\nexit $status"]
+    end_job_commands: List[str] = [
+        "\n\nls -R continuous_integration_artifacts/",
+        f"\n\nls -R {artifact_path}/",
+        "\n\nexit $status",
+    ]
 
     for job_tag, matrix_job in grouped_job_matrix.items():
         bash_file_name = job_tag + ".sh"
