@@ -216,8 +216,9 @@ jobs:
         with:
           name: ${{ matrix.job_info.job_tag }}_logs
           path: |
-            continuous_integration_artifacts/arduino_*.json
-            !continuous_integration_artifacts/arduino_job_matrix.json
+            **/arduino_*.json
+            **/arduino-cli_*.json
+            !**/arduino_job_matrix.json
 
       - name: Uninstall testing version of the library before caching
         if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }}

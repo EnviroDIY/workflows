@@ -311,7 +311,8 @@ jobs:
         with:
           name: ${{ matrix.job_info.job_tag }}_logs
           path: |
-            continuous_integration_artifacts/pio_*.log
+            **/pio_*.log
+            **/platformio_*.log
 
       - *cache_platforms
       - *cache_libraries
