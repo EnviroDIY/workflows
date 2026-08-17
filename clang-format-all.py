@@ -92,6 +92,15 @@ def format_all_walk_recursive(root_dir: str, exclude_files=None, file_extensions
             if str(path) in exclude_files:
                 continue
             if path.suffix in file_extensions:
+                command_list = [
+                    "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
+                    "-style=file",
+                    "-i",
+                    path,
+                ]
+                print(
+                    f"\tCalling clang-format: {subprocess.list2cmdline(command_list)}"
+                )
                 if (
                     subprocess.run(
                         [
