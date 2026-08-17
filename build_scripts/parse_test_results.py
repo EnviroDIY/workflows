@@ -6,7 +6,24 @@ import re
 import json
 
 import pandas as pd
-from build_config import get_env_config
+
+# %%
+# The workspace directory
+workspace_dir = os.getcwd()
+if "\\continuous_integration" in workspace_dir:
+    workspace_dir = workspace_dir.replace("\\continuous_integration", "")
+
+workspace_path = os.path.abspath(os.path.realpath(workspace_dir))
+print(f"Workspace Path: {workspace_path}")
+
+
+# %%
+# A directory of files to save and upload as artifacts to use in future jobs
+artifact_dir = os.path.join(
+    os.path.join(workspace_dir, "continuous_integration_artifacts")
+)
+artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
+
 
 # %%
 def parse_arduino_output(result_json: dict) -> dict[str, int | None] | None:
@@ -115,10 +132,6 @@ def get_job_info_from_filename(filename: str) -> dict:
 
 
 # %%
-# read the artifact path from the environment variable or config file
-args = get_env_config()
-artifact_path = args.artifact_path
-
 # parse all of the job logs and create a summary CSV file
 pio_logs = glob(os.path.join(artifact_path, "pio_*.log"))
 acli_logs = glob(os.path.join(artifact_path, "arduino_*.json"))
