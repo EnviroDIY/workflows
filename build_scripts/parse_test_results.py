@@ -23,6 +23,7 @@ artifact_dir = os.path.join(
     os.path.join(workspace_dir, "continuous_integration_artifacts")
 )
 artifact_path = os.path.abspath(os.path.realpath(artifact_dir))
+print(f"Artifact Path: {artifact_path}")
 
 
 # %%
@@ -133,29 +134,38 @@ def get_job_info_from_filename(filename: str) -> dict:
 
 # %%
 # parse all of the job logs and create a summary CSV file
-pio_logs = glob(os.path.join(artifact_path, "pio_*.log"))
-acli_logs = glob(os.path.join(artifact_path, "arduino_*.json"))
+pio_logs = glob(os.path.join(artifact_path, "pio_*.log")) + glob(
+    os.path.join(artifact_path, "platformio_*.log")
+)
+acli_logs = glob(os.path.join(artifact_path, "arduino_*.json")) + glob(
+    os.path.join(artifact_path, "arduino-cli_*.json")
+)
 
 
 log_results = []
 for log_file in pio_logs + acli_logs:
     job_info = get_job_info_from_filename(log_file)
+    print(f"Parsing log file: {log_file} for job info: {job_info}")
     with open(log_file, "r") as f:
         if job_info["compiler"] == "pio":
             log_contents = f.read()
             parsed_result = parse_pio_output(log_contents)
+            print(f"Parsed result for {log_file}: {parsed_result}")
         else:
             try:
                 log_contents = json.load(f)
                 parsed_result = parse_arduino_output(log_contents)
+                print(f"Parsed result for {log_file}: {parsed_result}")
             except json.JSONDecodeError:
                 parsed_result = {"success": False}
     if parsed_result is not None:
         job_info.update(parsed_result)
     log_results.append(job_info)
 
-
+print(f"Final log results: {len(log_results)} entries")
 df = pd.DataFrame(log_results)
+
+
 df["flash_percent"] = df.apply(
     lambda row: (
         (row["flash_used"] / row["flash_total"] * 100) if row["flash_total"] else None
