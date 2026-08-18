@@ -134,12 +134,12 @@ def get_job_info_from_filename(filename: str) -> dict:
 
 # %%
 # parse all of the job logs and create a summary CSV file
-pio_logs = glob(os.path.join(artifact_path, "pio_*.log")) + glob(
-    os.path.join(artifact_path, "platformio_*.log")
+pio_logs = glob("**/pio_*.log") + glob("**/platformio_*.log")
+print(f"Found {len(pio_logs)} PlatformIO compiler logs")
+acli_logs = (
+    glob("**/arduino_*.json") + glob("**/arduino-cli_*.json") + glob("**/a-cli_*.json")
 )
-acli_logs = glob(os.path.join(artifact_path, "arduino_*.json")) + glob(
-    os.path.join(artifact_path, "arduino-cli_*.json")
-)
+print(f"Found {len(acli_logs)} Arduino CLI logs")
 
 
 log_results = []
