@@ -123,8 +123,8 @@ def get_job_info_from_filename(filename: str) -> dict:
     name_parts = base_name.split("_")
     assumed_vals = {
         "compiler": name_parts[0],
-        "board": name_parts[1],
-        "example": name_parts[2],
+        "example": name_parts[1],
+        "board": name_parts[2],
     }
     for n, v in enumerate(name_parts[3:]):
         assumed_vals[f"flag_{n+1}"] = v
@@ -151,7 +151,7 @@ for log_file in pio_logs + acli_logs:
     job_info = get_job_info_from_filename(log_file)
     print(f"Parsing log file: {log_file} for job info: {job_info}")
     with open(log_file, "r") as f:
-        if job_info["compiler"] == "pio":
+        if job_info["compiler"] in ["pio", "platformio"]:
             log_contents = f.read()
             parsed_result = parse_pio_output(log_contents)
             print(f"Parsed result for {log_file}: {parsed_result}")
