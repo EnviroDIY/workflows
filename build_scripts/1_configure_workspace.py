@@ -337,7 +337,7 @@ def match_board_to_fqbn(
     return matched_fqbn
 
 
-def get_boards_to_build(
+def get_common_boards_to_build(
     args: configargparse.Namespace,
     compiler_board_dictionaries: list[dict[str, str]],
 ) -> list[str]:
@@ -382,27 +382,37 @@ def get_pio_envs_to_build(
 ) -> tuple[list[str], list[str]]:
     """Parse boards from environment or use all available boards"""
 
-    print_verbose(f"Common boards to build: {len(common_boards)}")
-    for board in common_boards:
-        print_verbose(f"  - {board}")
-    print_verbose(f"Additional environments to build: {len(args.pio_envs_to_build)}")
-    for env in args.pio_envs_to_build:
-        print_verbose(f"  - {env}")
-    print_verbose(f"Environments to ignore: {len(args.pio_envs_to_ignore)}")
-    for env in args.pio_envs_to_ignore:
-        print_verbose(f"  - {env}")
+    if common_boards not in unset_positive:
+        print_verbose(f"Common boards to build: {len(common_boards)}")
+        for board in common_boards:
+            print_verbose(f"  - {board}")
+    if args.pio_envs_to_build not in unset_positive:
+        print_verbose(
+            f"Additional environments to build: {len(args.pio_envs_to_build)}"
+        )
+        for env in args.pio_envs_to_build:
+            print_verbose(f"  - {env}")
+    if args.pio_envs_to_ignore not in unset_negative:
+        print_verbose(f"Environments to ignore: {len(args.pio_envs_to_ignore)}")
+        for env in args.pio_envs_to_ignore:
+            print_verbose(f"  - {env}")
 
     build_envs = []
+    # only add additional environments if the user has specified them
+    # NOTE argparser will enforce that the user cannot specify both
+    # pio_envs_to_build and pio_envs_to_ignore at the same time.
     if args.pio_envs_to_build not in unset_positive:
         print("Building specified PlatformIO environments.")
         build_envs = match_inputs_with_known_dicts(
             args.pio_envs_to_build, pio_env_to_board, board_to_pio_env, "keys"
         )
-    else:
+    # if the user hasn't specified either common boards or additional environments, add everything possible
+    elif len(common_boards) == 0:
         build_envs = list(pio_env_to_board.keys())
         print("Building all known PlatformIO environments.")
 
     # add in any boards listed in the boards_to_build list that are not already in the build_envs list
+    print("Adding common boards with matched PlatformIO environments.")
     for board in common_boards:
         matched_envs = match_board_to_pio_env(board, pio_env_to_board, board_to_pio_env)
         if matched_envs is not None:
@@ -450,16 +460,20 @@ def get_arduino_fqbns_to_build(
 ) -> tuple[list[str], list[str]]:
     """Parse boards from environment or use all available boards"""
 
-    print_verbose(f"Common boards to build: {len(common_boards)}")
-    for board in common_boards:
-        print_verbose(f"  - {board}")
-    print_verbose(f"Requested boards to build: {len(args.arduino_fqbns_to_build)}")
-    for board in args.arduino_fqbns_to_build:
-        print_verbose(f"  - {board}")
-    print_verbose(f"Requested boards to ignore: {len(args.arduino_fqbns_to_ignore)}")
-    for board in args.arduino_fqbns_to_ignore:
-        print_verbose(f"  - {board}")
+    if common_boards not in unset_positive:
+        print_verbose(f"Common boards to build: {len(common_boards)}")
+        for board in common_boards:
+            print_verbose(f"  - {board}")
+    if args.arduino_fqbns_to_build not in unset_positive:
+        print_verbose(f"Additional FQBNs to build: {len(args.arduino_fqbns_to_build)}")
+        for fqbn in args.arduino_fqbns_to_build:
+            print_verbose(f"  - {fqbn}")
+    if args.arduino_fqbns_to_ignore not in unset_negative:
+        print_verbose(f"FQBNs to ignore: {len(args.arduino_fqbns_to_ignore)}")
+        for fqbn in args.arduino_fqbns_to_ignore:
+            print_verbose(f"  - {fqbn}")
 
+    # only add additional environments if the user has specified them
     # NOTE argparser will enforce that the user cannot specify both
     # arduino_fqbns_to_build and arduino_fqbns_to_ignore at the same time.
     build_fqbns = []
@@ -468,7 +482,8 @@ def get_arduino_fqbns_to_build(
         build_fqbns = match_inputs_with_known_dicts(
             args.arduino_fqbns_to_build, pio_board_to_fqbn, board_to_fqbn, "values"
         )
-    else:
+    # if the user hasn't specified either common boards or additional FQBNs, add everything possible
+    elif len(common_boards) == 0:
         print("Building all known Arduino boards except those specified to ignore.")
         build_fqbns = list(pio_board_to_fqbn.values())
         if args.arduino_fqbns_to_ignore not in unset_negative:
@@ -480,6 +495,7 @@ def get_arduino_fqbns_to_build(
             )
 
     # add in any boards listed in the boards_to_build list that are not already in the build_envs list
+    print("Adding common boards with matched Arduino FQBNs.")
     for board in common_boards:
         matched_envs = match_board_to_fqbn(board, pio_board_to_fqbn, board_to_fqbn)
         if matched_envs is not None:
@@ -744,19 +760,21 @@ if __name__ == "__main__":
 
     if (
         args.boards_to_build in unset_positive
-        or args.boards_to_ignore not in unset_negative
+        or args.boards_to_ignore in unset_negative
     ):
         print_verbose(
             "Compiling the list of common boards to build based on the inputs and the known boards..."
         )
-        common_boards = get_boards_to_build(args, [pio_env_to_board, pio_board_to_fqbn])
+        common_boards = get_common_boards_to_build(
+            args, [pio_env_to_board, pio_board_to_fqbn]
+        )
     else:
         common_boards = []
 
     if "platformio" in args.compiler_list:
         # Compile the list of PlatformIO environments to build based on the inputs and the known boards
         print_verbose(
-            "Converting common boards to PlatformIO environments and adding specifically requested environments..."
+            "Getting specifically requested PlatformIO environments and converting common boards to PlatformIO environments..."
         )
         build_envs, build_platforms = get_pio_envs_to_build(
             args, common_boards, pio_env_to_board, pio_env_to_platform, board_to_pio_env
@@ -770,7 +788,7 @@ if __name__ == "__main__":
     if "arduino-cli" in args.compiler_list:
         # Compile the list of Arduino FQBNs to build based on the inputs and the known boards
         print_verbose(
-            "Converting common boards to Arduino FQBNs and adding specifically requested FQBNs..."
+            "Getting specifically requested Arduino FQBNs and converting common boards to Arduino FQBNs..."
         )
         build_fqbns, build_cores = get_arduino_fqbns_to_build(
             args, common_boards, pio_board_to_fqbn, board_to_fqbn

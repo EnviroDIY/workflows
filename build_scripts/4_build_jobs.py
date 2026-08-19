@@ -370,8 +370,8 @@ if __name__ == "__main__":
             g for g in log_groupers if g not in ["build_commands", "other_commands"]
         ]
         print(f"Using all matrix keys as log grouping fields: {log_groupers}")
-    grouped_command_matrix: dict[str, dict] = {}
 
+    grouped_command_matrix: dict[str, dict] = {}
     for matrix_item in complete_command_matrix:
         l_names = []
         for grouper in log_groupers:
@@ -404,7 +404,7 @@ if __name__ == "__main__":
             }
             for grouper in log_groupers:
                 l_dict[grouper] = matrix_item[grouper]
-            grouped_command_matrix[l_key] = l_dict
+            grouped_command_matrix[l_key] = deepcopy(l_dict)
         else:
             grouped_command_matrix[l_key]["group_commands"] += l_command_list
 
