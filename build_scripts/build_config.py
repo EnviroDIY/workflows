@@ -316,7 +316,7 @@ def get_env_parser():
         "--log-grouping-fields",
         help="comma-separated list of fields to group logs by",
         type=str,
-        default="compiler,board,example,inline_defines",
+        default="",
     )
     parser.add_argument(
         "--job-grouping-fields",
