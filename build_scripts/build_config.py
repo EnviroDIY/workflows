@@ -268,13 +268,13 @@ def get_env_parser():
         "\nThese will be added to the common boards-to-build list and the common boards-to-ignore list."
     )
     cli_group.add_argument(
-        "--arduino-boards-to-build",
+        "--arduino-fqbns-to-build",
         help='comma-separated list of FQBNs or board names to build with the Arduino CLI (or "all" for all)',
         type=str,
         default="all",
     )
     cli_group.add_argument(
-        "--arduino-boards-to-ignore",
+        "--arduino-fqbns-to-ignore",
         help="comma-separated list of FQBNs or board names to skip when building with the Arduino CLI",
         type=str,
     )

@@ -58,12 +58,12 @@ on:
         default: ""
         required: false
         type: string
-      arduino_boards_to_build:
-        description: "Comma-separated list of FQBNs or board names to build with Arduino CLI (or 'all' for all). Mutually exclusive with arduino_boards_to_ignore"
+      arduino_fqbns_to_build:
+        description: "Comma-separated list of FQBNs or board names to build with Arduino CLI (or 'all' for all). Mutually exclusive with arduino_fqbns_to_ignore"
         default: "all"
         required: false
         type: string
-      arduino_boards_to_ignore:
+      arduino_fqbns_to_ignore:
         description: "Comma-separated list of FQBNs or board names to skip when building with Arduino CLI"
         default: ""
         required: false
@@ -122,8 +122,8 @@ jobs:
           INPUT_EXAMPLES_TO_IGNORE: ${{ inputs.examples_to_ignore }}
           INPUT_BOARDS_TO_BUILD: ${{ inputs.boards_to_build }}
           INPUT_BOARDS_TO_IGNORE: ${{ inputs.boards_to_ignore }}
-          INPUT_ARDUINO_BOARDS_TO_BUILD: ${{ inputs.arduino_boards_to_build }}
-          INPUT_ARDUINO_BOARDS_TO_IGNORE: ${{ inputs.arduino_boards_to_ignore }}
+          INPUT_ARDUINO_FQBNS_TO_BUILD: ${{ inputs.arduino_fqbns_to_build }}
+          INPUT_ARDUINO_FQBNS_TO_IGNORE: ${{ inputs.arduino_fqbns_to_ignore }}
           INPUT_PIO_ENVS_TO_BUILD: ${{ inputs.pio_envs_to_build }}
           INPUT_PIO_ENVS_TO_IGNORE: ${{ inputs.pio_envs_to_ignore }}
           INPUT_INLINE_DEFINES: ${{ inputs.inline_defines }}
@@ -154,10 +154,10 @@ jobs:
           fi
 
           # Handle mutually exclusive Arduino boards pair: prioritize ignore over build
-          if [[ -n "$INPUT_ARDUINO_BOARDS_TO_IGNORE" ]]; then
-            echo "ARDUINO_BOARDS_TO_IGNORE=$INPUT_ARDUINO_BOARDS_TO_IGNORE" >> $GITHUB_ENV
+          if [[ -n "$INPUT_ARDUINO_FQBNS_TO_IGNORE" ]]; then
+            echo "ARDUINO_FQBNS_TO_IGNORE=$INPUT_ARDUINO_FQBNS_TO_IGNORE" >> $GITHUB_ENV
           else
-            [[ -n "$INPUT_ARDUINO_BOARDS_TO_BUILD" ]] && echo "ARDUINO_BOARDS_TO_BUILD=$INPUT_ARDUINO_BOARDS_TO_BUILD" >> $GITHUB_ENV || true
+            [[ -n "$INPUT_ARDUINO_FQBNS_TO_BUILD" ]] && echo "ARDUINO_FQBNS_TO_BUILD=$INPUT_ARDUINO_FQBNS_TO_BUILD" >> $GITHUB_ENV || true
           fi
 
           # Handle mutually exclusive PlatformIO envs pair: prioritize ignore over build
