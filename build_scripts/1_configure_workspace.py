@@ -607,7 +607,7 @@ def parse_examples_to_build(args):
     else:
         print("Building all examples found in the example path.")
         examples_to_build = []
-        excluded_folders = [".history", "archive", "logger_test", "tests", "more"]
+        excluded_folders = [".history", "archive", "logger_test", "tests"]
         for root, subdirs, files in chain(
             os.walk(args.examples_path), os.walk(args.extras_path)
         ):
@@ -625,13 +625,19 @@ def parse_examples_to_build(args):
         # Remove any ignored examples from the list
         ex_ignore = args.examples_to_ignore
         if ex_ignore is not None and ex_ignore not in unset_negative:
+            lowered_ex_ignore = [
+                os.sep.join(
+                    [p.lower().strip() for p in os.path.normpath(ei_).split(os.sep)]
+                )
+                for ei_ in ex_ignore
+            ]
             examples_to_build = [
                 example
                 for example in examples_to_build
-                if not any(
-                    e in [p.lower() for p in os.path.normpath(example).split(os.sep)]
-                    for e in [example_.lower().strip() for example_ in ex_ignore]
+                if not os.sep.join(
+                    [p.lower() for p in os.path.normpath(example).split(os.sep)]
                 )
+                in lowered_ex_ignore
             ]
 
     print(f"Total examples to build: {len(examples_to_build)}")

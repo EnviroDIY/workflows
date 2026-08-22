@@ -531,13 +531,13 @@ fi
     print(f"Total jobs: {len(arduino_job_matrix) + len(pio_job_matrix)}")
 
     if len(arduino_job_matrix) > 0:
-        print("\nArduino CLI jobs:")
+        print_verbose("\nArduino CLI jobs:")
         for job in arduino_job_matrix:
-            print(f"  - {job['job_name']}")
+            print_verbose(f"  - {job['job_name']}")
 
     if len(pio_job_matrix) > 0:
         print("\nPlatformIO jobs:")
         for job in pio_job_matrix:
-            print(f"  - {job['job_name']}")
+            print_verbose(f"  - {job['job_name']}")
 
 # cSpell:ignore

@@ -39,24 +39,30 @@ del "%WORKSPACE_DIR%\generated_docs" /q
 
 @REM Clear out output files
 echo Clearing content any previous output files
-echo "" > "%WORKSPACE_DIR%\docs\output_generateLogo.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_documentExamples.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_doxygen_run.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_doxygen.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_preprocessXML.log"
-@REM echo "" > "%WORKSPACE_DIR%\docs\output_fixFunctionsInGroups.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_mcss_run.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_mcss.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_mcssmd_run.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_mcssmd.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_mcssr.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_mcssr_run.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_moxygen_run.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_moxygen.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_doxybook2_run.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_copyFunctions.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_removeStupidLinks.log"
-echo "" > "%WORKSPACE_DIR%\docs\output_check_component_inclusion.log"
+for %%F in (
+    output_generateLogo.log
+    output_documentExamples.log
+    output_doxygen_run.log
+    output_doxygen.log
+    output_preprocessXML.log
+    output_fixFunctionsInGroups.log
+    output_mcss_run.log
+    output_mcss.log
+    output_mcssmd_run.log
+    output_mcssmd.log
+    output_mcssr.log
+    output_mcssr_run.log
+    output_moxygen_run.log
+    output_moxygen.log
+    output_doxybook2_run.log
+    output_copyFunctions.log
+    output_removeStupidLinks.log
+    output_check_component_inclusion.log
+) do (
+    if exist "%WORKSPACE_DIR%\docs\%%F" (
+        del "%WORKSPACE_DIR%\docs\%%F" /q
+    )
+)
 
 @REM Check versions of stuff
 echo Current Doxygen version...
@@ -115,14 +121,14 @@ echo Preprocessing XML...
 python -u "%SCRIPT_DIR%\preprocessXML.py" > output_preprocessXML.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo xml post-processor failed with error code %errorlevel%.
-  exit /b %errorlevel%
+  goto :error
 )
 
 @REM echo Fixing copied function documentation in group documentation
 @REM python -u "%SCRIPT_DIR%\fixFunctionsInGroups.py" > output_fixFunctionsInGroups.log 2>&1
 @REM IF %errorlevel% NEQ 0 (
 @REM   echo copied function post-processor failed with error code %errorlevel%.
-@REM   exit /b %errorlevel%
+@REM   goto :error
 @REM )
 
 @REM Run m.css for html output
@@ -131,7 +137,7 @@ python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --de
 @REM python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss_run.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > output_mcss.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo m.css to html post-processor failed with error code %errorlevel%.
-  exit /b %errorlevel%
+  goto :error
 )
 
 @REM Run m.css for markdown output
@@ -140,7 +146,7 @@ IF %errorlevel% NEQ 0 (
 @REM python -u "%MCSS_DIR%\documentation\doxygen_refactored.py" "mcss-conf.py" --no-doxygen --format all --debug > output_mcssr.log 2>&1
 @REM IF %errorlevel% NEQ 0 (
 @REM   echo m.css to markdown post-processor failed with error code %errorlevel%.
-@REM   exit /b %errorlevel%
+@REM   goto :error
 @REM )
 
 @REM @REM Move to generated markdown directory to rename files to .md
@@ -163,7 +169,7 @@ echo Copying function documentation
 python -u "%SCRIPT_DIR%\copyFunctions.py" > output_copyFunctions.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo copy functions post-processor failed with error code %errorlevel%.
-  exit /b %errorlevel%
+  goto :error
 )
 
 @REM Remove stupid links - to add sub-paging structure you must add pages for every level
@@ -173,7 +179,7 @@ echo Removing stupid links that are created by sub-paging structure
 python -u "%SCRIPT_DIR%\removeStupidLinks.py" > output_removeStupidLinks.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo stupid link post-processor failed with error code %errorlevel%.
-  exit /b %errorlevel%
+  goto :error
 )
 
 IF "%GITHUB_REPOSITORY%"=="ModularSensors" (
@@ -183,7 +189,7 @@ IF "%GITHUB_REPOSITORY%"=="ModularSensors" (
 )
 IF %errorlevel% NEQ 0 (
   echo inclusion check failed with error code %errorlevel%.
-  exit /b %errorlevel%
+  goto :error
 )
 
 @REM @REM Run moxygen to generate markdown files from the Doxygen xml output
@@ -191,7 +197,7 @@ IF %errorlevel% NEQ 0 (
 @REM call moxygen --groups --pages --anchors --language cpp --frontmatter --templates "%SCRIPT_DIR%\moxygen_templates" --logfile "%WORKSPACE_DIR%\docs\output_moxygen.log" --output "%WORKSPACE_DIR%\generated_docs\%%%%s.md" "%WORKSPACE_DIR%\..\TinyGSM_Doxygen\xml" > "%WORKSPACE_DIR%\docs\output_moxygen_run.log" 2>&1
 @REM IF %errorlevel% NEQ 0 (
 @REM   echo moxygen post-processor failed with error code %errorlevel%.
-@REM   exit /b %errorlevel%
+@REM   goto :error
 @REM )
 
 @REM Run doxybook2 to generate markdown files from the Doxygen xml output
@@ -199,9 +205,31 @@ echo Running doxybook2 to generate markdown files from the Doxygen xml output
 "C:\Program Files\doxybook2\bin\doxybook2.exe" --config "%SCRIPT_DIR%\\.doxybook\config.json" --templates "%SCRIPT_DIR%\\.doxybook\templates" --input "%WORKSPACE_DIR%_Doxygen\xml" --output "%WORKSPACE_DIR%_Doxygen\md" -d > "%WORKSPACE_DIR%\docs\output_doxybook2_run.log" 2>&1
 IF %errorlevel% NEQ 0 (
   echo doxybook2 post-processor failed with error code %errorlevel%.
-  exit /b %errorlevel%
+  goto :error
 )
 
+echo.
+echo ============================================
+echo Documentation Build - Completed Successfully
+echo ============================================
+echo.
+goto :end
+
+:error
+echo.
+echo ============================================
+echo Documentation Build - FAILED
+echo ============================================
+echo.
+call :cleanup_downloads
+exit /b 1
+
+:end
+echo.
+call :cleanup_downloads
+endlocal
+
+:cleanup_downloads
 @REM Delete copied files
 echo Deleting copied files
 del "%WORKSPACE_DIR%\Ubuntu-Bold.ttf" /q
