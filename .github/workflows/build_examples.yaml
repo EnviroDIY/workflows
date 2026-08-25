@@ -4,98 +4,79 @@ on:
   workflow_call:
     inputs:
       working_path:
-        description: "Working workspace path as an absolute path (e.g., /home/runner/work/EnviroDIY/EnviroDIY). If not provided, the default is the GitHub Actions workspace path."
-        default: ""
+        description: "Working workspace path as an absolute path (e.g., /home/runner/work/EnviroDIY/EnviroDIY). If not provided: the GitHub Actions workspace path."
         required: false
         type: string
       ci_path:
-        description: "Continuous integration path, relative to the workspace path"
-        default: "continuous_integration"
+        description: "Continuous integration path, relative to the workspace path. If not provided: 'continuous_integration'"
         required: false
         type: string
       artifact_path:
-        description: "Path to store artifacts, relative to the workspace path"
-        default: "continuous_integration_artifacts"
+        description: "Path to store artifacts, relative to the workspace path. If not provided: 'continuous_integration_artifacts'"
         required: false
         type: string
       examples_path:
-        description: "Path to examples, relative to the workspace path"
-        default: "examples"
+        description: "Path to examples, relative to the workspace path. If not provided: 'examples'"
         required: false
         type: string
       extras_path:
-        description: "Path to extras, relative to the workspace path"
-        default: "extras"
+        description: "Path to extras, relative to the workspace path. If not provided: 'extras'"
         required: false
         type: string
       config_file_name:
-        description: "Filename for the configuration file (not the full path)"
-        default: "matrix_config.json"
+        description: "Filename for the configuration file (not the full path). If not provided: 'matrix_config.json'"
         required: false
         type: string
       compiler_list:
-        description: "Comma-separated list of compilers to use (arduino-cli, platformio, or both)"
-        default: "arduino-cli,platformio"
+        description: "Comma-separated list of compilers to use (arduino-cli, platformio, or both). If not provided: 'arduino-cli,platformio'"
         required: false
         type: string
       examples_to_build:
-        description: "Comma-separated list of examples to build (or 'all' for all). Mutually exclusive with examples_to_ignore"
-        default: "all"
+        description: "Comma-separated list of examples to build (or 'all' for all). Mutually exclusive with examples_to_ignore. If not provided: 'all'"
         required: false
         type: string
       examples_to_ignore:
-        description: "Comma-separated list of examples to ignore. Mutually exclusive with examples_to_build"
-        default: ""
+        description: "Comma-separated list of examples to ignore. Mutually exclusive with examples_to_build. Empty if not provided."
         required: false
         type: string
       boards_to_build:
-        description: "Comma-separated list of board names to build with all compilers (or 'all' for all). Mutually exclusive with boards_to_ignore"
-        default: "all"
+        description: "Comma-separated list of board names to build with all compilers (or 'all' for all). Mutually exclusive with boards_to_ignore. If not provided: 'all'"
         required: false
         type: string
       boards_to_ignore:
-        description: "Comma-separated list of board names to skip when building with any compilers"
-        default: ""
+        description: "Comma-separated list of board names to skip when building with any compilers. Empty if not provided."
         required: false
         type: string
       arduino_fqbns_to_build:
-        description: "Comma-separated list of FQBNs or board names to build with Arduino CLI (or 'all' for all). Mutually exclusive with arduino_fqbns_to_ignore"
-        default: "all"
+        description: "Comma-separated list of FQBNs or board names to build with Arduino CLI (or 'all' for all). Mutually exclusive with arduino_fqbns_to_ignore. If not provided: 'all'"
         required: false
         type: string
       arduino_fqbns_to_ignore:
-        description: "Comma-separated list of FQBNs or board names to skip when building with Arduino CLI"
-        default: ""
+        description: "Comma-separated list of FQBNs or board names to skip when building with Arduino CLI. Empty if not provided."
         required: false
         type: string
       pio_envs_to_build:
-        description: "Comma-separated list of environment names or board names to build with PlatformIO (or 'all' for all). Mutually exclusive with pio_envs_to_ignore"
-        default: "all"
+        description: "Comma-separated list of environment names or board names to build with PlatformIO (or 'all' for all). Mutually exclusive with pio_envs_to_ignore. If not provided: 'all'"
         required: false
         type: string
       pio_envs_to_ignore:
-        description: "Comma-separated list of environment names or board names to skip when building with PlatformIO"
-        default: ""
+        description: "Comma-separated list of environment names or board names to skip when building with PlatformIO. Empty if not provided."
         required: false
         type: string
       inline_defines:
-        description: "Semicolon-separated list of comma-separated inline defines (e.g., DEBUG,VERSION=1.0;VERSION=2.0)"
-        default: ""
+        description: "Semicolon-separated list of comma-separated inline defines (e.g., DEBUG,VERSION=1.0;VERSION=2.0). Empty if not provided."
         required: false
         type: string
       compiler_flags:
-        description: "Semicolon-separated list of comma-separated compiler flags (e.g., -Wall,-Wextra;-O2,-g)"
-        default: ""
+        description: "Semicolon-separated list of comma-separated compiler flags (e.g., -Wall,-Wextra;-O2,-g). Empty if not provided."
         required: false
         type: string
       log_grouping_fields:
-        description: "Comma-separated list of fields to group logs by"
-        default: "compiler,board,example,inline_defines"
+        description: "Comma-separated list of fields to group logs by. If not provided: 'compiler,board,example,inline_defines'"
         required: false
         type: string
       job_grouping_fields:
-        description: "Comma-separated list of fields to group jobs by"
-        default: "compiler,board"
+        description: "Comma-separated list of fields to group jobs by. If not provided: 'compiler,board'"
         required: false
         type: string
 
