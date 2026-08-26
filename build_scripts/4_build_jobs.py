@@ -375,7 +375,11 @@ if __name__ == "__main__":
     for matrix_item in complete_command_matrix:
         l_names = []
         for grouper in log_groupers:
-            if grouper not in matrix_item.keys():
+            if grouper == "board" and "fqbn" in matrix_item:
+                l_names.append(get_filename_slug("fqbn", matrix_item["fqbn"]))
+            elif grouper == "board" and "pio_env" in matrix_item:
+                l_names.append(get_filename_slug("pio_env", matrix_item["pio_env"]))
+            elif grouper not in matrix_item.keys():
                 raise ValueError(
                     f"Matrix item {matrix_item} does not have the key {grouper}"
                 )
@@ -423,7 +427,11 @@ if __name__ == "__main__":
     for l_key, group_dict in grouped_command_matrix.items():
         j_names = []
         for grouper in job_groupers:
-            if grouper not in group_dict.keys():
+            if grouper == "board" and "fqbn" in group_dict:
+                j_names.append(get_filename_slug("fqbn", group_dict["fqbn"]))
+            elif grouper == "board" and "pio_env" in group_dict:
+                j_names.append(get_filename_slug("pio_env", group_dict["pio_env"]))
+            elif grouper not in group_dict.keys():
                 raise ValueError(
                     f"Matrix item {group_dict} does not have the key {grouper}"
                 )
