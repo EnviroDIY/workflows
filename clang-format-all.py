@@ -1,7 +1,8 @@
+# %%
 import os
 import subprocess
 from pathlib import Path
-import argparse
+import configargparse as argparse
 import logging
 from typing import List
 
@@ -15,9 +16,9 @@ default_extensions = [
     ".cpp",
     ".cc",
     ".C",
-    "CPP",
+    ".CPP",
     ".c++",
-    "cp",
+    ".cp",
     ".cxx",
     ".h",
     ".hh",
@@ -34,16 +35,23 @@ default_exclusions = [
     ".github",
     ".pio",
     ".vscode",
+    "archive",
     "build",
     "bin",
+    "docs",
+    "ci",
+    "continuous_integration",
+    "continuous_integration_artifacts",
     "lib",
     "include",
     "external",
     "third_party",
+    "__pycache__",
 ]
 
 
-def parse_args():
+# %%
+def parse_input_args():
     parser = argparse.ArgumentParser(
         description="clang_format_all starts at this directory and drills down recursively"
     )
@@ -73,82 +81,110 @@ def parse_args():
         help="Files/Folders to Exclude",
         default=default_exclusions,
     )
+    parser.add_argument(
+        "--exclude_files",
+        type=str,
+        required=False,
+        nargs="+",
+        help="Files to Exclude",
+        default=[],
+    )
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
+    parser.print_values()
     return args
 
 
-def format_all_walk_recursive(root_dir: str, exclude_files=None, file_extensions=None):
+def get_all_files(
+    root_dir: str,
+    file_extensions: set | None = None,
+    exclude_dirs: set | None = None,
+    exclude_files: set | None = None,
+) -> List:
+    if file_extensions is None:
+        file_extensions = set(default_extensions)
+    if exclude_dirs is None:
+        exclude_dirs = set(default_exclusions)
     if exclude_files is None:
         exclude_files = set()
-    if file_extensions is None:
-        file_extensions = []
-    for root, dirs, files in os.walk(root_dir):
-        if dirs:
-            for d in dirs:
-                format_all_walk_recursive((os.path.join(root, d)), file_extensions)
+
+    files_array = []
+    for root, dirs, files in os.walk(root_dir, topdown=True):
+        dirs[:] = [
+            d
+            for d in dirs
+            if d not in exclude_dirs and os.path.join(root, d) not in exclude_dirs
+        ]
         for file in files:
-            path = Path(os.path.join(root, file))
-            if str(path) in exclude_files:
+            path = os.path.join(root, file)
+            if file in exclude_files or path in exclude_files:
                 continue
-            if path.suffix in file_extensions:
-                command_list = [
+            if Path(path).suffix in file_extensions:
+                files_array.append(path)
+    return files_array
+
+
+def find_clang_format_style_file(start_dir: str) -> str | None:
+    current_dir = Path(start_dir).resolve()
+    while True:
+        style_file = current_dir / ".clang-format"
+        if style_file.exists():
+            return str(style_file)
+        if current_dir.parent == current_dir:
+            break
+        current_dir = current_dir.parent
+    return None
+
+
+def format_all(file_list: List[str]):
+    for path in file_list:
+        style_file = find_clang_format_style_file(os.path.dirname(path))
+        command_list = [
+            "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
+            f"-style=file:{style_file}" if style_file else "-style=file",
+            "-i",
+            path,
+        ]
+        print(f"\tCalling clang-format: {subprocess.list2cmdline(command_list)}")
+        if (
+            subprocess.run(
+                [
                     "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
                     "-style=file",
                     "-i",
                     path,
-                ]
-                print(
-                    f"\tCalling clang-format: {subprocess.list2cmdline(command_list)}"
-                )
-                if (
-                    subprocess.run(
-                        [
-                            "C:\\Program Files\\LLVM\\bin\\clang-format.exe",
-                            "-style=file",
-                            "-i",
-                            path,
-                        ],
-                        capture_output=True,
-                    ).returncode
-                    != 0
-                ):
-                    logger.info(
-                        '"%s": An error occurred while parsing this file.', path
-                    )
-                    exit(-1)
-                else:
-                    logger.info('"%s": parsed successfully.', path)
-
-
-def get_all_files(root_dir: str) -> List:
-    files_array = []
-    for root, dirs, files in os.walk(root_dir):
-        if dirs:
-            for d in dirs:
-                files_array += get_all_files((os.path.join(root, d)))
-        for file in files:
-            files_array.append(os.path.join(root, file))
-    return files_array
-
-
-def get_resolved_paths(unresolved_paths: List[str]) -> List[str]:
-    resolved_paths = []
-    for p in unresolved_paths:
-        resolved_paths += get_all_files(str(Path(p).resolve()))
-
-    return list(set(resolved_paths))
+                ],
+                capture_output=True,
+            ).returncode
+            != 0
+        ):
+            logger.info('"%s": An error occurred while parsing this file.', path)
+            exit(-1)
+        else:
+            logger.info('"%s": parsed successfully.', path)
 
 
 def main():
-    args = parse_args()
-    excluded_dirs = get_resolved_paths(args.exclude_dirs)
-    format_all_walk_recursive(
-        str(Path(args.root_dir).resolve()),
-        excluded_dirs,
-        args.file_extensions,
+    args = parse_input_args()
+    root_dir = Path(args.root_dir).resolve()
+    file_extensions = (
+        set(args.file_extensions) if args.file_extensions else set(default_extensions)
     )
+    exclude_dirs = (
+        set(args.exclude_dirs) if args.exclude_dirs else set(default_exclusions)
+    )
+    exclude_files = set(args.exclude_files) if args.exclude_files else set()
+    files_to_format = get_all_files(
+        root_dir=str(root_dir),
+        file_extensions=file_extensions,
+        exclude_dirs=exclude_dirs,
+        exclude_files=exclude_files,
+    )
+    format_all(files_to_format)
 
 
+# %%
 if __name__ == "__main__":
     main()
+
+# cSpell:ignore topdown
