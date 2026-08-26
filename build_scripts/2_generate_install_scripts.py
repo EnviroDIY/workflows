@@ -201,24 +201,31 @@ def get_package_spec(dependency: dict):
 def convert_dep_dict_to_str(dependency: dict, include_version: bool = True) -> str:
     """Convert dependency dict to install string"""
     install_str = ""
-    if "owner" in dependency.keys() and "github" in dependency["version"]:
-        if "name" in dependency.keys():
-            install_str += f"{dependency['name']}="
-        install_str += dependency["version"]
-    elif (
+
+    install_from_repo = "version" in dependency.keys() and any(
+        x in dependency["version"] for x in ["github", "git+", "hg+", "svn+"]
+    )
+    version_cat = "@"
+    if install_from_repo:
+        version_cat = "="
+
+    if (
         "owner" in dependency.keys()
         and "name" in dependency.keys()
         and "version" in dependency.keys()
+        and not install_from_repo
     ):
         lib_dep = f"{dependency['owner']}/{dependency['name']}"
         if include_version:
-            lib_dep += f"@{dependency['version']}"
+            lib_dep += f"{version_cat}{dependency['version']}"
         install_str += lib_dep
     elif "name" in dependency.keys() and "version" in dependency.keys():
         lib_dep = f"{dependency['name']}"
         if include_version:
-            lib_dep += f"@{dependency['version']}"
+            lib_dep += f"{version_cat}{dependency['version']}"
         install_str += lib_dep
+    elif install_from_repo:
+        install_str += dependency["version"]
     else:
         install_str += dependency["name"]
 
