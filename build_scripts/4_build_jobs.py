@@ -217,15 +217,17 @@ def create_command_list_from_matrix(
 
     job_dict = deepcopy(matrix_item)
     job_dict["inline_defines"] = inline_defines
-    output_file_name = get_filename_for_log(
-        job_dict,
-        artifact_path,
-        [
-            k
-            for k in matrix_item.keys()
-            if k not in ["build_commands", "other_commands"]
-        ],
-    )
+    output_file_name = matrix_item.get("output_file_name", None)
+    if output_file_name is None or output_file_name == "":
+        output_file_name = get_filename_for_log(
+            job_dict,
+            artifact_path,
+            [
+                k
+                for k in matrix_item.keys()
+                if k not in ["build_commands", "other_commands"]
+            ],
+        )
 
     if compiler == "arduino-cli":
         build_command = create_arduino_cli_compile_command(
@@ -331,26 +333,7 @@ if __name__ == "__main__":
     #             final_matrix[n]["fqbn"] = fqbn
     #             final_matrix[n]["pio_env"] = env
 
-    # Convert matrix to command blocks
-    print(f"Converting {len(final_matrix)} matrix items to command blocks...")
-    complete_command_matrix: List[dict] = []
-    for matrix_item in final_matrix:
-        command_block = create_command_list_from_matrix(
-            matrix_item=matrix_item,
-            workspace_path=workspace_path,
-            artifact_path=artifact_path,
-            config=config,
-        )
-        if command_block is not None:
-            complete_command_matrix.append(command_block)
-
-    print(f"Total command blocks: {len(complete_command_matrix)}")
-
-    # Group commands for logging
-    if len(complete_command_matrix) == 0:
-        print("::warning::No command blocks to process!")
-        sys.exit(0)
-
+    print(f"Getting file names and log groups for {len(final_matrix)} matrix items...")
     # Use log_grouping_fields from config, or default to all keys
     if "log_grouping_fields" in config and len(config["log_grouping_fields"]) > 0:
         log_groupers = config["log_grouping_fields"]
@@ -371,8 +354,7 @@ if __name__ == "__main__":
         ]
         print(f"Using all matrix keys as log grouping fields: {log_groupers}")
 
-    grouped_command_matrix: dict[str, dict] = {}
-    for matrix_item in complete_command_matrix:
+    for matrix_item in final_matrix:
         l_names = []
         for grouper in log_groupers:
             if grouper == "board" and "fqbn" in matrix_item:
@@ -394,6 +376,36 @@ if __name__ == "__main__":
         l_key = re.sub(r"[\-]{2,}", "-", l_key)
         l_key = re.sub(r"[_]{2,}", "_", l_key)
 
+        matrix_item["group_title"] = l_key
+        matrix_item["output_file_name"] = get_filename_for_log(
+            matrix_item,
+            artifact_path,
+            log_groupers,
+        )
+
+    # Convert matrix to command blocks
+    print(f"Converting {len(final_matrix)} matrix items to command blocks...")
+    complete_command_matrix: List[dict] = []
+    for matrix_item in final_matrix:
+        command_block = create_command_list_from_matrix(
+            matrix_item=matrix_item,
+            workspace_path=workspace_path,
+            artifact_path=artifact_path,
+            config=config,
+        )
+        if command_block is not None:
+            complete_command_matrix.append(command_block)
+
+    print(f"Total command blocks: {len(complete_command_matrix)}")
+
+    if len(complete_command_matrix) == 0:
+        print("::warning::No command blocks to process!")
+        sys.exit(0)
+
+    # Group commands for logging
+    grouped_command_matrix: dict[str, dict] = {}
+    for matrix_item in complete_command_matrix:
+        l_key = matrix_item["group_title"]
         l_command_list = group_and_log_commands(
             matrix_item["build_commands"],
             matrix_item["other_commands"],
@@ -410,6 +422,9 @@ if __name__ == "__main__":
                 l_dict[grouper] = matrix_item[grouper]
             grouped_command_matrix[l_key] = deepcopy(l_dict)
         else:
+            print(
+                f"::warning::Duplicate log group key '{l_key}' found. Appending commands to existing group."
+            )
             grouped_command_matrix[l_key]["group_commands"] += l_command_list
 
     print(f"Total log groups: {len(grouped_command_matrix)}")
