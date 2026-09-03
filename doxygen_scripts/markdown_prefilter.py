@@ -598,10 +598,9 @@ with fileinput.FileInput(
         if skip_me or not print_me:
             massaged_line = "<!--" + massaged_line.strip() + "-->\n"
 
-        if (
-            massaged_line.count("\n") != line.count("\n")
-            or line.count("\n") != 1
-            or massaged_line.count("\n") != 1
+        is_last_line_without_newline = not line.endswith("\n")
+        if massaged_line.count("\n") != line.count("\n") or (
+            not is_last_line_without_newline and line.count("\n") != 1
         ):
             raise Exception(
                 '\n\nNot exactly one new lines\nFile:{}\nLine Number:{}\nNew Lines in Original: {}\nOriginal Line:\n"{}"\nNew Lines after Massage: {}\nMassaged Line:\n"{}"\n\n'.format(
