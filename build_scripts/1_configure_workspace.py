@@ -432,6 +432,7 @@ def get_pio_envs_to_build(
 
     # de-duplicate
     build_envs = list(set(build_envs))
+    build_envs.sort(key=str.casefold)
 
     # Get matching platforms for the build_envs list
     build_platforms = [v for k, v in pio_env_to_platform.items() if k in build_envs]
@@ -776,6 +777,8 @@ if __name__ == "__main__":
         )
     else:
         common_boards = []
+
+    common_boards.sort(key=str.casefold)
 
     if "platformio" in args.compiler_list:
         # Compile the list of PlatformIO environments to build based on the inputs and the known boards

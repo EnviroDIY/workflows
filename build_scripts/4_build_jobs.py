@@ -277,6 +277,16 @@ def create_command_list_from_matrix(
     return deepcopy(job_dict)
 
 
+def clean_name(name: str) -> str:
+    """Clean a name string for use in filenames"""
+    name = re.sub(r"[^a-zA-Z0-9_\-]", "_", name)
+    name = re.sub(r"[_]{2,}", "_", name)
+    name = re.sub(r"[\-]{2,}", "-", name)
+    name = re.sub(r"(?: - ){2,}", " - ", name)
+    name = name.replace("-D-", "-")
+    return name.strip().strip("_").strip("-").strip()
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("CI Build Pipeline: Build Jobs")
@@ -372,9 +382,7 @@ if __name__ == "__main__":
             else:
                 l_names.append(get_filename_slug(grouper, matrix_item[grouper]))
 
-        l_key = "_".join(l_names)
-        l_key = re.sub(r"[\-]{2,}", "-", l_key)
-        l_key = re.sub(r"[_]{2,}", "_", l_key)
+        l_key = clean_name("_".join(l_names))
 
         matrix_item["group_title"] = l_key
         matrix_item["output_file_name"] = get_filename_for_log(
@@ -457,8 +465,8 @@ if __name__ == "__main__":
             else:
                 j_names.append(get_filename_slug(grouper, group_dict[grouper]))
 
-        job_name = " - ".join(j_names)
-        job_tag = "-".join(j_names)
+        job_name = clean_name(" - ".join(j_names))
+        job_tag = clean_name("-".join(j_names))
 
         if job_tag not in grouped_job_matrix.keys():
             j_dict: dict = {
