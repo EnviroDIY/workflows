@@ -35,6 +35,7 @@ print("Running install_working_dependencies.py")
 
 options = {"update": True, "silent": False, "skip_dependencies": False, "force": False}
 
+# %%
 # Some working directories
 try:
     # Import the current working construction
@@ -207,8 +208,8 @@ dependencies.extend(
 )
 
 humanized_deps = [dep.as_dependency() for dep in dependencies]
-# print("Humanized dependencies:")
-# print(humanized_deps)
+print("Humanized dependencies:")
+print(humanized_deps)
 
 # %%
 # quit if there are no dependencies
@@ -308,7 +309,9 @@ def install_project_env_libraries(options):
         req_spec = PackageSpec(library)
         # skip built-in dependencies
         if not req_spec.external and not req_spec.owner:
-            print(f"Skipping {library}")
+            print(
+                f"Skipping {library}.  It is {'external' if not req_spec.external else 'internal'} and the owner is {req_spec.owner}"
+            )
             continue
         # print(private_lm.log)
         installed_spec = private_lm.get_package(

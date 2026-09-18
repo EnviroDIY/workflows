@@ -34,30 +34,31 @@ del "%WORKSPACE_DIR%_Doxygen\xml" /q
 del "%WORKSPACE_DIR%_Doxygen\m.css" /q
 del "%WORKSPACE_DIR%_Doxygen\sqlite3" /q
 del "%WORKSPACE_DIR%_Doxygen\md" /q /s
+del "%WORKSPACE_DIR%_Doxygen\markdown" /q /s
 del "%WORKSPACE_DIR%\docs\css" /q
 del "%WORKSPACE_DIR%\generated_docs" /q
 
 @REM Clear out output files
 echo Clearing content any previous output files
 for %%F in (
-    output_generateLogo.log
-    output_documentExamples.log
-    output_doxygen_run.log
-    output_doxygen.log
-    output_preprocessXML.log
-    output_fixFunctionsInGroups.log
-    output_mcss_run.log
-    output_mcss.log
-    output_mcssmd_run.log
-    output_mcssmd.log
-    output_mcssr.log
-    output_mcssr_run.log
-    output_moxygen_run.log
-    output_moxygen.log
-    output_doxybook2_run.log
-    output_copyFunctions.log
-    output_removeStupidLinks.log
-    output_check_component_inclusion.log
+    logs\output_generateLogo.log
+    logs\output_documentExamples.log
+    logs\output_doxygen_run.log
+    logs\output_doxygen.log
+    logs\output_preprocessXML.log
+    logs\output_fixFunctionsInGroups.log
+    logs\output_mcss_run.log
+    logs\output_mcss.log
+    logs\output_mcssmd_run.log
+    logs\output_mcssmd.log
+    logs\output_mcssr.log
+    logs\output_mcssr_run.log
+    logs\output_moxygen_run.log
+    logs\output_moxygen.log
+    logs\output_doxybook2_run.log
+    logs\output_copyFunctions.log
+    logs\output_removeStupidLinks.log
+    logs\output_check_component_inclusion.log
 ) do (
     if exist "%WORKSPACE_DIR%\docs\%%F" (
         del "%WORKSPACE_DIR%\docs\%%F" /q
@@ -74,9 +75,11 @@ call latex --version
 echo Current Python Version...
 call python --version
 
-@REM Update the style sheets
+@REM Move to the m.css directory
 echo Update the style sheets
 cd "%MCSS_DIR%\css\EnviroDIY"
+
+@REM Update the style sheets
 @REM pygmentize -f html -S arduino -a ".m-code-arduino" > pygments-arduino.css
 @REM pygmentize -f html -S default -a ".m-code-pygments-default" > pygments-default.css
 python -u "%MCSS_DIR%\css\postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "%MCSS_DIR%\css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"  2>&1
@@ -93,11 +96,11 @@ echo Generating library logos
 copy "%SCRIPT_DIR%\Ubuntu-Bold.ttf" "%WORKSPACE_DIR%\docs"
 copy "%SCRIPT_DIR%\enviroDIY_Favicon.png" "%WORKSPACE_DIR%\docs"
 @REM Generate the logos
-python -u "%SCRIPT_DIR%\generateLogos.py" > output_generateLogo.log 2>&1
+python -u "%SCRIPT_DIR%\generateLogos.py" > logs\output_generateLogo.log 2>&1
 
 @REM Document the examples from the header of each example
 echo Creating dox files from example file headers
-python -u "%SCRIPT_DIR%\documentExamples.py" > output_documentExamples.log 2>&1
+python -u "%SCRIPT_DIR%\documentExamples.py" > logs\output_documentExamples.log 2>&1
 
 @REM  download the markdown pre-filter
 echo Copying markdown pre-filter to docs directory
@@ -110,22 +113,22 @@ set PLATFORMIO_PACKAGES_DIR=C:/Users/sdamiano/.platformio/PLATFORMIO_PACKAGES_DI
 
 echo Generating Doxygen code documentation...
 @REM https://github.com/doxygen/doxygen/blob/master/doc_internal/doxygen.md
-"C:\Program Files\doxygen\bin\doxygen.exe" Doxyfile > output_doxygen_run.log 2>&1
-@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d preprocessor Doxyfile > output_doxygen_run.log 2>&1
-@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d filteroutput -d commentcnv -d markdown Doxyfile > output_doxygen_run.log 2>&1
-@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d formula Doxyfile > output_doxygen_run.log 2>&1
+"C:\Program Files\doxygen\bin\doxygen.exe" Doxyfile > logs\output_doxygen_run.log 2>&1
+@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d preprocessor Doxyfile > logs\output_doxygen_run.log 2>&1
+@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d filteroutput -d commentcnv -d markdown Doxyfile > logs\output_doxygen_run.log 2>&1
+@REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d formula Doxyfile > logs\output_doxygen_run.log 2>&1
 endlocal
 
 @REM Preprocess XML to fix bad section ids and anchor ids and remove private functions from the XML output.
 echo Preprocessing XML...
-python -u "%SCRIPT_DIR%\preprocessXML.py" > output_preprocessXML.log 2>&1
+python -u "%SCRIPT_DIR%\preprocessXML.py" > logs\output_preprocessXML.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo xml post-processor failed with error code %errorlevel%.
   goto :error
 )
 
 @REM echo Fixing copied function documentation in group documentation
-@REM python -u "%SCRIPT_DIR%\fixFunctionsInGroups.py" > output_fixFunctionsInGroups.log 2>&1
+@REM python -u "%SCRIPT_DIR%\fixFunctionsInGroups.py" > logs\output_fixFunctionsInGroups.log 2>&1
 @REM IF %errorlevel% NEQ 0 (
 @REM   echo copied function post-processor failed with error code %errorlevel%.
 @REM   goto :error
@@ -133,8 +136,8 @@ IF %errorlevel% NEQ 0 (
 
 @REM Run m.css for html output
 echo Running m.css Doxygen post-processor to generate html...
-python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output output_mcss_run.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > output_mcss.log 2>&1
-@REM python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output output_mcss_run.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > output_mcss.log 2>&1
+python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcss_run.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > logs\output_mcss.log 2>&1
+@REM python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output logs\output_mcss_run.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > logs\output_mcss.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo m.css to html post-processor failed with error code %errorlevel%.
   goto :error
@@ -142,8 +145,8 @@ IF %errorlevel% NEQ 0 (
 
 @REM Run m.css for markdown output
 @REM echo Running m.css Doxygen post-processor to generate markdown...
-@REM python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > output_mcssmd.log 2>&1
-@REM python -u "%MCSS_DIR%\documentation\doxygen_refactored.py" "mcss-conf.py" --no-doxygen --format all --debug > output_mcssr.log 2>&1
+@REM python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
+@REM python -u "%MCSS_DIR%\documentation\doxygen_refactored.py" "mcss-conf.py" --no-doxygen --format all --debug > logs\output_mcssr.log 2>&1
 @REM IF %errorlevel% NEQ 0 (
 @REM   echo m.css to markdown post-processor failed with error code %errorlevel%.
 @REM   goto :error
@@ -166,7 +169,7 @@ IF %errorlevel% NEQ 0 (
 
 @REM copy functions so they look right
 echo Copying function documentation
-python -u "%SCRIPT_DIR%\copyFunctions.py" > output_copyFunctions.log 2>&1
+python -u "%SCRIPT_DIR%\copyFunctions.py" > logs\output_copyFunctions.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo copy functions post-processor failed with error code %errorlevel%.
   goto :error
@@ -176,7 +179,7 @@ IF %errorlevel% NEQ 0 (
 @REM and dump links to them in the parent page.
 @REM This is to remove those stupid pages and links.
 echo Removing stupid links that are created by sub-paging structure
-python -u "%SCRIPT_DIR%\removeStupidLinks.py" > output_removeStupidLinks.log 2>&1
+python -u "%SCRIPT_DIR%\removeStupidLinks.py" > logs\output_removeStupidLinks.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo stupid link post-processor failed with error code %errorlevel%.
   goto :error
@@ -185,7 +188,7 @@ IF %errorlevel% NEQ 0 (
 IF "%GITHUB_REPOSITORY%"=="ModularSensors" (
   echo Checking for inclusion of all ModularSensors components
   cd "%WORKSPACE_DIR%\continuous_integration"
-  python -u check_component_inclusion.py > "%WORKSPACE_DIR%\docs\output_check_component_inclusion.log" 2>&1
+  python -u check_component_inclusion.py > logs\output_check_component_inclusion.log 2>&1
 )
 IF %errorlevel% NEQ 0 (
   echo inclusion check failed with error code %errorlevel%.
@@ -194,7 +197,7 @@ IF %errorlevel% NEQ 0 (
 
 @REM @REM Run moxygen to generate markdown files from the Doxygen xml output
 @REM echo Running moxygen to generate markdown files from the Doxygen xml output
-@REM call moxygen --groups --pages --anchors --language cpp --frontmatter --templates "%SCRIPT_DIR%\moxygen_templates" --logfile "%WORKSPACE_DIR%\docs\output_moxygen.log" --output "%WORKSPACE_DIR%\generated_docs\%%%%s.md" "%WORKSPACE_DIR%\..\TinyGSM_Doxygen\xml" > "%WORKSPACE_DIR%\docs\output_moxygen_run.log" 2>&1
+@REM call moxygen --groups --pages --anchors --language cpp --frontmatter --templates "%SCRIPT_DIR%moxygen_templates" --logfile "%WORKSPACE_DIR%\docs\logs\output_moxygen.log" --output "%WORKSPACE_DIR%\generated_docs\%%%%s.md" "%WORKSPACE_DIR%\..\TinyGSM_Doxygen\xml" > "%WORKSPACE_DIR%\docs\logs\output_moxygen_run.log" 2>&1
 @REM IF %errorlevel% NEQ 0 (
 @REM   echo moxygen post-processor failed with error code %errorlevel%.
 @REM   goto :error
@@ -202,7 +205,7 @@ IF %errorlevel% NEQ 0 (
 
 @REM Run doxybook2 to generate markdown files from the Doxygen xml output
 echo Running doxybook2 to generate markdown files from the Doxygen xml output
-"C:\Program Files\doxybook2\bin\doxybook2.exe" --config "%SCRIPT_DIR%\\.doxybook\config.json" --templates "%SCRIPT_DIR%\\.doxybook\templates" --input "%WORKSPACE_DIR%_Doxygen\xml" --output "%WORKSPACE_DIR%_Doxygen\md" -d > "%WORKSPACE_DIR%\docs\output_doxybook2_run.log" 2>&1
+"C:\Program Files\doxybook2\bin\doxybook2.exe" --config "%SCRIPT_DIR%\.doxybook\config.json" --templates "%SCRIPT_DIR%\.doxybook\templates" --input "%WORKSPACE_DIR%_Doxygen\xml" --output "%WORKSPACE_DIR%_Doxygen\md" -d > "%WORKSPACE_DIR%\docs\logs\output_doxybook2_run.log" 2>&1
 IF %errorlevel% NEQ 0 (
   echo doxybook2 post-processor failed with error code %errorlevel%.
   goto :error
