@@ -130,14 +130,12 @@ def load_arduino_cli_config(ci_path: str, artifact_path: str):
 
 
 # %%
-
-
 def load_platformio_config(ci_path: str, artifact_path: str):
     """
     Download the PlatformIO configuration file, if necessary.
     """
 
-    # NOTE THis file **is** required for the build process,
+    # NOTE This file **is** required for the build process,
     # so we will download it if it does not exist.
     downloaded_pio_config = False
     pio_config_file = os.path.join(ci_path, "platformio.ini")
@@ -721,6 +719,10 @@ if __name__ == "__main__":
     )
     args: configargparse.Namespace = get_extended_config()
     set_verbose_mode(args.verbose)
+
+    print_verbose("Creating the continuous integration directory, if needed...")
+    os.makedirs(args.ci_path, exist_ok=True)
+    os.makedirs(args.artifact_path, exist_ok=True)
 
     # if the user has requested to build PlatformIO environments or if they have not
     # specified any boards to build, we will download the PlatformIO config to get all
