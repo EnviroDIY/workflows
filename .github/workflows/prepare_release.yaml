@@ -200,7 +200,7 @@ jobs:
       # Create a new release with zipped dependencies
       - name: Create Release with Assets
         id: create_release_with_zip
-        uses: softprops/action-gh-release@v3.0.2
+        uses: softprops/action-gh-release@v3.0.3
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
@@ -236,7 +236,7 @@ jobs:
       # Create a new release with no zip
       - name: Create Simple Release
         id: create_bare_release
-        uses: softprops/action-gh-release@v3.0.2
+        uses: softprops/action-gh-release@v3.0.3
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
