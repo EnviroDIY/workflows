@@ -156,10 +156,15 @@ def get_filename_for_log(job: dict, artifact_path: str, name_keys: list) -> str:
 
     file_name = ""
     for key in name_keys:
-        if key not in job:
+        use_key = key
+        if key in ["board", "pio_env"] and "fqbn" in job:
+            use_key = "fqbn"
+        elif key in ["board", "fqbn"] and "pio_env" in job:
+            use_key = "pio_env"
+        elif key not in job:
             raise ValueError(f"Job dictionary must contain the key '{key}'")
-        if job[key] is not None and job[key] != "" and job[key] != []:
-            file_name += "_" + get_filename_slug(key, job[key])
+        if job[use_key] is not None and job[use_key] != "" and job[use_key] != []:
+            file_name += "_" + get_filename_slug(use_key, job[use_key])
 
     if file_name.startswith("_"):
         file_name = file_name[1:]
@@ -205,10 +210,15 @@ def create_command_list_from_matrix(
     config: dict,
 ) -> Optional[dict]:
     """Convert a matrix item into a command block"""
-    required_keys = ["compiler", "example", "board"]
+    required_keys = ["compiler", "example"]
     for key in required_keys:
         if key not in matrix_item:
             raise ValueError(f"Matrix item must contain the key '{key}'")
+    one_of_required = ["board", "pio_env", "fqbn"]
+    if not any(key in matrix_item for key in one_of_required):
+        raise ValueError(
+            f"Matrix item must contain at least one of the keys {one_of_required}"
+        )
 
     compiler = matrix_item.get("compiler", "")
     example = matrix_item.get("example", "")
@@ -367,9 +377,9 @@ if __name__ == "__main__":
     for matrix_item in final_matrix:
         l_names = []
         for grouper in log_groupers:
-            if grouper == "board" and "fqbn" in matrix_item:
+            if grouper in ["board", "pio_env"] and "fqbn" in matrix_item:
                 l_names.append(get_filename_slug("fqbn", matrix_item["fqbn"]))
-            elif grouper == "board" and "pio_env" in matrix_item:
+            elif grouper in ["board", "fqbn"] and "pio_env" in matrix_item:
                 l_names.append(get_filename_slug("pio_env", matrix_item["pio_env"]))
             elif grouper not in matrix_item.keys():
                 raise ValueError(
@@ -427,7 +437,12 @@ if __name__ == "__main__":
                 "group_commands": l_command_list,
             }
             for grouper in log_groupers:
-                l_dict[grouper] = matrix_item[grouper]
+                use_grouper = grouper
+                if grouper in ["board", "pio_env"] and "fqbn" in matrix_item:
+                    use_grouper = "fqbn"
+                elif grouper in ["board", "fqbn"] and "pio_env" in matrix_item:
+                    use_grouper = "pio_env"
+                l_dict[use_grouper] = matrix_item[use_grouper]
             grouped_command_matrix[l_key] = deepcopy(l_dict)
         else:
             print(
@@ -450,20 +465,21 @@ if __name__ == "__main__":
     for l_key, group_dict in grouped_command_matrix.items():
         j_names = []
         for grouper in job_groupers:
-            if grouper == "board" and "fqbn" in group_dict:
-                j_names.append(get_filename_slug("fqbn", group_dict["fqbn"]))
-            elif grouper == "board" and "pio_env" in group_dict:
-                j_names.append(get_filename_slug("pio_env", group_dict["pio_env"]))
-            elif grouper not in group_dict.keys():
+            use_grouper = grouper
+            if grouper in ["board", "pio_env"] and "fqbn" in group_dict:
+                use_grouper = "fqbn"
+            elif grouper in ["board", "fqbn"] and "pio_env" in group_dict:
+                use_grouper = "pio_env"
+            if use_grouper not in group_dict.keys():
                 raise ValueError(
-                    f"Matrix item {group_dict} does not have the key {grouper}"
+                    f"Matrix item {group_dict} does not have the key {use_grouper}"
                 )
-            elif group_dict[grouper] is None:
+            elif group_dict[use_grouper] is None:
                 raise ValueError(
-                    f"Matrix item {group_dict} has a None value for the key {grouper}"
+                    f"Matrix item {group_dict} has a None value for the key {use_grouper}"
                 )
             else:
-                j_names.append(get_filename_slug(grouper, group_dict[grouper]))
+                j_names.append(get_filename_slug(use_grouper, group_dict[use_grouper]))
 
         job_name = clean_name(" - ".join(j_names))
         job_tag = clean_name("-".join(j_names))
@@ -475,7 +491,12 @@ if __name__ == "__main__":
                 "job_command": group_dict["group_commands"],
             }
             for grouper in log_groupers:
-                j_dict[grouper] = group_dict[grouper]
+                use_grouper = grouper
+                if grouper in ["board", "pio_env"] and "fqbn" in group_dict:
+                    use_grouper = "fqbn"
+                elif grouper in ["board", "fqbn"] and "pio_env" in group_dict:
+                    use_grouper = "pio_env"
+                j_dict[use_grouper] = group_dict[use_grouper]
             grouped_job_matrix[job_tag] = j_dict
         else:
             grouped_job_matrix[job_tag]["job_command"] += group_dict["group_commands"]

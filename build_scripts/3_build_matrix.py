@@ -24,6 +24,7 @@ from build_config import (
     write_config_file,
 )
 
+
 def build_default_matrix(config: dict):
     """Build the default matrix using dict_product"""
     print("Building default job matrix...")
@@ -123,10 +124,6 @@ def build_default_matrix(config: dict):
         example = matrix_entry["example"]
         example_name = os.path.split(example)[-1]
         example_full_path = os.path.join(workspace_path, example, example_name + ".ino")
-        matrix_entry["other_commands"] = [
-            r"sed -i 's/#define TINY_GSM_MODEM_/\/\/ #define TINY_GSM_MODEM_/g' "
-            + f'"{example_full_path}"'
-        ]
 
     final_matrix = remove_nested_duplicates(assembled_matrix)
     print(f"Final filtered matrix: {len(final_matrix)}")
