@@ -434,9 +434,9 @@ if __name__ == "__main__":
     example_specs = load_example_dependencies(args.examples_path)
 
     # Ensure dependencies key exists
-    if "dependencies" not in library_specs:
+    if "dependencies" not in library_specs or len(library_specs["dependencies"]) == 0:
         library_specs["dependencies"] = []
-    if "dependencies" not in example_specs:
+    if "dependencies" not in example_specs or len(example_specs["dependencies"]) == 0:
         example_specs["dependencies"] = []
 
     print(f"Library dependencies: {len(library_specs['dependencies'])}")
