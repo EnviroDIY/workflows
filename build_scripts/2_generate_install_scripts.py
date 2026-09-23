@@ -349,6 +349,7 @@ if __name__ == "__main__":
         "Reading configuration from environment variables, command line arguments, and the config file..."
     )
     args = get_extended_config()
+    config = vars(args)
     set_verbose_mode(args.verbose)
 
     print("\n" + "=" * 60)
@@ -418,6 +419,7 @@ if __name__ == "__main__":
             command_with_log = add_log_to_command(install_command, group_title)
             bash_out.write("\n".join(command_with_log))
 
+        bash_out.write(f"pio run --project-conf {config["pio_config_file"]} || true")
         bash_out.write(PIO_PLATFORM_END_TEXT)
 
     print(f"✓ Generated {bash_file_name}")
