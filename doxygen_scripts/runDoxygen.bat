@@ -65,6 +65,21 @@ for %%F in (
     )
 )
 
+SET DOCS_DIR=%WORKSPACE_DIR%\docs
+IF NOT EXIST "%DOCS_DIR%\" (
+    MD "%DOCS_DIR%"
+    echo Folder "%DOCS_DIR%" created successfully.
+) ELSE (
+    echo Folder "%DOCS_DIR%" already exists.
+)
+SET LOGS_DIR=%WORKSPACE_DIR%\docs\logs
+IF NOT EXIST "%LOGS_DIR%\" (
+    MD "%LOGS_DIR%"
+    echo Folder "%LOGS_DIR%" created successfully.
+) ELSE (
+    echo Folder "%LOGS_DIR%" already exists.
+)
+
 @REM Check versions of stuff
 echo Current Doxygen version...
 doxygen -v
@@ -84,6 +99,7 @@ cd "%MCSS_DIR%\css\EnviroDIY"
 @REM pygmentize -f html -S default -a ".m-code-pygments-default" > pygments-default.css
 python -u "%MCSS_DIR%\css\postprocess.py" "m-EnviroDIY.css" "m-documentation.css" -o "%MCSS_DIR%\css/EnviroDIY/m-EnviroDIY+documentation.compiled.css"  2>&1
 
+echo Copying the compiled CSS to the docs directory
 mkdir "%WORKSPACE_DIR%\docs\css"
 copy "%MCSS_DIR%\css\EnviroDIY\m-EnviroDIY+documentation.compiled.css" "%WORKSPACE_DIR%\docs\css"
 copy "%MCSS_DIR%\documentation\clipboard.js" "%WORKSPACE_DIR%\docs"
@@ -118,6 +134,10 @@ echo Generating Doxygen code documentation...
 @REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d filteroutput -d commentcnv -d markdown Doxyfile > logs\output_doxygen_run.log 2>&1
 @REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d formula Doxyfile > logs\output_doxygen_run.log 2>&1
 endlocal
+
+@REM Move the doxygen output log to the logs directory if it exists in the docs directory.
+IF EXIST "%WORKSPACE_DIR%\docs\output_doxygen.log" IF NOT EXIST "%WORKSPACE_DIR%\docs\logs\output_doxygen.log" MOVE "%WORKSPACE_DIR%\docs\output_doxygen.log" "%WORKSPACE_DIR%\docs\logs\output_doxygen.log"
+
 
 @REM Preprocess XML to fix bad section ids and anchor ids and remove private functions from the XML output.
 echo Preprocessing XML...
