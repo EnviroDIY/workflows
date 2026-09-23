@@ -84,7 +84,9 @@
       "toolchain-gccarmnoneeabi",
       "framework-cmsis",
       "framework-arduinoadafruitnrf52",
-      "tool-scons"
+      "framework-zephyr",
+      "tool-scons",
+      "tool-cmake"
     ]
   },
 
@@ -93,10 +95,12 @@
     "tools": [
       "framework-arduino-mbed",
       "framework-arduinoststm32",
+      "framework-zephyr",
       "framework-cmsis",
       "framework-cmsis-dsp",
       "toolchain-gccarmnoneeabi",
-      "tool-scons"
+      "tool-scons",
+      "tool-cmake"
     ]
   },
 
