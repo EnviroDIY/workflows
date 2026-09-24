@@ -92,19 +92,6 @@ jobs:
       #     chmod +x install-platforms-platformio.sh
       #     sh install-platforms-platformio.sh
 
-      - &cache_platforms
-        name: Cache PlatformIO Platforms
-        uses: actions/cache/save@v6
-        id: cache_platforms
-        if: steps.restore_platforms.outputs.cache-matched-key == '' && steps.install_platforms.outcome == 'success'
-        with:
-          path: |
-            ~/.platformio/packages
-            ~/.platformio/dist
-            ~/.platformio/platforms
-            ~/.platformio/tools
-          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
-
       - &restore_libraries
         name: Restore PlatformIO Libraries
         uses: actions/cache/restore@v6
@@ -129,16 +116,6 @@ jobs:
           chmod +x continuous_integration/install-example-libdeps-platformio.sh
           sh continuous_integration/install-example-libdeps-platformio.sh
           cp -a /home/runner/.platformio/lib/. $GITHUB_WORKSPACE/lib/ || true
-
-      - &cache_libraries
-        name: Cache PlatformIO Libraries
-        uses: actions/cache/save@v6
-        id: cache_libraries
-        if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') && (steps.install_libraries.outcome == 'success') }}
-        with:
-          path: |
-            ~/.platformio/lib
-          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
 
       - &get_boards_commit
         name: Get latest commit hash of EnviroDIY Boards
@@ -243,6 +220,37 @@ jobs:
         run: |
           pio pkg install --skip-dependencies -g --library ${{ inputs.library_install_git }}
           pio pkg list -g --only-libraries
+
+      # Install the test library at the Global level for PlatformIO
+      - &run_empty_pio
+        name: Run empty PlatformIO command to trigger cache
+        id: run_empty_pio
+        if: steps.restore_platforms.outputs.cache-matched-key == '' || steps.restore_libraries.outputs.cache-matched-key == '' || steps.restore_testing_library.outputs.cache-matched-key == ''
+        run: |
+          pio run || true
+
+      - &cache_platforms
+        name: Cache PlatformIO Platforms
+        uses: actions/cache/save@v6
+        id: cache_platforms
+        if: steps.restore_platforms.outputs.cache-matched-key == '' && steps.install_platforms.outcome == 'success'
+        with:
+          path: |
+            ~/.platformio/packages
+            ~/.platformio/dist
+            ~/.platformio/platforms
+            ~/.platformio/tools
+          key: pio_platforms-${{ hashFiles('install-platforms-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
+
+      - &cache_libraries
+        name: Cache PlatformIO Libraries
+        uses: actions/cache/save@v6
+        id: cache_libraries
+        if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') && (steps.install_libraries.outcome == 'success') }}
+        with:
+          path: |
+            ~/.platformio/lib
+          key: pio_libraries-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
 
       - &cache_testing_library
         name: Cache the testing version of the library for PlatformIO
