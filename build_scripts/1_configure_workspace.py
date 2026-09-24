@@ -288,7 +288,9 @@ def match_input_with_known_dicts(
                     print_verbose(f"::notice::Matched input '{input_item}' with '{k}'")
                     return k if return_type.lower() == "keys" else v
     # if we get here, we didn't match
-    print(f"::warning:: '{input_item}' could not be matched!")
+    if input_item not in ["uno_pic32", "genuino101", "zero"]:
+        # ^^ don't print warnings for these known exceptions
+        print(f"::warning:: '{input_item}' could not be matched!")
     return None
 
 
