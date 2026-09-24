@@ -13,7 +13,6 @@ jobs:
     if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
     uses: EnviroDIY/workflows/.github/workflows/build_examples.yaml@main
     with:
-
       # # Workspace path as an absolute path (default: workspace root)
       # workspace_path: ""
 
@@ -50,7 +49,7 @@ jobs:
 
       # # Comma-separated list of Arduino FQBNs or board names to build with Arduino CLI or "all" for all (default: all)
       # # Mutually exclusive with arduino_fqbns_to_ignore
-      # arduino_fqbns_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
+      # arduino_fqbns_to_build: "EnviroDIY:avr:envirodiy_mayfly,EnviroDIY:samd:stonefly_m4,arduino:avr:mega,arduino:samd:mzero_bl,adafruit:samd:adafruit_feather_m0"
       # # Comma-separated list of Arduino FQBNs or board names to skip (default: empty)
       # # Mutually exclusive with arduino_fqbns_to_build
       # arduino_fqbns_to_ignore: ""
@@ -58,9 +57,9 @@ jobs:
       # # Comma-separated list of PlatformIO environments or board names to build or "all" for all (default: all)
       # # Mutually exclusive with pio_envs_to_ignore
       # pio_envs_to_build: "mayfly,megaatmega2560,zeroUSB,adafruit_feather_m0"
-      # # Comma-separated list of PlatformIO environments or board names to skip (default: esp32-c6-devkitm-1,arduino_nano_esp32)
+      # # Comma-separated list of PlatformIO environments or board names to skip (default: empty)
       # # Mutually exclusive with pio_envs_to_build
-      # pio_envs_to_ignore: "esp32-c6-devkitm-1,arduino_nano_esp32"
+      # pio_envs_to_ignore: ""
 
       # # Semicolon-separated list of comma-separated inline defines to expand the matrix
       # # To set a value, use the format: NAME=VALUE.

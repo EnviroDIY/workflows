@@ -44,12 +44,9 @@
   "portenta_h7_m7": "arduino:mbed_portenta:envie_m7",
 
   "nicla_vision": "arduino:mbed_nicla:nicla_vision",
-  "nicla_sense": "arduino:mbed_nicla:nicla_sense",
+  "nicla_sense_me": "arduino:mbed_nicla:nicla_sense",
 
   "uno_r4_wifi": "arduino:renesas_uno:unor4wifi",
-
-  "nicla_vision_m4": "arduino:zephyr_main:nicla_vision",
-  "nicla_sense_me": "arduino:zephyr_main:nicla_sense",
 
   "bluepill_f103c8": "STMicroelectronics:stm32:GenF1",
   "adafruit_feather_f405": "STMicroelectronics:stm32:GenF4",
