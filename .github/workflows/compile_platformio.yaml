@@ -222,8 +222,7 @@ jobs:
           pio pkg list -g --only-libraries
 
       # Install the test library at the Global level for PlatformIO
-      - &run_empty_pio
-        name: Run empty PlatformIO command to trigger cache
+      - name: Run empty PlatformIO command to trigger cache
         id: run_empty_pio
         if: steps.restore_platforms.outputs.cache-matched-key == '' || steps.restore_libraries.outputs.cache-matched-key == '' || steps.restore_testing_library.outputs.cache-matched-key == ''
         run: |
