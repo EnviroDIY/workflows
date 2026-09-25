@@ -39,7 +39,7 @@ jobs:
   check_for_dependencies:
     name: Check for any library dependencies
     uses: ./.github/workflows/check_for_dependencies.yaml
-    if: ${{ ! failure() && ! cancelled() && inputs.include_dependencies == 'true' }}
+    if: ${{ ! failure() && ! cancelled() }}
 
   prepare_assets:
     name: Prepare Release Assets
