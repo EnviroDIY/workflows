@@ -22,7 +22,12 @@ else:
     )
     if docbuild_dir.lower() == expected_path.lower():
         docbuild_dir = os.path.join(
-            os.path.expanduser("~"), "Documents", "GitHub", "EnviroDIY", "ModularSensors", "docs"
+            os.path.expanduser("~"),
+            "Documents",
+            "GitHub",
+            "EnviroDIY",
+            "ModularSensors",
+            "docs",
         )
     repo_name = os.path.normpath(docbuild_dir).split(os.sep)[-2]
     relative_dir = os.path.join("..", "..", repo_name) + os.sep
@@ -206,7 +211,44 @@ with open(output_file, "w+") as out_file:
                     lines_copied += 1
                 i += 1
             if lines_copied == 0:
-                print(f"  No doc block detected in file")
+                print(f"  No doc block detected in file, creating a default one")
+                out_file.write(
+                    "/** ============================================================================\n"
+                )
+                out_file.write(f" * @example{{lineno}} {os.path.split(filename)[1]}\n")
+                out_file.write(" * @copyright Stroud Water Research Center\n")
+                out_file.write(
+                    " * @license This example is published under the BSD-3 license.\n"
+                )
+                out_file.write(
+                    " * @author Sara Geleskie Damiano <sdamiano@stroudcenter.org>\n"
+                )
+                out_file.write(" *\n")
+                out_file.write(f" * @m_examplenavigation{{{main_example_page},}}\n")
+                out_file.write(" * @m_footernavigation\n")
+                out_file.write(
+                    " * ========================================================================== */\n"
+                )
+
+                # write out a directory listing for the example, only if there are other files in the directory
+                if (
+                    len(
+                        [
+                            file
+                            for file in os.listdir(os.path.dirname(filename))
+                            if re.match(
+                                doxy_file_type_patterns, file, flags=re.IGNORECASE
+                            )
+                        ]
+                    )
+                    > 0
+                ):
+                    print(f"  Writing directory listing for {filename}")
+                    out_file.write(
+                        f"\n/**\n * @dir {'/'.join(filename.split(os.sep)[-3:-1])}\n * @brief Contains the {re.sub(r'.ino$','',os.path.split(filename)[1])} example.\n */\n"
+                    )
+                else:
+                    print(f"  No directory listing needed for {filename}")
 
             out_file.write("\n\n")
 
