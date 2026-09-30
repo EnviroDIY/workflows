@@ -1,0 +1,18 @@
+dictionaries: []
+dictionaryDefinitions: []
+ignorePaths:
+  - compile_commands.json
+  - keywords.txt
+  - platformio.ini
+  - .coderabbit.yaml
+  - .gitignore
+  - .gitattributes
+ignoreWords: []
+import: []
+version: '0.2'
+words:
+  - Adafruit
+  - EnviroDIY
+  - mcss
+  - Sparkfun
+  - CodeRabbit
