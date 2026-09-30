@@ -29,6 +29,9 @@ jobs:
           ]
     name: Wait for Checks to complete
     runs-on: ubuntu-latest
+    # actions:read is required so action-wait-for-workflow can query workflow run status
+    permissions:
+      actions: read
     steps:
       - name: Wait on Workflow
         uses: ArcticLampyrid/action-wait-for-workflow@v1.3.0
@@ -49,6 +52,8 @@ jobs:
     if: |
       always() &&
       (needs.wait_for_checks.result == 'success' || needs.wait_for_checks.result == 'skipped')
+    permissions:
+      contents: write
     uses: EnviroDIY/workflows/.github/workflows/prepare_release.yaml@main
     secrets:
       PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}

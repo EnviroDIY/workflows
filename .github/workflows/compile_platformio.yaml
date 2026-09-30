@@ -1,5 +1,8 @@
 name: PlatformIO Compile
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

@@ -1,5 +1,8 @@
 name: Figure out the source of the library to build for testing
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
   workflow_call:

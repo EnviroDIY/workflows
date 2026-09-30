@@ -1,5 +1,9 @@
 name: Verify library manifest and structure
 
+# contents: write is required so peter-evans/commit-comment can post validation failures
+permissions:
+  contents: write
+
 on:
   workflow_call:
     inputs:

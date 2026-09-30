@@ -1,5 +1,8 @@
 name: Arduino CLI Compile
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

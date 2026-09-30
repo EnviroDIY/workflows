@@ -1,5 +1,8 @@
 name: Prepare a new release and add release assets
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

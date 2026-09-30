@@ -1,5 +1,10 @@
 on: pull_request
 name: Changelog Reminder
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   remind:
     name: Changelog Reminder

@@ -59,6 +59,7 @@ jobs:
     if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
     name: Build documentation
     permissions:
+      contents: read
       id-token: write
       pages: write
 

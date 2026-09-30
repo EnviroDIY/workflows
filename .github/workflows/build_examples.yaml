@@ -1,5 +1,8 @@
 name: Build Library Examples
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

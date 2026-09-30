@@ -1,5 +1,8 @@
 name: Check for Arduino Library Dependencies
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
   workflow_call:
