@@ -30,6 +30,7 @@ import json
 from copy import deepcopy
 from typing import List, Optional
 from subprocess import list2cmdline
+from shlex import quote
 from build_utils import get_filename_slug, save_json_file
 from build_config import get_extended_config, set_verbose_mode, print_verbose
 
@@ -270,6 +271,15 @@ def create_command_list_from_matrix(
     # Handle inline flags (sed commands)
     example_name = os.path.split(example)[-1]
     example_full_path = os.path.join(workspace_path, example, example_name + ".ino")
+    # Start each matrix item from the committed sketch, including builds with
+    # no inline defines, so flags from a previous build cannot carry over.
+    example_repo_path = os.path.relpath(example_full_path, workspace_path).replace(
+        os.sep, "/"
+    )
+    restore_command = (
+        f"git -C {quote(workspace_path)} restore --source=HEAD --worktree -- "
+        f"{quote(example_repo_path)}"
+    )
     sed_commands: List[str] = []
     for flag in inline_defines:
         if len(flag) > 0:
@@ -281,7 +291,9 @@ def create_command_list_from_matrix(
             )
 
     job_dict["output_file_name"] = output_file_name
-    job_dict["other_commands"] = matrix_item.get("other_commands", []) + sed_commands
+    job_dict["other_commands"] = (
+        matrix_item.get("other_commands", []) + [restore_command] + sed_commands
+    )
     job_dict["build_commands"] = [build_command]
 
     return deepcopy(job_dict)
