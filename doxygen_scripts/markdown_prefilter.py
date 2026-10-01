@@ -417,6 +417,7 @@ with fileinput.FileInput(
         massaged_line = line
         # Convert markdown comment tags to c++/dox style comment tags
         massaged_line = re.sub(r"\[//\]: # \( @(\w+?.*) \)", r"@\1", massaged_line)
+        massaged_line = re.sub(r"<!--!%-->", r"%", massaged_line)
         # allow thank you tags
         massaged_line = massaged_line.replace("thanks to @", r"thanks to \@")
         massaged_line = massaged_line.replace("courtesy of @", r"courtesy of \@")

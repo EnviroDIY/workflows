@@ -110,7 +110,7 @@ def fix_bad_anchor_ids(root, compound_id):
 
 def remove_private_elements(root):
     """
-    Remove any <memberdef>, <innerclass>, or <compounddef> elements with prot="private".
+    Remove any <memberdef>, <innerclass>, or <compounddef> elements with prot="private" or "protected".
     """
     needs_to_be_fixed: bool = False
     removed_ids = []
@@ -119,7 +119,10 @@ def remove_private_elements(root):
         for parent in root.iter():
             to_remove = []
             for child in list(parent):
-                if child.tag == tag and child.attrib.get("prot") == "private":
+                if child.tag == tag and child.attrib.get("prot") in [
+                    "private",
+                    "protected",
+                ]:
                     needs_to_be_fixed = True
                     id_tag = "refid" if tag == "innerclass" else "id"
 
@@ -175,7 +178,7 @@ def remove_private_members_from_member_list(root):
             if (
                 parent.tag == "listofallmembers"
                 and child.tag == "member"
-                and child.attrib.get("prot") == "private"
+                and child.attrib.get("prot") in ["private", "protected"]
             ):
                 needs_to_be_fixed = True
                 print(
@@ -191,7 +194,7 @@ def remove_private_members_from_member_list(root):
 
 def remove_private_members_from_index(root, ids_to_remove=[]):
     """
-    Remove any <member> elements with prot="private" from the index.
+    Remove any <member> elements with prot="private" or "protected" from the index.
     """
     needs_to_be_fixed: bool = False
     # Iterate through all elements and remove matching members in the member list

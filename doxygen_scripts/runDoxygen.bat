@@ -223,13 +223,13 @@ IF %errorlevel% NEQ 0 (
 @REM   goto :error
 @REM )
 
-@REM Run doxybook2 to generate markdown files from the Doxygen xml output
-echo Running doxybook2 to generate markdown files from the Doxygen xml output
-"C:\Program Files\doxybook2\bin\doxybook2.exe" --config "%SCRIPT_DIR%\.doxybook\config.json" --templates "%SCRIPT_DIR%\.doxybook\templates" --input "%WORKSPACE_DIR%_Doxygen\xml" --output "%WORKSPACE_DIR%_Doxygen\md" -d > "%WORKSPACE_DIR%\docs\logs\output_doxybook2_run.log" 2>&1
-IF %errorlevel% NEQ 0 (
-  echo doxybook2 post-processor failed with error code %errorlevel%.
-  goto :error
-)
+@REM  @REM Run doxybook2 to generate markdown files from the Doxygen xml output
+@REM  echo Running doxybook2 to generate markdown files from the Doxygen xml output
+@REM  "C:\Program Files\doxybook2\bin\doxybook2.exe" --config "%SCRIPT_DIR%\.doxybook\config.json" --templates "%SCRIPT_DIR%\.doxybook\templates" --input "%WORKSPACE_DIR%_Doxygen\xml" --output "%WORKSPACE_DIR%_Doxygen\md" -d > "%WORKSPACE_DIR%\docs\logs\output_doxybook2_run.log" 2>&1
+@REM  IF %errorlevel% NEQ 0 (
+@REM    echo doxybook2 post-processor failed with error code %errorlevel%.
+@REM    goto :error
+@REM  )
 
 echo.
 echo ============================================
