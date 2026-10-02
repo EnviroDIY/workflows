@@ -185,25 +185,38 @@ def group_and_log_commands(
 ) -> List[str]:
     """Create a log group with build commands"""
     command_list = []
-    command_list.append("\necho ::group::{}".format(group_title))
+    command_list.append("\n\necho ::group::{}".format(group_title))
     command_list.append("group_failed=0")
-    for command in other_commands + build_commands:
-        # first append git commands to restore the example to its original state
-        if (
-            command.startswith("git")
-            and "restore --source=HEAD --worktree --" in command
-        ):
+    other_commands_ordered = []
+    # first append git commands to restore the example to its original state
+    other_commands_ordered.extend(
+        [
+            cmd
+            for cmd in other_commands
+            if cmd.startswith("git") and "restore --source=HEAD --worktree --" in cmd
+        ]
+    )
+    # then add the sed commands
+    other_commands_ordered.extend(
+        [cmd for cmd in other_commands if cmd.startswith("sed")]
+    )
+    # then add the other commands
+    other_commands_ordered.extend(
+        [cmd for cmd in other_commands if cmd not in other_commands_ordered]
+    )
+    for command in other_commands_ordered:
+        # add sed commands with no logging to the file and no failure
+        if command.startswith("sed"):
             command_list.append(command)
-        # next add sed commands
-        elif command.startswith("sed"):
-            command_list.append(command)
-        # then add other stuff
+        # add other stuff teeing to a file
         else:
             command_list.append(command + ' 2>&1 | tee -a "{}"'.format(output_filename))
-            command_list.append("result_code=${PIPESTATUS[0]}")
-            command_list.append(
-                'if [ "$result_code" -ne "0" ]; then group_failed=1; status=1; fi'
-            )
+    for command in build_commands:
+        command_list.append(command + ' 2>&1 | tee -a "{}"'.format(output_filename))
+    command_list.append("result_code=${PIPESTATUS[0]}")
+    command_list.append(
+        'if [ "$result_code" -ne "0" ]; then group_failed=1; status=1; fi'
+    )
     command_list.append("echo ::endgroup::")
     command_list.append(
         f'if [ "$group_failed" -eq "0" ]; then echo -e "\\e[32m{group_title} successfully compiled\\e[0m"; else echo -e "\\e[31m{group_title} failed to compile\\e[0m"; fi'
@@ -337,11 +350,15 @@ if __name__ == "__main__":
     )
     args = get_extended_config()
     set_verbose_mode(args.verbose)
+    use_verbose |= args.verbose
     config = vars(args)
 
     workspace_path = args.workspace_path
     artifact_path = args.artifact_path
     final_matrix = args.final_matrix
+
+    final_matrix_file = os.path.join(artifact_path, "matrix_final_config.json")
+    save_json_file(final_matrix_file, final_matrix)
 
     # if any("board" in matrix_item.keys() for matrix_item in final_matrix):
     #     import importlib.util
@@ -450,6 +467,9 @@ if __name__ == "__main__":
         print("::warning::No command blocks to process!")
         sys.exit(0)
 
+    command_matrix_file = os.path.join(artifact_path, "matrix_complete_command.json")
+    save_json_file(command_matrix_file, complete_command_matrix)
+
     # Group commands for logging
     grouped_command_matrix: dict[str, dict] = {}
     for matrix_item in complete_command_matrix:
@@ -481,6 +501,11 @@ if __name__ == "__main__":
             grouped_command_matrix[l_key]["group_commands"] += l_command_list
 
     print(f"Total log groups: {len(grouped_command_matrix)}")
+
+    grouped_command_matrix_file = os.path.join(
+        artifact_path, "matrix_grouped_command.json"
+    )
+    save_json_file(grouped_command_matrix_file, grouped_command_matrix)
 
     # Group into jobs
     # Use job_grouping_fields from config, or default to ["compiler", "board"]
@@ -532,6 +557,9 @@ if __name__ == "__main__":
             grouped_job_matrix[job_tag]["job_command"] += group_dict["group_commands"]
 
     print(f"Total jobs: {len(grouped_job_matrix)}")
+
+    grouped_job_matrix_file = os.path.join(artifact_path, "matrix_grouped_job.json")
+    save_json_file(grouped_job_matrix_file, grouped_job_matrix)
 
     # Generate bash scripts
     start_job_commands: List[str] = ["status=0"]

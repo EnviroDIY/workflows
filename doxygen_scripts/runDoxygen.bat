@@ -29,16 +29,16 @@ echo mcss Directory: %MCSS_DIR%
 
 @REM Delete any old versions of the documentation and css
 echo Deleting any previous documentation directories
-del "%WORKSPACE_DIR%_Doxygen\html" /q /Q
-del "%WORKSPACE_DIR%_Doxygen\xml" /q /Q
-del "%WORKSPACE_DIR%_Doxygen\m.css" /q /s /Q
-del "%WORKSPACE_DIR%_Doxygen\sqlite3" /q /Q
-del "%WORKSPACE_DIR%_Doxygen\md" /q /s /Q
-del "%WORKSPACE_DIR%_Doxygen\markdown" /q /s /Q
-del "%WORKSPACE_DIR%_Doxygen\json" /q /s /Q
-del "%WORKSPACE_DIR%\docs\css" /q /Q
-del "%WORKSPACE_DIR%\generated_docs" /q /Q
-del "%WORKSPACE_DIR%\docs\generated_doc_helpers" /q /Q
+del "%WORKSPACE_DIR%_Doxygen\html" /q >nul
+del "%WORKSPACE_DIR%_Doxygen\xml" /q >nul
+del "%WORKSPACE_DIR%_Doxygen\m.css" /q /s >nul
+del "%WORKSPACE_DIR%_Doxygen\sqlite3" /q >nul
+del "%WORKSPACE_DIR%_Doxygen\md" /q /s >nul
+del "%WORKSPACE_DIR%_Doxygen\markdown" /q /s >nul
+del "%WORKSPACE_DIR%_Doxygen\json" /q /s >nul
+del "%WORKSPACE_DIR%\docs\css" /q >nul
+del "%WORKSPACE_DIR%\generated_docs" /q >nul
+del "%WORKSPACE_DIR%\docs\generated_doc_helpers" /q >nul
 
 @REM Clear out output files
 echo Clearing content any previous output files
@@ -63,7 +63,7 @@ for %%F in (
     logs\output_check_component_inclusion.log
 ) do (
     if exist "%WORKSPACE_DIR%\docs\%%F" (
-        del "%WORKSPACE_DIR%\docs\%%F" /q
+        del "%WORKSPACE_DIR%\docs\%%F" /q >nul
     )
 )
 
@@ -245,21 +245,20 @@ endlocal
 
 :cleanup_downloads
 @REM Delete copied files
-echo Deleting copied files
-del "%WORKSPACE_DIR%\Ubuntu-Bold.ttf" /q /Q
-del "%WORKSPACE_DIR%\docs\Ubuntu-Bold.ttf" /q /Q
-del "%WORKSPACE_DIR%\docs\UbuntuMono-Regular.ttf" /q /Q
-del "%WORKSPACE_DIR%\docs\main_logo.png" /q /Q
-del "%WORKSPACE_DIR%\docs\favicon.png" /q /Q
-del "%WORKSPACE_DIR%\docs\enviroDIY_favicon.png" /q /Q
-del "%WORKSPACE_DIR%\docs\gp-desktop-logo.png" /q /Q
-del "%WORKSPACE_DIR%\docs\gp-mobile-logo.png" /q /Q
-del "%WORKSPACE_DIR%\docs\gp-scrolling-logo.png" /q /Q
-del "%WORKSPACE_DIR%\docs\markdown_prefilter.py" /q /Q
-del "%WORKSPACE_DIR%\docs\examples.dox" /q /Q
-del "%WORKSPACE_DIR%\docs\clipboard.js" /q /Q
-del "%WORKSPACE_DIR%\docs\css" /q /Q
-rmdir "%WORKSPACE_DIR%\docs\css" /q /Q
+del "%WORKSPACE_DIR%\Ubuntu-Bold.ttf" /q >nul
+del "%WORKSPACE_DIR%\docs\Ubuntu-Bold.ttf" /q >nul
+del "%WORKSPACE_DIR%\docs\UbuntuMono-Regular.ttf" /q >nul
+del "%WORKSPACE_DIR%\docs\main_logo.png" /q >nul
+del "%WORKSPACE_DIR%\docs\favicon.png" /q >nul
+del "%WORKSPACE_DIR%\docs\enviroDIY_favicon.png" /q >nul
+del "%WORKSPACE_DIR%\docs\gp-desktop-logo.png" /q >nul
+del "%WORKSPACE_DIR%\docs\gp-mobile-logo.png" /q >nul
+del "%WORKSPACE_DIR%\docs\gp-scrolling-logo.png" /q >nul
+del "%WORKSPACE_DIR%\docs\markdown_prefilter.py" /q >nul
+del "%WORKSPACE_DIR%\docs\examples.dox" /q >nul
+del "%WORKSPACE_DIR%\docs\clipboard.js" /q >nul
+del "%WORKSPACE_DIR%\docs\css" /q >nul
+rmdir "%WORKSPACE_DIR%\docs\css" /q >nul
 
 @REM navigate back to the main directory
 cd "%WORKSPACE_DIR%"
