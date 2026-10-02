@@ -189,8 +189,16 @@ def group_and_log_commands(
     command_list.append("group_failed=0")
     command_list.extend(other_commands)
     for command in build_commands:
-        if command.startswith("sed"):
+        # first append git commands to restore the example to its original state
+        if (
+            command.startswith("git")
+            and "restore --source=HEAD --worktree --" in command
+        ):
             command_list.append(command)
+        # next add sed commands
+        elif command.startswith("sed"):
+            command_list.append(command)
+        # then add other stuff
         else:
             command_list.append(command + ' 2>&1 | tee -a "{}"'.format(output_filename))
             command_list.append("result_code=${PIPESTATUS[0]}")

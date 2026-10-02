@@ -29,14 +29,16 @@ echo mcss Directory: %MCSS_DIR%
 
 @REM Delete any old versions of the documentation and css
 echo Deleting any previous documentation directories
-del "%WORKSPACE_DIR%_Doxygen\html" /q
-del "%WORKSPACE_DIR%_Doxygen\xml" /q
-del "%WORKSPACE_DIR%_Doxygen\m.css" /q
-del "%WORKSPACE_DIR%_Doxygen\sqlite3" /q
-del "%WORKSPACE_DIR%_Doxygen\md" /q /s
-del "%WORKSPACE_DIR%_Doxygen\markdown" /q /s
-del "%WORKSPACE_DIR%\docs\css" /q
-del "%WORKSPACE_DIR%\generated_docs" /q
+del "%WORKSPACE_DIR%_Doxygen\html" /q /Q
+del "%WORKSPACE_DIR%_Doxygen\xml" /q /Q
+del "%WORKSPACE_DIR%_Doxygen\m.css" /q /s /Q
+del "%WORKSPACE_DIR%_Doxygen\sqlite3" /q /Q
+del "%WORKSPACE_DIR%_Doxygen\md" /q /s /Q
+del "%WORKSPACE_DIR%_Doxygen\markdown" /q /s /Q
+del "%WORKSPACE_DIR%_Doxygen\json" /q /s /Q
+del "%WORKSPACE_DIR%\docs\css" /q /Q
+del "%WORKSPACE_DIR%\generated_docs" /q /Q
+del "%WORKSPACE_DIR%\docs\generated_doc_helpers" /q /Q
 
 @REM Clear out output files
 echo Clearing content any previous output files
@@ -117,6 +119,10 @@ python -u "%SCRIPT_DIR%\generateLogos.py" > logs\output_generateLogo.log 2>&1
 @REM Document the examples from the header of each example
 echo Creating dox files from example file headers
 python -u "%SCRIPT_DIR%\documentExamples.py" > logs\output_documentExamples.log 2>&1
+IF %errorlevel% NEQ 0 (
+  echo example documentation generation failed with error code %errorlevel%.
+  exit /b %errorlevel%
+)
 
 @REM  download the markdown pre-filter
 echo Copying markdown pre-filter to docs directory
@@ -156,36 +162,21 @@ IF %errorlevel% NEQ 0 (
 
 @REM Run m.css for html output
 echo Running m.css Doxygen post-processor to generate html...
-python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcss_run.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > logs\output_mcss.log 2>&1
-@REM python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output logs\output_mcss_run.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > logs\output_mcss.log 2>&1
+python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output logs\output_mcss_run.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > logs\output_mcss.log 2>&1
+@REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcss_run.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > logs\output_mcss.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo m.css to html post-processor failed with error code %errorlevel%.
   goto :error
 )
 
 @REM Run m.css for markdown output
-@REM echo Running m.css Doxygen post-processor to generate markdown...
-@REM python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
-@REM python -u "%MCSS_DIR%\documentation\doxygen_refactored.py" "mcss-conf.py" --no-doxygen --format all --debug > logs\output_mcssr.log 2>&1
-@REM IF %errorlevel% NEQ 0 (
-@REM   echo m.css to markdown post-processor failed with error code %errorlevel%.
-@REM   goto :error
-@REM )
-
-@REM @REM Move to generated markdown directory to rename files to .md
-@REM cd "C:\Users\sdamiano\Documents\GitHub\EnviroDIY\TinyGSM_Doxygen\m.css\"
-@REM echo Renaming files to remove ".html" and replace with ".md"
-@REM setlocal enabledelayedexpansion
-@REM set "search=.html"
-@REM set "replace=.md"
-
-@REM for %%F in (*%search%*) do (
-@REM set "name=%%F"
-@REM ren "!name!" "!name:%search%=%replace%!"
-@REM )
-@REM endlocal
-@REM @REM Move back to the repository directory
-@REM cd "%WORKSPACE_DIR%"
+echo Running m.css Doxygen post-processor to generate markdown...
+python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
+@REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --debug-template --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
+IF %errorlevel% NEQ 0 (
+ echo m.css to markdown post-processor failed with error code %errorlevel%.
+ goto :error
+)
 
 @REM copy functions so they look right
 echo Copying function documentation
@@ -255,20 +246,20 @@ endlocal
 :cleanup_downloads
 @REM Delete copied files
 echo Deleting copied files
-del "%WORKSPACE_DIR%\Ubuntu-Bold.ttf" /q
-del "%WORKSPACE_DIR%\docs\Ubuntu-Bold.ttf" /q
-del "%WORKSPACE_DIR%\docs\UbuntuMono-Regular.ttf" /q
-del "%WORKSPACE_DIR%\docs\main_logo.png" /q
-del "%WORKSPACE_DIR%\docs\favicon.png" /q
-del "%WORKSPACE_DIR%\docs\enviroDIY_favicon.png" /q
-del "%WORKSPACE_DIR%\docs\gp-desktop-logo.png" /q
-del "%WORKSPACE_DIR%\docs\gp-mobile-logo.png" /q
-del "%WORKSPACE_DIR%\docs\gp-scrolling-logo.png" /q
-del "%WORKSPACE_DIR%\docs\markdown_prefilter.py" /q
-del "%WORKSPACE_DIR%\docs\examples.dox" /q
-del "%WORKSPACE_DIR%\docs\clipboard.js" /q
-del "%WORKSPACE_DIR%\docs\css" /q
-rmdir "%WORKSPACE_DIR%\docs\css" /q
+del "%WORKSPACE_DIR%\Ubuntu-Bold.ttf" /q /Q
+del "%WORKSPACE_DIR%\docs\Ubuntu-Bold.ttf" /q /Q
+del "%WORKSPACE_DIR%\docs\UbuntuMono-Regular.ttf" /q /Q
+del "%WORKSPACE_DIR%\docs\main_logo.png" /q /Q
+del "%WORKSPACE_DIR%\docs\favicon.png" /q /Q
+del "%WORKSPACE_DIR%\docs\enviroDIY_favicon.png" /q /Q
+del "%WORKSPACE_DIR%\docs\gp-desktop-logo.png" /q /Q
+del "%WORKSPACE_DIR%\docs\gp-mobile-logo.png" /q /Q
+del "%WORKSPACE_DIR%\docs\gp-scrolling-logo.png" /q /Q
+del "%WORKSPACE_DIR%\docs\markdown_prefilter.py" /q /Q
+del "%WORKSPACE_DIR%\docs\examples.dox" /q /Q
+del "%WORKSPACE_DIR%\docs\clipboard.js" /q /Q
+del "%WORKSPACE_DIR%\docs\css" /q /Q
+rmdir "%WORKSPACE_DIR%\docs\css" /q /Q
 
 @REM navigate back to the main directory
 cd "%WORKSPACE_DIR%"
