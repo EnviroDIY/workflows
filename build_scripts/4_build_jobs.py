@@ -187,8 +187,7 @@ def group_and_log_commands(
     command_list = []
     command_list.append("\necho ::group::{}".format(group_title))
     command_list.append("group_failed=0")
-    command_list.extend(other_commands)
-    for command in build_commands:
+    for command in other_commands + build_commands:
         # first append git commands to restore the example to its original state
         if (
             command.startswith("git")
