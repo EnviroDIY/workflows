@@ -298,9 +298,20 @@ def create_command_list_from_matrix(
                 f'#endif\\\n\' "{example_full_path}"'
             )
 
+    # In verbose mode, show how the sed-modified sketch differs from the committed one
+    diff_commands: List[str] = []
+    if use_verbose:
+        diff_commands.append(
+            f"git -C {quote(workspace_path)} --no-pager diff HEAD -- "
+            f"{quote(example_repo_path)}"
+        )
+
     job_dict["output_file_name"] = output_file_name
     job_dict["other_commands"] = (
-        matrix_item.get("other_commands", []) + [restore_command] + sed_commands
+        matrix_item.get("other_commands", [])
+        + [restore_command]
+        + sed_commands
+        + diff_commands
     )
     job_dict["build_commands"] = [build_command]
 
