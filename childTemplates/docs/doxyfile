@@ -1153,6 +1153,7 @@ EXCLUDE                = ../src/ReadMe.md \
                          ../.github \
                          ../.pio \
                          ../.vscode \
+                         ../keywords.txt \
                          ../archive \
                          ../tests \
                          ../lib \
