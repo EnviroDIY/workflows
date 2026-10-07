@@ -115,13 +115,17 @@ copy "%SCRIPT_DIR%\Ubuntu-Bold.ttf" "%WORKSPACE_DIR%\docs"
 copy "%SCRIPT_DIR%\enviroDIY_Favicon.png" "%WORKSPACE_DIR%\docs"
 @REM Generate the logos
 python -u "%SCRIPT_DIR%\generateLogos.py" > logs\output_generateLogo.log 2>&1
+IF %errorlevel% NEQ 0 (
+  echo logo generation failed with error code %errorlevel%.
+  goto :error
+)
 
 @REM Document the examples from the header of each example
 echo Creating dox files from example file headers
 python -u "%SCRIPT_DIR%\documentExamples.py" > logs\output_documentExamples.log 2>&1
 IF %errorlevel% NEQ 0 (
   echo example documentation generation failed with error code %errorlevel%.
-  exit /b %errorlevel%
+  goto :error
 )
 
 @REM  download the markdown pre-filter
@@ -161,29 +165,36 @@ IF %errorlevel% NEQ 0 (
 @REM )
 
 @REM Run m.css for html output
-echo Running m.css Doxygen post-processor to generate html...
-python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output logs\output_mcss_run.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > logs\output_mcss.log 2>&1
-@REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcss_run.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > logs\output_mcss.log 2>&1
-IF %errorlevel% NEQ 0 (
-  echo m.css to html post-processor failed with error code %errorlevel%.
-  goto :error
+IF EXIST "%WORKSPACE_DIR%\docs\mcss-conf.py" (
+  echo Running m.css Doxygen post-processor to generate html...
+  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output logs\output_mcss_run.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > logs\output_mcss.log 2>&1
+  @REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcss_run.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > logs\output_mcss.log 2>&1
+  IF %errorlevel% NEQ 0 (
+    echo m.css to html post-processor failed with error code %errorlevel%.
+    goto :error
+  )
+  @REM copy functions so they look right
+  echo Copying function documentation
+  python -u "%SCRIPT_DIR%\copyFunctions.py" > logs\output_copyFunctions.log 2>&1
+  IF %errorlevel% NEQ 0 (
+    echo copy functions post-processor failed with error code %errorlevel%.
+    goto :error
+  )
+) ELSE (
+  echo Skipping m.css html post-processor - mcss-conf.py not found
 )
 
 @REM Run m.css for markdown output
-echo Running m.css Doxygen post-processor to generate markdown...
-python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
-@REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --debug-template --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
-IF %errorlevel% NEQ 0 (
- echo m.css to markdown post-processor failed with error code %errorlevel%.
- goto :error
-)
-
-@REM copy functions so they look right
-echo Copying function documentation
-python -u "%SCRIPT_DIR%\copyFunctions.py" > logs\output_copyFunctions.log 2>&1
-IF %errorlevel% NEQ 0 (
-  echo copy functions post-processor failed with error code %errorlevel%.
-  goto :error
+IF EXIST "%WORKSPACE_DIR%\docs\mcss-conf-md.py" (
+  echo Running m.css Doxygen post-processor to generate markdown...
+  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
+  @REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --debug-template --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
+  IF %errorlevel% NEQ 0 (
+    echo m.css to markdown post-processor failed with error code %errorlevel%.
+    goto :error
+  )
+) ELSE (
+  echo Skipping m.css markdown post-processor - mcss-conf-md.py not found
 )
 
 @REM Remove stupid links - to add sub-paging structure you must add pages for every level

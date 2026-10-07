@@ -682,7 +682,7 @@ INTERNAL_DOCS          = NO
 # Possible values are: SYSTEM, NO and YES.
 # The default value is: SYSTEM.
 
-CASE_SENSE_NAMES       = SYSTEM
+CASE_SENSE_NAMES       = NO
 
 # If the HIDE_SCOPE_NAMES tag is set to NO then Doxygen will show members with
 # their full class and namespace scopes in the documentation. If set to YES, the
@@ -1118,6 +1118,8 @@ FILE_PATTERNS          = *.c \
                          *.md \
                          *.mm \
                          *.dox \
+                         *.doc \
+                         *.txt \
                          *.py \
                          *.pyw \
                          *.f90 \
@@ -1147,6 +1149,11 @@ RECURSIVE              = YES
 # run.
 
 EXCLUDE                = ../src/ReadMe.md \
+                         ../AGENTS.md \
+                         ../.github \
+                         ../.pio \
+                         ../.vscode \
+                         ../archive \
                          ../tests \
                          ../lib \
                          ../boards \
@@ -1425,7 +1432,7 @@ CLANG_DATABASE_PATH    =
 # classes, structs, unions or interfaces.
 # The default value is: YES.
 
-ALPHABETICAL_INDEX     = YES
+ALPHABETICAL_INDEX     = NO
 
 # The IGNORE_PREFIX tag can be used to specify a prefix (or a list of prefixes)
 # that should be ignored while generating the index headers. The IGNORE_PREFIX
@@ -2629,6 +2636,7 @@ PREDEFINED             = DOXYGEN=1 \
                          ARDUINO=10808 \
                          __AVR_ATmega1284P__ \
                          NEOSWSERIAL_EXTERNAL_PCINT \
+                         SDI12_EXTERNAL_PCINT \
                          SERIAL_PORT_USBVIRTUAL=0
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
