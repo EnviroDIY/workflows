@@ -121,7 +121,7 @@ if os.path.isdir(f"{examples_path}") and os.path.isfile(
     examples_page = os.path.abspath(
         os.path.realpath(os.path.join(examples_path, "ReadMe.md"))
     )
-    with open(examples_page, "r") as in_file:  # open in readonly mode
+    with open(examples_page, "r", encoding="utf-8") as in_file:  # open in readonly mode
         lines = in_file.readlines()
         got_example_page_tag = False
         for line in lines:
@@ -146,12 +146,12 @@ else:
     )
 
 # %%
-with open(output_file, "w+") as out_file:
+with open(output_file, "w+", encoding="utf-8") as out_file:
     for filename in examples_to_doc:
         if not os.path.isfile(filename):
             continue
         print(f"\nCurrent example: {filename}")
-        with open(filename, "r") as in_file:  # open in readonly mode
+        with open(filename, "r", encoding="utf-8") as in_file:  # open in readonly mode
             i = 1
             lines_copied = 0
             got_start_comment = False
