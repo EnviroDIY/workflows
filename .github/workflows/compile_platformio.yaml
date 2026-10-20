@@ -229,6 +229,7 @@ jobs:
         id: run_empty_pio
         if: steps.restore_platforms.outputs.cache-matched-key == '' || steps.restore_libraries.outputs.cache-matched-key == '' || steps.restore_testing_library.outputs.cache-matched-key == ''
         run: |
+          cd continuous_integration
           pio run || true
 
       - &cache_platforms
