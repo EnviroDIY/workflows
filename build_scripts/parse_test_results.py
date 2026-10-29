@@ -5,6 +5,7 @@ import os
 import re
 import json
 
+import numpy as np
 import pandas as pd
 
 # %%
@@ -172,14 +173,14 @@ df = pd.DataFrame(log_results)
 
 df["flash_percent"] = df.apply(
     lambda row: (
-        (row["flash_used"] / row["flash_total"] * 100) if row["flash_total"] else None
+        (row["flash_used"] / row["flash_total"] * 100) if row["flash_total"] else np.nan
     ),
     axis=1,
 )
 df["flash_percent"] = df["flash_percent"].round(1)
 df["ram_percent"] = df.apply(
     lambda row: (
-        (row["ram_used"] / row["ram_total"] * 100) if row["ram_total"] else None
+        (row["ram_used"] / row["ram_total"] * 100) if row["ram_total"] else np.nan
     ),
     axis=1,
 )
