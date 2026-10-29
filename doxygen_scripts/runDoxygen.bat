@@ -167,8 +167,8 @@ IF %errorlevel% NEQ 0 (
 @REM Run m.css for html output
 IF EXIST "%WORKSPACE_DIR%\docs\mcss-conf.py" (
   echo Running m.css Doxygen post-processor to generate html...
-  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output logs\output_mcss_run.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > logs\output_mcss.log 2>&1
-  @REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcss_run.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > logs\output_mcss.log 2>&1
+  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output logs\output_mcss.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > logs\output_mcss_run.log 2>&1
+  @REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcss.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > logs\output_mcss_run.log 2>&1
   IF %errorlevel% NEQ 0 (
     echo m.css to html post-processor failed with error code %errorlevel%.
     goto :error
@@ -187,8 +187,8 @@ IF EXIST "%WORKSPACE_DIR%\docs\mcss-conf.py" (
 @REM Run m.css for markdown output
 IF EXIST "%WORKSPACE_DIR%\docs\mcss-conf-md.py" (
   echo Running m.css Doxygen post-processor to generate markdown...
-  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
-  @REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --debug-template --output logs\output_mcssmd_run.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd.log 2>&1
+  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --output logs\output_mcssmd.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd_run.log 2>&1
+  @REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --debug-template --output logs\output_mcssmd.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd_run.log 2>&1
   IF %errorlevel% NEQ 0 (
     echo m.css to markdown post-processor failed with error code %errorlevel%.
     goto :error

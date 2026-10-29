@@ -174,10 +174,10 @@ set +e
 echo -e "\e[36mRunning m.css Doxygen post-processor...\e[0m"
 echo "::group::m.css Run Log"
 if [ "$RUNNER_DEBUG" = "1" ]; then
-    python -u "${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" --debug | tee output_mcss_run.log
+    python -u "${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" --debug 2>&1 | tee output_mcss_run.log
     result_code_mcss=${PIPESTATUS[0]}
 else
-    python -u "${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" | tee output_mcss_run.log
+    python -u "${MCSS_DIR}documentation/doxygen.py" "mcss-conf.py" --no-doxygen --output "${REPO_DIR}/docs/output_mcss.log" --templates "${MCSS_DIR}documentation/templates/EnviroDIY" 2>&1 | tee output_mcss_run.log
     result_code_mcss=${PIPESTATUS[0]}
 fi
 
