@@ -66,21 +66,22 @@
   ],
   "words": [
     "Adafruit",
-    "Damiano",
     "doxyfile",
     "EnviroDIY",
     "espressif",
-    "examplenavigation",
-    "footernavigation",
+    "Damiano",
     "Geleskie",
     "sdamiano",
     "SRGDamia1"
   ],
-  "ignoreWords": [],
+  "ignoreWords": ["examplenavigation", "footernavigation"],
   "ignorePaths": [
+    ".vscode",
+    ".gitignore",
+    ".clang-format",
+    ".clang-tidy",
     "platformio.ini",
     "*doxyfile*",
-    ".vscode",
     "docs/Doxyfile",
     ".github/**/*.yaml",
     ".github/**/*.yml"

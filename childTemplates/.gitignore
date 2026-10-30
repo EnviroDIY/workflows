@@ -1,3 +1,52 @@
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+~*
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# =========================
+# Operating System Files
+# =========================
+
+# OSX
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
 # Compiled files, executables
 *.o
 *.a
@@ -9,64 +58,82 @@
 *.orig
 *.log
 *.bak
+*.tar.gz
+sync.ffs_db
 
-# IDE project files
-.settings
-.pioenvs
-.piolibdeps
-.pio/*
+# Certificates
+*.pem
+*.pem.crt
+*.pem.cert
+*.pem.key
+*.crt
+*.cert
+*.key
+
+# Python
+__pycache__/
+
+# PyCharm
+.idea/
+
+# Atom
+.atomrc.cson
 .clang_complete
 .gcc-flags.json
+
+# VSCode
+.vscode
+.history
+
+# PlatformIO
+.settings
+.pio
+.pioenvs
+.piolibdeps
+lib
+include
+tests
+boards
+variants
+pioScripts
+.sconsign.dblite
 platformio.ini
 extra_envs.ini
 lib/readme.txt
 include/readme.txt
-.history
+tests/readme.txt
+.clang-tidy
+compile_commands.json
+platformio_extra_envs.ini
+pio_common_libdeps.ini
 
-# VSCode
-.vscode
+# Arduino CLI
+arduino_cli.log
+continuous_integration/arduino_cli_local.yaml
+home/arduino/*
+arduino_lint.md
+arduino_lint.json
+
+# Local CI and Build Artifacts
+continuous_integration/arduino_cli_local.yaml
+continuous_integration/platformio_ci_local.ini
+continuous_integration/arduino_cli_cmd.bat
+output_*.log
+continuous_integration_artifacts/*
+clang_format_all.bat
+generateKeywords.bat
+installWorkingDependencies.bat
+runDoxygen.bat
+buildCI.bat
+run_mcss.bat
 
 # Filters
 .gitconfig
 filters/*
 
-# Certificates
-*.cert
-*.crt
-*.pem
-*.key
-
-# PlatformIO
-pioScripts/*
-variants/*
-boards/*
-tests/*
-lib/*
-platformio_extra_envs.ini
-pio_common_libdeps.ini
-
-# Arduino CLI
-continuous_integration/arduino_cli_local.yaml
-
-# Local CI and Build Artifacts
-home/arduino/*
-continuous_integration_artifacts/*
-clang_format_all.bat
-generateKeywords.bat
-installWorkingDependencies.bat
-clang-format-all.py
-runDoxygen.bat
-compile_commands.json
-buildCI.bat
-
 # Other stuff
-*.tar.gz
-archive/*
-src/wakeUp.h
-**/__pycache__/**
+archive/
+**/sensor_tests/
 AGENTS.md
 .github/copilot-instructions.md
 .bumpversion.toml
-.github/workflows/LibraryBuild.yml
-datasheets/*
-Datasheets.md
