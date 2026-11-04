@@ -21,9 +21,9 @@ import requests
 import shutil
 import subprocess
 
-
 # Arduino package indexes do not declare these cross-package core dependencies.
 ARDUINO_CORE_DEPENDENCIES = {
+    "adafruit:avr": ["arduino:avr"],
     "EnviroDIY:avr": ["arduino:avr"],
     "EnviroDIY:samd": ["adafruit:samd"],
 }
@@ -61,9 +61,9 @@ def get_arduino_core_cache_tag(cores: List[str]) -> str:
     expanded_cores = expand_arduino_core_dependencies(cores)
     core_names = "-".join(expanded_cores)
     core_name = re.sub(r"[^a-zA-Z0-9]+", "-", core_names).strip("-").lower()
-    core_hash = hashlib.sha256(
-        "\n".join(expanded_cores).encode("utf-8")
-    ).hexdigest()[:8]
+    core_hash = hashlib.sha256("\n".join(expanded_cores).encode("utf-8")).hexdigest()[
+        :8
+    ]
     return f"{core_name}-{core_hash}"
 
 
@@ -80,16 +80,14 @@ def create_arduino_core_cache_info(
 
     with open(core_install_script, "w") as bash_out:
         bash_out.write("#!/bin/bash\n\n")
-        bash_out.write(
-            '''set -e # Exit with nonzero exit code if anything fails
+        bash_out.write("""set -e # Exit with nonzero exit code if anything fails
 if [ "$RUNNER_DEBUG" = "1" ]; then
     echo "Enabling debugging!"
     set -v # Prints shell input lines as they are read.
     set -x # Print command traces before executing command.
 fi
 
-'''
-        )
+""")
         bash_out.write('echo "\\e[32mCurrent Arduino CLI version:\\e[0m"\n')
         bash_out.write("arduino-cli version\n\n")
         bash_out.write('echo "\\e[32mUpdating the core index\\e[0m"\n')
@@ -111,9 +109,7 @@ fi
             f'arduino-cli --config-file "{arduino_cli_config}" core update-index\n\n'
         )
         bash_out.write('echo "\\e[32mCurrently installed cores:\\e[0m"\n')
-        bash_out.write(
-            f'arduino-cli --config-file "{arduino_cli_config}" core list\n'
-        )
+        bash_out.write(f'arduino-cli --config-file "{arduino_cli_config}" core list\n')
 
     with open(core_install_script, "rb") as script_file:
         core_cache_hash = hashlib.sha256(script_file.read()).hexdigest()
