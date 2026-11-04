@@ -15,6 +15,7 @@ Step 2 in the CI Build Pipeline sequence.
 # %%
 import json
 import os
+import hashlib
 from typing import List
 
 import requests
@@ -394,9 +395,7 @@ if __name__ == "__main__":
             artifact_path=args.artifact_path,
             arduino_cli_config=arduino_cli_config,
         )
-        print(
-            f"✓ Generated {os.path.basename(core_cache_info['core_install_script'])}"
-        )
+        print(f"✓ Generated {os.path.basename(core_cache_info['core_install_script'])}")
         arduino_core_matrix.append(core_cache_info)
 
     arduino_core_matrix_file = os.path.join(

@@ -1,8 +1,8 @@
 {
   "version": "0.2",
-  "ignorePaths": [],
   "dictionaryDefinitions": [],
   "dictionaries": [],
+  "language": "en-US",
   "words": [
     "Adafruit",
     "bluepill",
@@ -44,6 +44,18 @@
     "NGWOS",
     "pkgs",
     "pygments"
+  ],
+  "ignorePaths": [
+    ".vscode",
+    ".gitignore",
+    ".clang-format",
+    ".clang-tidy",
+    "platformio.ini",
+    "*doxyfile*",
+    "docs/Doxyfile",
+    ".github/**/*.yaml",
+    ".github/**/*.yml",
+    ".gitignore"
   ],
   "import": []
 }

@@ -22,6 +22,8 @@ Step 1 in the CI Build Pipeline sequence.
 
 # %%
 import os
+import re
+import hashlib
 from copy import deepcopy
 from itertools import chain
 
@@ -373,7 +375,9 @@ def get_arduino_core_groups(build_fqbns: list[str]) -> list[dict]:
         grouped_fqbns.setdefault(core, []).append(fqbn)
 
     grouped_cores = []
-    for core, fqbns in sorted(grouped_fqbns.items(), key=lambda item: item[0].casefold()):
+    for core, fqbns in sorted(
+        grouped_fqbns.items(), key=lambda item: item[0].casefold()
+    ):
         cores = expand_arduino_core_dependencies([core])
         grouped_cores.append(
             {
