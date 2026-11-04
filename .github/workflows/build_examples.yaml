@@ -91,6 +91,7 @@ jobs:
     outputs:
       arduino_job_matrix: ${{ steps.py_matrix.outputs.arduino_job_matrix }}
       pio_job_matrix: ${{ steps.py_matrix.outputs.pio_job_matrix }}
+      pio_platform_matrix: ${{ steps.py_install.outputs.pio_platform_matrix }}
 
     steps:
       - name: Set environment variables from inputs
@@ -260,6 +261,7 @@ jobs:
     with:
       library_install_git: ${{ needs.determine_library_source.outputs.library_install_git }}
       pio_job_matrix: ${{ needs.generate_scripts.outputs.pio_job_matrix }}
+      pio_platform_matrix: ${{ needs.generate_scripts.outputs.pio_platform_matrix }}
 
   beautify_outputs:
     name: Beautify Outputs

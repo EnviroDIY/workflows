@@ -1,4 +1,7 @@
 {
+  "version": "0.2",
+  "dictionaryDefinitions": [],
+  "dictionaries": [],
   "language": "en-US",
   "ignoreRegExpList": [
     "header-defines",
@@ -74,7 +77,7 @@
     "sdamiano",
     "SRGDamia1"
   ],
-  "ignoreWords": ["examplenavigation", "footernavigation"],
+  "ignoreWords": ["examplenavigation", "footernavigation", "microcontroller", "SRGD"],
   "ignorePaths": [
     ".vscode",
     ".gitignore",
@@ -84,6 +87,7 @@
     "*doxyfile*",
     "docs/Doxyfile",
     ".github/**/*.yaml",
-    ".github/**/*.yml"
+    ".github/**/*.yml",
+    ".gitignore"
   ]
 }

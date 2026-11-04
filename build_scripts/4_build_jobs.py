@@ -23,10 +23,10 @@ Writes:
 """
 
 # %%
-import os
-import sys
-import re
 import json
+import os
+import re
+import sys
 from copy import deepcopy
 from typing import List, Optional
 from subprocess import list2cmdline
@@ -602,15 +602,40 @@ fi
         if v["compiler"] == "arduino-cli"
     ]
 
-    pio_job_matrix = [
-        {
-            vk: vv
-            for vk, vv in v.items()
-            if vk == "job_name" or vk == "job_tag" or vk == "script"
+    pio_platform_matrix_file = os.path.join(
+        artifact_path, "pio_platform_matrix.json"
+    )
+    with open(pio_platform_matrix_file) as matrix_file:
+        pio_platform_matrix = json.load(matrix_file)
+    pio_cache_info_by_tag = {
+        cache_info["platform_cache_tag"]: cache_info
+        for cache_info in pio_platform_matrix
+    }
+    pio_env_cache_info = {}
+    for platform_group in args.pio_platform_groups:
+        platform_cache_tag = platform_group["platform_cache_tag"]
+        cache_info = pio_cache_info_by_tag[platform_cache_tag]
+        for pio_env in platform_group["pio_envs"]:
+            pio_env_cache_info[pio_env] = cache_info
+
+    pio_job_matrix = []
+    for matrix_job in grouped_job_matrix.values():
+        if matrix_job["compiler"] not in ["platformio", "pio"]:
+            continue
+
+        pio_env = matrix_job.get("pio_env", matrix_job.get("board"))
+        if pio_env not in pio_env_cache_info:
+            raise ValueError(
+                f"No PlatformIO platform cache group was found for environment '{pio_env}'"
+            )
+
+        pio_job = {
+            key: value
+            for key, value in matrix_job.items()
+            if key in ["job_name", "job_tag", "script"]
         }
-        for k, v in grouped_job_matrix.items()
-        if v["compiler"] in ["platformio", "pio"]
-    ]
+        pio_job.update(pio_env_cache_info[pio_env])
+        pio_job_matrix.append(pio_job)
 
     # Write matrices to JSON files
     artifact_path = config["artifact_path"]
@@ -622,6 +647,7 @@ fi
 
     print(f"Arduino job matrix saved to: {arduino_matrix_file}")
     print(f"PlatformIO job matrix saved to: {pio_matrix_file}")
+    print(f"PlatformIO platform matrix saved to: {pio_platform_matrix_file}")
 
     # Output to GitHub
     if "GITHUB_OUTPUT" in os.environ.keys():
@@ -630,6 +656,10 @@ fi
                 "arduino_job_matrix={}".format(json.dumps(arduino_job_matrix)), file=fh
             )
             print("pio_job_matrix={}".format(json.dumps(pio_job_matrix)), file=fh)
+            print(
+                "pio_platform_matrix={}".format(json.dumps(pio_platform_matrix)),
+                file=fh,
+            )
         print("Outputs written to GITHUB_OUTPUT")
     else:
         print("::notice::Not running in GitHub Actions, skipping GITHUB_OUTPUT")

@@ -54,11 +54,12 @@ Temporary Items
 *.out
 *.app
 
-# Junk
+# Compressed and Backup Files
 *.orig
 *.log
 *.bak
 *.tar.gz
+*.zip
 sync.ffs_db
 
 # Certificates
@@ -84,24 +85,24 @@ __pycache__/
 # VSCode
 .vscode
 .history
+.settings
 
 # PlatformIO
-.settings
-.pio
 .pioenvs
 .piolibdeps
+.pio
 lib
-include
-tests
-boards
-variants
-pioScripts
+lib/readme.txt
+/include
+include/readme.txt
+/tests
+tests/readme.txt
+/boards
+/variants
+/pioScripts
 .sconsign.dblite
 platformio.ini
 extra_envs.ini
-lib/readme.txt
-include/readme.txt
-tests/readme.txt
 .clang-tidy
 compile_commands.json
 platformio_extra_envs.ini
@@ -128,12 +129,16 @@ buildCI.bat
 run_mcss.bat
 
 # Filters
-.gitconfig
 filters/*
 
-# Other stuff
-archive/
-**/sensor_tests/
+# Planning and Archive Folders
+/archive
+/planning
+**/*.*_archive
+
+# Local Agent Instructions
 AGENTS.md
 .github/copilot-instructions.md
 .bumpversion.toml
+
+# Other stuff

@@ -29,7 +29,7 @@ if exist "%WORKSPACE_DIR%\keywords_duplicates.txt" (
 
 @REM Generate Arduino keywords using doxygen2keywords.xsl and Saxon
 echo Converting the Doxygen output to an Arduino keywords file
-java -jar "%SCRIPT_DIR%\SaxonHE12-10J\saxon-he-12.10.jar" -o:"%WORKSPACE_DIR%\keywords_duplicates.txt" -s:"%WORKSPACE_DIR%_Doxygen\xml\index.xml" -xsl:"%SCRIPT_DIR%\doxygen2keywords.xsl"
+"C:\Program Files\Java\latest\jre-1.8\bin\java.exe" -jar "%SCRIPT_DIR%\SaxonHE12-10J\saxon-he-12.10.jar" -o:"%WORKSPACE_DIR%\keywords_duplicates.txt" -s:"%WORKSPACE_DIR%_Doxygen\xml\index.xml" -xsl:"%SCRIPT_DIR%\doxygen2keywords.xsl"
 if %errorlevel% neq 0 (
     echo Error: Java command failed with exit code %errorlevel%
     exit /b %errorlevel%

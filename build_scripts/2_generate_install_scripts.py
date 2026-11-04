@@ -13,9 +13,11 @@ Step 2 in the CI Build Pipeline sequence.
 """
 
 # %%
-import os
+import hashlib
 import json
+import os
 from typing import List
+
 import requests
 from build_config import get_extended_config, set_verbose_mode, print_verbose
 
@@ -423,6 +425,53 @@ if __name__ == "__main__":
         bash_out.write(PIO_PLATFORM_END_TEXT)
 
     print(f"✓ Generated {bash_file_name}")
+
+    # Write one script per platform so GitHub Actions can create bounded,
+    # independently restorable platform caches.
+    pio_platform_matrix = []
+    for platform_group in args.pio_platform_groups:
+        platform = platform_group["platform"]
+        platform_cache_tag = platform_group["platform_cache_tag"]
+        bash_file_name = f"install-platform-{platform_cache_tag}.sh"
+        print(f"Writing {bash_file_name}...")
+        with open(os.path.join(args.artifact_path, bash_file_name), "w") as bash_out:
+            bash_out.write("#!/bin/bash\n\n")
+            bash_out.write(DEBUG_TEXT)
+            bash_out.write(PIO_PLATFORM_START_TEXT)
+
+            install_command = create_pio_ci_core_command(
+                platform_name=platform, is_tool=False
+            )
+            command_with_log = add_log_to_command(install_command, platform)
+            bash_out.write("\n".join(command_with_log))
+            bash_out.write(PIO_PLATFORM_END_TEXT)
+
+        print(f"✓ Generated {bash_file_name}")
+        platform_install_script = os.path.abspath(
+            os.path.join(args.artifact_path, bash_file_name)
+        )
+        with open(platform_install_script, "rb") as script_file:
+            platform_cache_hash = hashlib.sha256(script_file.read()).hexdigest()
+        pio_platform_matrix.append(
+            {
+                "platform": platform,
+                "platform_cache_tag": platform_cache_tag,
+                "platform_cache_hash": platform_cache_hash,
+                "platform_install_script": platform_install_script,
+            }
+        )
+
+    pio_platform_matrix_file = os.path.join(
+        args.artifact_path, "pio_platform_matrix.json"
+    )
+    with open(pio_platform_matrix_file, "w") as matrix_file:
+        json.dump(pio_platform_matrix, matrix_file, indent=2)
+    if "GITHUB_OUTPUT" in os.environ:
+        with open(os.environ["GITHUB_OUTPUT"], "a") as github_output:
+            print(
+                "pio_platform_matrix={}".format(json.dumps(pio_platform_matrix)),
+                file=github_output,
+            )
 
     # Generate library installation scripts
 

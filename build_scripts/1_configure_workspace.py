@@ -21,10 +21,13 @@ Step 1 in the CI Build Pipeline sequence.
 """
 
 # %%
-import configargparse
-from copy import deepcopy
+import hashlib
 import os
+import re
+from copy import deepcopy
 from itertools import chain
+
+import configargparse
 from build_config import (
     get_extended_config,
     set_verbose_mode,
@@ -245,6 +248,37 @@ def get_pio_envs_to_build(
         print_verbose(f"  - {env}")
 
     return build_envs, build_platforms
+
+
+def get_pio_platform_groups(
+    build_envs: list[str], pio_env_to_platform: dict[str, str]
+) -> list[dict[str, str | list[str]]]:
+    """Group selected PlatformIO environments by development platform."""
+
+    grouped_envs: dict[str, list[str]] = {}
+    for env in build_envs:
+        platform = pio_env_to_platform[env]
+        grouped_envs.setdefault(platform, []).append(env)
+
+    platform_groups = []
+    for platform, environments in sorted(
+        grouped_envs.items(), key=lambda item: item[0].casefold()
+    ):
+        platform_name = platform.rstrip("/").rsplit("/", 1)[-1]
+        platform_name = re.sub(r"\.(?:zip|tar(?:\.gz)?|tgz)$", "", platform_name)
+        platform_name = platform_name.split("@", 1)[0]
+        platform_name = re.sub(r"[^a-zA-Z0-9]+", "-", platform_name)
+        platform_name = platform_name.strip("-").lower() or "platform"
+        platform_hash = hashlib.sha256(platform.encode("utf-8")).hexdigest()[:8]
+        platform_groups.append(
+            {
+                "platform": platform,
+                "platform_cache_tag": f"{platform_name}-{platform_hash}",
+                "pio_envs": sorted(environments, key=str.casefold),
+            }
+        )
+
+    return platform_groups
 
 
 def get_arduino_fqbns_to_build(
@@ -588,9 +622,13 @@ if __name__ == "__main__":
         )
         args.build_envs = build_envs
         args.build_platforms = build_platforms
+        args.pio_platform_groups = get_pio_platform_groups(
+            build_envs, pio_env_to_platform
+        )
     else:
         args.build_envs = []
         args.build_platforms = []
+        args.pio_platform_groups = []
 
     if "arduino-cli" in args.compiler_list:
         # Compile the list of Arduino FQBNs to build based on the inputs and the known boards
