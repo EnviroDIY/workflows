@@ -14,14 +14,22 @@ on:
         description: "A json string with the job matrix"
         required: true
         type: string
+      arduino_core_matrix:
+        description: "A json string with the unique Arduino core cache matrix"
+        required: true
+        type: string
 
 jobs:
-  create_environment_caches:
-    name: Create Arduino Caches
+  create_core_caches:
+    name: Create Arduino Cache - ${{ matrix.job_info.core_cache_tag }}
     runs-on: ubuntu-latest
     env:
       LIBRARY_INSTALL_ZIP: ${{ inputs.library_install_zip }}
       LOOKUP_ONLY: true
+    strategy:
+      fail-fast: false
+      matrix:
+        job_info: ${{ fromJSON(inputs.arduino_core_matrix) }}
 
     steps:
       - &checkout_code
@@ -78,10 +86,7 @@ jobs:
         with:
           path: |
             home/arduino/data
-          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}-${{ matrix.job_info.job_tag }}
-          restore-keys: |
-            arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
-            arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}
+          key: arduino-core-${{ runner.os }}-${{ matrix.job_info.core_cache_tag || matrix.job_info.job_tag }}-${{ matrix.job_info.core_cache_hash || hashFiles('install-platforms-arduino-cli.sh') }}
           lookup-only: ${{ env.LOOKUP_ONLY }}
 
       # Install cores for the Arduino CLI, iff no cache
@@ -90,26 +95,36 @@ jobs:
         id: install_cores
         if: steps.restore_cores.outputs.cache-matched-key == ''
         run: |
-          chmod +x install-platforms-arduino-cli.sh
-          sh install-platforms-arduino-cli.sh
-
-      # Upgrade all cores to the latest version, iff using cache
-      # - &upgrade_cores
-      #   name: Upgrade the Arduino Platforms
-      #   id: upgrade_cores
-      #   if: steps.restore_cores.outputs.cache-hit == 'true'
-      #   run: |
-      #     arduino-cli --config-file arduino_cli.yaml core upgrade
+          core_install_script="${{ matrix.job_info.core_install_script }}"
+          if [ -z "$core_install_script" ]; then
+            core_install_script="install-platforms-arduino-cli.sh"
+          fi
+          chmod +x "$core_install_script"
+          sh "$core_install_script"
 
       - &cache_cores
         name: Cache Arduino Cores
         uses: actions/cache/save@v6
         id: cache_cores
-        if: always() && steps.restore_cores.outputs.cache-matched-key == '' && steps.install_cores.outcome == 'success'
+        if: steps.restore_cores.outputs.cache-matched-key == '' && steps.install_cores.outcome == 'success'
         with:
           path: |
             home/arduino/data
-          key: arduino_platforms-${{ hashFiles('install-platforms-arduino-cli.sh') }}-${{ github.run_id }}
+          key: arduino-core-${{ runner.os }}-${{ matrix.job_info.core_cache_tag || matrix.job_info.job_tag }}-${{ matrix.job_info.core_cache_hash || hashFiles('install-platforms-arduino-cli.sh') }}
+
+  create_environment_caches:
+    name: Create Shared Arduino Cache
+    runs-on: ubuntu-latest
+    env:
+      LIBRARY_INSTALL_ZIP: ${{ inputs.library_install_zip }}
+      LOOKUP_ONLY: true
+
+    steps:
+      - *checkout_code
+      - *setup_arduino_cli
+      - *download_scripts
+      - *copy_scripts
+      - *cli_config
 
       - &restore_libraries
         name: Restore Arduino libraries
@@ -149,7 +164,7 @@ jobs:
   build_arduino:
     name: ${{ matrix.job_info.job_name }}
     runs-on: ubuntu-latest
-    needs: create_environment_caches
+    needs: [create_core_caches, create_environment_caches]
     env:
       LIBRARY_INSTALL_ZIP: ${{ inputs.library_install_zip }}
       LOOKUP_ONLY: false
@@ -182,7 +197,6 @@ jobs:
       - *cli_config
       - *restore_cores
       - *install_cores
-      # - *upgrade_cores
       - *restore_libraries
       - *install_libraries
 

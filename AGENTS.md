@@ -28,6 +28,7 @@ The workflows facilitate these tasks:
 * If a requested change conflicts with an existing project convention, explain the conflict and use the approach that best satisfies the user's explicit request.
 * If a change would require a potentially breaking API decision and the user's intent is unclear, ask before proceeding.
 * If testing cannot be performed, say so explicitly. Never claim that code was tested when it was not.
+* All python scripts should be tested using the `arduino_pio` conda environment.
 
 ### Instruction Priority
 

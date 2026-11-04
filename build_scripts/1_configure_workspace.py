@@ -369,6 +369,41 @@ def get_arduino_fqbns_to_build(
     return build_fqbns, build_cores
 
 
+def get_arduino_core_groups(build_fqbns: list[str]) -> list[dict]:
+    """Group selected Arduino FQBNs by the cores required to build them."""
+
+    grouped_fqbns: dict[str, list[str]] = {}
+    for fqbn in build_fqbns:
+        core = fqbn.rsplit(":", 1)[0]
+        grouped_fqbns.setdefault(core, []).append(fqbn)
+
+    core_groups = []
+    if "EnviroDIY:samd" in grouped_fqbns:
+        cores = ["EnviroDIY:samd", "adafruit:samd"]
+        fqbns = grouped_fqbns.pop("EnviroDIY:samd")
+        fqbns.extend(grouped_fqbns.pop("adafruit:samd", []))
+        core_groups.append((cores, fqbns))
+
+    for core, fqbns in grouped_fqbns.items():
+        core_groups.append(([core], fqbns))
+
+    grouped_cores = []
+    for cores, fqbns in sorted(core_groups, key=lambda item: item[0][0].casefold()):
+        cores = sorted(cores, key=str.casefold)
+        core_names = "-".join(cores)
+        core_name = re.sub(r"[^a-zA-Z0-9]+", "-", core_names).strip("-").lower()
+        core_hash = hashlib.sha256("\n".join(cores).encode("utf-8")).hexdigest()[:8]
+        grouped_cores.append(
+            {
+                "cores": cores,
+                "core_cache_tag": f"{core_name}-{core_hash}",
+                "fqbns": sorted(fqbns, key=str.casefold),
+            }
+        )
+
+    return grouped_cores
+
+
 # %%
 def parse_examples_to_build(args):
     """Parse examples from environment or find all examples"""
@@ -640,6 +675,7 @@ if __name__ == "__main__":
         )
         args.build_fqbns = build_fqbns
         args.build_cores = build_cores
+        args.arduino_core_groups = get_arduino_core_groups(build_fqbns)
 
         # Download Arduino CLI config
         # Save to args namespace for later use
@@ -653,6 +689,7 @@ if __name__ == "__main__":
     else:
         args.build_fqbns = []
         args.build_cores = []
+        args.arduino_core_groups = []
         args.arduino_cli_config = None
         args.downloaded_arduino_cli_config = False
 

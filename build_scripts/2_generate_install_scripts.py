@@ -47,9 +47,6 @@ ACLI_PLATFORM_END_TEXT = """
 echo "\\e[32mUpdating the core index\\e[0m"
 arduino-cli --config-file "{0}" core update-index
 
-echo "\\e[32mUpgrading all cores\\e[0m"
-arduino-cli --config-file "{0}" core upgrade
-
 echo "\\e[32mCurrently installed cores:\\e[0m"
 arduino-cli --config-file "{0}" core list
 """
@@ -386,6 +383,57 @@ if __name__ == "__main__":
         bash_out.write(ACLI_PLATFORM_END_TEXT.format(arduino_cli_config))
 
     print(f"✓ Generated {bash_file_name}")
+
+    # Write one script per core group so GitHub Actions can create bounded,
+    # independently restorable core caches.
+    arduino_core_matrix = []
+    for core_group in args.arduino_core_groups:
+        core_cache_tag = core_group["core_cache_tag"]
+        bash_file_name = f"install-core-{core_cache_tag}.sh"
+        print(f"Writing {bash_file_name}...")
+        with open(os.path.join(args.artifact_path, bash_file_name), "w") as bash_out:
+            bash_out.write("#!/bin/bash\n\n")
+            bash_out.write(DEBUG_TEXT)
+            bash_out.write(ACLI_PLATFORM_START_TEXT.format(arduino_cli_config))
+
+            for core in core_group["cores"]:
+                install_command = create_arduino_cli_core_command(
+                    core_name=core,
+                    arduino_cli_config=arduino_cli_config,
+                )
+                command_with_log = add_log_to_command(
+                    install_command, core.replace(":", " ").title()
+                )
+                bash_out.write("\n".join(command_with_log))
+
+            bash_out.write(ACLI_PLATFORM_END_TEXT.format(arduino_cli_config))
+
+        print(f"✓ Generated {bash_file_name}")
+        core_install_script = os.path.abspath(
+            os.path.join(args.artifact_path, bash_file_name)
+        )
+        with open(core_install_script, "rb") as script_file:
+            core_cache_hash = hashlib.sha256(script_file.read()).hexdigest()
+        arduino_core_matrix.append(
+            {
+                "cores": core_group["cores"],
+                "core_cache_tag": core_cache_tag,
+                "core_cache_hash": core_cache_hash,
+                "core_install_script": core_install_script,
+            }
+        )
+
+    arduino_core_matrix_file = os.path.join(
+        args.artifact_path, "arduino_core_matrix.json"
+    )
+    with open(arduino_core_matrix_file, "w") as matrix_file:
+        json.dump(arduino_core_matrix, matrix_file, indent=2)
+    if "GITHUB_OUTPUT" in os.environ:
+        with open(os.environ["GITHUB_OUTPUT"], "a") as github_output:
+            print(
+                "arduino_core_matrix={}".format(json.dumps(arduino_core_matrix)),
+                file=github_output,
+            )
 
     # Download PlatformIO tools associated with each platform.
     print_verbose(

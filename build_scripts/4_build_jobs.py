@@ -592,15 +592,40 @@ fi
         matrix_job["script"] = bash_file_path
 
     # Prepare output matrices
-    arduino_job_matrix = [
-        {
-            vk: vv
-            for vk, vv in v.items()
-            if vk == "job_name" or vk == "job_tag" or vk == "script"
+    arduino_core_matrix_file = os.path.join(
+        artifact_path, "arduino_core_matrix.json"
+    )
+    with open(arduino_core_matrix_file) as matrix_file:
+        arduino_core_matrix = json.load(matrix_file)
+    arduino_cache_info_by_tag = {
+        cache_info["core_cache_tag"]: cache_info
+        for cache_info in arduino_core_matrix
+    }
+    arduino_fqbn_cache_info = {}
+    for core_group in args.arduino_core_groups:
+        core_cache_tag = core_group["core_cache_tag"]
+        cache_info = arduino_cache_info_by_tag[core_cache_tag]
+        for fqbn in core_group["fqbns"]:
+            arduino_fqbn_cache_info[fqbn] = cache_info
+
+    arduino_job_matrix = []
+    for matrix_job in grouped_job_matrix.values():
+        if matrix_job["compiler"] != "arduino-cli":
+            continue
+
+        fqbn = matrix_job.get("fqbn", matrix_job.get("board"))
+        if fqbn not in arduino_fqbn_cache_info:
+            raise ValueError(
+                f"No Arduino core cache group was found for FQBN '{fqbn}'"
+            )
+
+        arduino_job = {
+            key: value
+            for key, value in matrix_job.items()
+            if key in ["job_name", "job_tag", "script"]
         }
-        for k, v in grouped_job_matrix.items()
-        if v["compiler"] == "arduino-cli"
-    ]
+        arduino_job.update(arduino_fqbn_cache_info[fqbn])
+        arduino_job_matrix.append(arduino_job)
 
     pio_platform_matrix_file = os.path.join(
         artifact_path, "pio_platform_matrix.json"
@@ -646,6 +671,7 @@ fi
     save_json_file(pio_matrix_file, pio_job_matrix)
 
     print(f"Arduino job matrix saved to: {arduino_matrix_file}")
+    print(f"Arduino core matrix saved to: {arduino_core_matrix_file}")
     print(f"PlatformIO job matrix saved to: {pio_matrix_file}")
     print(f"PlatformIO platform matrix saved to: {pio_platform_matrix_file}")
 
