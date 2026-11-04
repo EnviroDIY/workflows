@@ -146,6 +146,9 @@ acli_logs = (
 )
 print(f"Found {len(acli_logs)} Arduino CLI logs")
 
+# local testing paths below
+# local testing paths above
+
 
 log_results = []
 for log_file in pio_logs + acli_logs:

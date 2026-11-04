@@ -31,7 +31,13 @@ from copy import deepcopy
 from typing import List, Optional
 from subprocess import list2cmdline
 from shlex import quote
-from build_utils import get_filename_slug, save_json_file
+from build_utils import (
+    create_arduino_core_cache_info,
+    expand_arduino_core_dependencies,
+    get_arduino_core_cache_tag,
+    get_filename_slug,
+    save_json_file,
+)
 from build_config import get_extended_config, set_verbose_mode, print_verbose
 
 # Global config
@@ -493,12 +499,20 @@ if __name__ == "__main__":
                 elif grouper in ["board", "fqbn"] and "pio_env" in matrix_item:
                     use_grouper = "pio_env"
                 l_dict[use_grouper] = matrix_item[use_grouper]
+            if matrix_item["compiler"] == "arduino-cli":
+                l_dict["arduino_fqbns"] = [
+                    matrix_item.get("fqbn", matrix_item.get("board"))
+                ]
             grouped_command_matrix[l_key] = deepcopy(l_dict)
         else:
             print(
                 f"::warning::Duplicate log group key '{l_key}' found. Appending commands to existing group."
             )
             grouped_command_matrix[l_key]["group_commands"] += l_command_list
+            if matrix_item["compiler"] == "arduino-cli":
+                fqbn = matrix_item.get("fqbn", matrix_item.get("board"))
+                if fqbn not in grouped_command_matrix[l_key]["arduino_fqbns"]:
+                    grouped_command_matrix[l_key]["arduino_fqbns"].append(fqbn)
 
     print(f"Total log groups: {len(grouped_command_matrix)}")
 
@@ -552,9 +566,17 @@ if __name__ == "__main__":
                 elif grouper in ["board", "fqbn"] and "pio_env" in group_dict:
                     use_grouper = "pio_env"
                 j_dict[use_grouper] = group_dict[use_grouper]
+            if "arduino_fqbns" in group_dict:
+                j_dict["arduino_fqbns"] = list(group_dict["arduino_fqbns"])
             grouped_job_matrix[job_tag] = j_dict
         else:
             grouped_job_matrix[job_tag]["job_command"] += group_dict["group_commands"]
+            for fqbn in group_dict.get("arduino_fqbns", []):
+                job_fqbns = grouped_job_matrix[job_tag].setdefault(
+                    "arduino_fqbns", []
+                )
+                if fqbn not in job_fqbns:
+                    job_fqbns.append(fqbn)
 
     print(f"Total jobs: {len(grouped_job_matrix)}")
 
@@ -592,40 +614,50 @@ fi
         matrix_job["script"] = bash_file_path
 
     # Prepare output matrices
-    arduino_core_matrix_file = os.path.join(
-        artifact_path, "arduino_core_matrix.json"
-    )
-    with open(arduino_core_matrix_file) as matrix_file:
-        arduino_core_matrix = json.load(matrix_file)
-    arduino_cache_info_by_tag = {
-        cache_info["core_cache_tag"]: cache_info
-        for cache_info in arduino_core_matrix
-    }
-    arduino_fqbn_cache_info = {}
-    for core_group in args.arduino_core_groups:
-        core_cache_tag = core_group["core_cache_tag"]
-        cache_info = arduino_cache_info_by_tag[core_cache_tag]
-        for fqbn in core_group["fqbns"]:
-            arduino_fqbn_cache_info[fqbn] = cache_info
-
+    arduino_core_cache_info = {}
     arduino_job_matrix = []
     for matrix_job in grouped_job_matrix.values():
         if matrix_job["compiler"] != "arduino-cli":
             continue
 
-        fqbn = matrix_job.get("fqbn", matrix_job.get("board"))
-        if fqbn not in arduino_fqbn_cache_info:
+        fqbns = matrix_job.get("arduino_fqbns", [])
+        if len(fqbns) == 0:
+            fqbn = matrix_job.get("fqbn", matrix_job.get("board"))
+            if fqbn is not None:
+                fqbns = [fqbn]
+        if len(fqbns) == 0:
             raise ValueError(
-                f"No Arduino core cache group was found for FQBN '{fqbn}'"
+                f"No Arduino FQBNs were found for job '{matrix_job['job_name']}'"
             )
+
+        required_cores = expand_arduino_core_dependencies(
+            [fqbn.rsplit(":", 1)[0] for fqbn in fqbns]
+        )
+        core_cache_tag = get_arduino_core_cache_tag(required_cores)
+        if core_cache_tag not in arduino_core_cache_info:
+            arduino_core_cache_info[core_cache_tag] = (
+                create_arduino_core_cache_info(
+                    cores=required_cores,
+                    artifact_path=artifact_path,
+                    arduino_cli_config=os.path.abspath(args.arduino_cli_config),
+                )
+            )
+        cache_info = arduino_core_cache_info[core_cache_tag]
 
         arduino_job = {
             key: value
             for key, value in matrix_job.items()
             if key in ["job_name", "job_tag", "script"]
         }
-        arduino_job.update(arduino_fqbn_cache_info[fqbn])
+        arduino_job.update(cache_info)
         arduino_job_matrix.append(arduino_job)
+
+    arduino_core_matrix = sorted(
+        arduino_core_cache_info.values(), key=lambda item: item["core_cache_tag"]
+    )
+    arduino_core_matrix_file = os.path.join(
+        artifact_path, "arduino_core_matrix.json"
+    )
 
     pio_platform_matrix_file = os.path.join(
         artifact_path, "pio_platform_matrix.json"
@@ -668,6 +700,7 @@ fi
     pio_matrix_file = os.path.join(artifact_path, "pio_job_matrix.json")
 
     save_json_file(arduino_matrix_file, arduino_job_matrix)
+    save_json_file(arduino_core_matrix_file, arduino_core_matrix)
     save_json_file(pio_matrix_file, pio_job_matrix)
 
     print(f"Arduino job matrix saved to: {arduino_matrix_file}")
@@ -680,6 +713,10 @@ fi
         with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
             print(
                 "arduino_job_matrix={}".format(json.dumps(arduino_job_matrix)), file=fh
+            )
+            print(
+                "arduino_core_matrix={}".format(json.dumps(arduino_core_matrix)),
+                file=fh,
             )
             print("pio_job_matrix={}".format(json.dumps(pio_job_matrix)), file=fh)
             print(

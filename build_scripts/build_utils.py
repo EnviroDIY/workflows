@@ -11,13 +11,120 @@ Provides:
 """
 
 # %%
+import hashlib
 import os
 import json
+import re
 from itertools import product
 from typing import List, Dict, Any
 import requests
 import shutil
 import subprocess
+
+
+# Arduino package indexes do not declare these cross-package core dependencies.
+ARDUINO_CORE_DEPENDENCIES = {
+    "EnviroDIY:avr": ["arduino:avr"],
+    "EnviroDIY:samd": ["adafruit:samd"],
+}
+
+
+def expand_arduino_core_dependencies(cores: List[str]) -> List[str]:
+    """Return Arduino cores and their dependencies in installation order."""
+
+    expanded_cores = []
+    visiting = set()
+    visited = set()
+
+    def add_core(core: str) -> None:
+        if core in visited:
+            return
+        if core in visiting:
+            raise ValueError(f"Circular Arduino core dependency involving '{core}'")
+
+        visiting.add(core)
+        for dependency in ARDUINO_CORE_DEPENDENCIES.get(core, []):
+            add_core(dependency)
+        visiting.remove(core)
+        visited.add(core)
+        expanded_cores.append(core)
+
+    for core in sorted(set(cores), key=str.casefold):
+        add_core(core)
+
+    return expanded_cores
+
+
+def get_arduino_core_cache_tag(cores: List[str]) -> str:
+    """Return a stable, filename-safe tag for an Arduino core set."""
+
+    expanded_cores = expand_arduino_core_dependencies(cores)
+    core_names = "-".join(expanded_cores)
+    core_name = re.sub(r"[^a-zA-Z0-9]+", "-", core_names).strip("-").lower()
+    core_hash = hashlib.sha256(
+        "\n".join(expanded_cores).encode("utf-8")
+    ).hexdigest()[:8]
+    return f"{core_name}-{core_hash}"
+
+
+def create_arduino_core_cache_info(
+    cores: List[str], artifact_path: str, arduino_cli_config: str
+) -> Dict[str, Any]:
+    """Write an Arduino core-set install script and return its cache metadata."""
+
+    expanded_cores = expand_arduino_core_dependencies(cores)
+    core_cache_tag = get_arduino_core_cache_tag(expanded_cores)
+    core_install_script = os.path.abspath(
+        os.path.join(artifact_path, f"install-core-{core_cache_tag}.sh")
+    )
+
+    with open(core_install_script, "w") as bash_out:
+        bash_out.write("#!/bin/bash\n\n")
+        bash_out.write(
+            '''set -e # Exit with nonzero exit code if anything fails
+if [ "$RUNNER_DEBUG" = "1" ]; then
+    echo "Enabling debugging!"
+    set -v # Prints shell input lines as they are read.
+    set -x # Print command traces before executing command.
+fi
+
+'''
+        )
+        bash_out.write('echo "\\e[32mCurrent Arduino CLI version:\\e[0m"\n')
+        bash_out.write("arduino-cli version\n\n")
+        bash_out.write('echo "\\e[32mUpdating the core index\\e[0m"\n')
+        bash_out.write(
+            f'arduino-cli --config-file "{arduino_cli_config}" core update-index\n'
+        )
+
+        for core in expanded_cores:
+            group_title = core.replace(":", " ").title()
+            bash_out.write(f'\necho "::group::{group_title}"\n')
+            bash_out.write(f'echo "\\e[32m{group_title}\\e[0m"\n')
+            bash_out.write(
+                f'arduino-cli --config-file "{arduino_cli_config}" core install {core}\n'
+            )
+            bash_out.write('echo "::endgroup::"\n')
+
+        bash_out.write('\necho "\\e[32mUpdating the core index\\e[0m"\n')
+        bash_out.write(
+            f'arduino-cli --config-file "{arduino_cli_config}" core update-index\n\n'
+        )
+        bash_out.write('echo "\\e[32mCurrently installed cores:\\e[0m"\n')
+        bash_out.write(
+            f'arduino-cli --config-file "{arduino_cli_config}" core list\n'
+        )
+
+    with open(core_install_script, "rb") as script_file:
+        core_cache_hash = hashlib.sha256(script_file.read()).hexdigest()
+
+    return {
+        "cores": expanded_cores,
+        "core_cache_tag": core_cache_tag,
+        "core_cache_hash": core_cache_hash,
+        "core_install_script": core_install_script,
+    }
+
 
 # %%
 # Utilities for matrix generation and deduplication

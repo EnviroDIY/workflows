@@ -21,9 +21,7 @@ Step 1 in the CI Build Pipeline sequence.
 """
 
 # %%
-import hashlib
 import os
-import re
 from copy import deepcopy
 from itertools import chain
 
@@ -44,6 +42,8 @@ from build_utils import (
     load_pio_to_arduino_mapping,
     build_pio_mappings,
     build_arduino_mappings,
+    expand_arduino_core_dependencies,
+    get_arduino_core_cache_tag,
 )
 
 
@@ -347,14 +347,9 @@ def get_arduino_fqbns_to_build(
     build_fqbns.sort(key=str.casefold)
 
     # The core is the first two parts of the FQBN (the part before the last colon).
-    build_cores = [v.rsplit(":", 1)[0] for v in build_fqbns]
-
-    # If EnviroDIY:samd is in the list, also add adafruit:samd (a dependency)
-    if "EnviroDIY:samd" in build_cores and "adafruit:samd" not in build_cores:
-        build_cores.append("adafruit:samd")
-
-    build_cores = list(set(build_cores))
-    build_cores.sort(key=str.casefold)
+    build_cores = expand_arduino_core_dependencies(
+        [v.rsplit(":", 1)[0] for v in build_fqbns]
+    )
 
     print(f"Arduino Cores to use: {len(build_cores)}")
     print_verbose("Cores to use:")
@@ -377,26 +372,13 @@ def get_arduino_core_groups(build_fqbns: list[str]) -> list[dict]:
         core = fqbn.rsplit(":", 1)[0]
         grouped_fqbns.setdefault(core, []).append(fqbn)
 
-    core_groups = []
-    if "EnviroDIY:samd" in grouped_fqbns:
-        cores = ["EnviroDIY:samd", "adafruit:samd"]
-        fqbns = grouped_fqbns.pop("EnviroDIY:samd")
-        fqbns.extend(grouped_fqbns.pop("adafruit:samd", []))
-        core_groups.append((cores, fqbns))
-
-    for core, fqbns in grouped_fqbns.items():
-        core_groups.append(([core], fqbns))
-
     grouped_cores = []
-    for cores, fqbns in sorted(core_groups, key=lambda item: item[0][0].casefold()):
-        cores = sorted(cores, key=str.casefold)
-        core_names = "-".join(cores)
-        core_name = re.sub(r"[^a-zA-Z0-9]+", "-", core_names).strip("-").lower()
-        core_hash = hashlib.sha256("\n".join(cores).encode("utf-8")).hexdigest()[:8]
+    for core, fqbns in sorted(grouped_fqbns.items(), key=lambda item: item[0].casefold()):
+        cores = expand_arduino_core_dependencies([core])
         grouped_cores.append(
             {
                 "cores": cores,
-                "core_cache_tag": f"{core_name}-{core_hash}",
+                "core_cache_tag": get_arduino_core_cache_tag(cores),
                 "fqbns": sorted(fqbns, key=str.casefold),
             }
         )

@@ -13,7 +13,6 @@ Step 2 in the CI Build Pipeline sequence.
 """
 
 # %%
-import hashlib
 import json
 import os
 from typing import List
@@ -22,6 +21,7 @@ import requests
 from build_config import get_extended_config, set_verbose_mode, print_verbose
 
 from platformio.package.meta import PackageSpec
+from build_utils import create_arduino_core_cache_info
 
 # %%
 # Bash script templates
@@ -388,40 +388,16 @@ if __name__ == "__main__":
     # independently restorable core caches.
     arduino_core_matrix = []
     for core_group in args.arduino_core_groups:
-        core_cache_tag = core_group["core_cache_tag"]
-        bash_file_name = f"install-core-{core_cache_tag}.sh"
-        print(f"Writing {bash_file_name}...")
-        with open(os.path.join(args.artifact_path, bash_file_name), "w") as bash_out:
-            bash_out.write("#!/bin/bash\n\n")
-            bash_out.write(DEBUG_TEXT)
-            bash_out.write(ACLI_PLATFORM_START_TEXT.format(arduino_cli_config))
-
-            for core in core_group["cores"]:
-                install_command = create_arduino_cli_core_command(
-                    core_name=core,
-                    arduino_cli_config=arduino_cli_config,
-                )
-                command_with_log = add_log_to_command(
-                    install_command, core.replace(":", " ").title()
-                )
-                bash_out.write("\n".join(command_with_log))
-
-            bash_out.write(ACLI_PLATFORM_END_TEXT.format(arduino_cli_config))
-
-        print(f"✓ Generated {bash_file_name}")
-        core_install_script = os.path.abspath(
-            os.path.join(args.artifact_path, bash_file_name)
+        print(f"Writing install-core-{core_group['core_cache_tag']}.sh...")
+        core_cache_info = create_arduino_core_cache_info(
+            cores=core_group["cores"],
+            artifact_path=args.artifact_path,
+            arduino_cli_config=arduino_cli_config,
         )
-        with open(core_install_script, "rb") as script_file:
-            core_cache_hash = hashlib.sha256(script_file.read()).hexdigest()
-        arduino_core_matrix.append(
-            {
-                "cores": core_group["cores"],
-                "core_cache_tag": core_cache_tag,
-                "core_cache_hash": core_cache_hash,
-                "core_install_script": core_install_script,
-            }
+        print(
+            f"✓ Generated {os.path.basename(core_cache_info['core_install_script'])}"
         )
+        arduino_core_matrix.append(core_cache_info)
 
     arduino_core_matrix_file = os.path.join(
         args.artifact_path, "arduino_core_matrix.json"
