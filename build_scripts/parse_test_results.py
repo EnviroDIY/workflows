@@ -138,16 +138,26 @@ def get_job_info_from_filename(filename: str) -> dict:
 pio_logs = glob(f"**{os.sep}pio_*.log", recursive=True) + glob(
     f"**{os.sep}platformio_*.log", recursive=True
 )
-print(f"Found {len(pio_logs)} PlatformIO compiler logs")
 acli_logs = (
     glob(f"**{os.sep}arduino_*.json", recursive=True)
     + glob(f"**{os.sep}arduino-cli_*.json", recursive=True)
     + glob(f"**{os.sep}a-cli_*.json", recursive=True)
 )
-print(f"Found {len(acli_logs)} Arduino CLI logs")
 
 # local testing paths below
 # local testing paths above
+
+# exclude non-log json files from Arduino CLI logs
+acli_logs = [
+    log_file
+    for log_file in acli_logs
+    if not any(
+        non_log in log_file for non_log in ["core_matrix.json", "job_matrix.json"]
+    )
+]
+# print out how many log files we found for each type
+print(f"Found {len(pio_logs)} PlatformIO compiler logs")
+print(f"Found {len(acli_logs)} Arduino CLI logs")
 
 
 log_results = []
@@ -165,6 +175,7 @@ for log_file in pio_logs + acli_logs:
                 parsed_result = parse_arduino_output(log_contents)
                 print(f"Parsed result for {log_file}: {parsed_result}")
             except json.JSONDecodeError:
+                print(f"Failed to parse JSON for {log_file}")
                 parsed_result = {"success": False}
     if parsed_result is not None:
         job_info.update(parsed_result)
