@@ -415,6 +415,7 @@ def parse_examples_to_build(args):
                 else:
                     full_file_path = os.path.join(args.workspace_path, example)
                     sub_dir_path = example_path
+                print_verbose(f"Searching for example: {example} as {full_file_path}")
                 if not os.path.exists(full_file_path):
                     print(f"::error::Example '{example}' does not exist!")
                     exit(1)
@@ -423,10 +424,11 @@ def parse_examples_to_build(args):
                 )
                 valid_examples.append(sub_dir_path)
             elif os.path.isabs(example):
-                example_path = example
+                example_path = os.path.normpath(example)
                 ex_name = example_path.rsplit(os.path.sep, 1)[-1]
                 full_file_path = os.path.join(example_path, ex_name + ".ino")
                 sub_dir_path = os.path.relpath(example, args.workspace_path)
+                print_verbose(f"Searching for example: {example} as {full_file_path}")
                 if not os.path.exists(full_file_path):
                     print(f"::error::Example '{example}' does not exist!")
                     exit(1)
@@ -435,7 +437,11 @@ def parse_examples_to_build(args):
                 )
                 valid_examples.append(sub_dir_path)
             else:
-                ex_name = example.rsplit(os.path.sep, 1)[-1] + ".ino"
+                example_path = os.path.normpath(example)
+                ex_name = example_path.rsplit(os.path.sep, 1)[-1] + ".ino"
+                print_verbose(
+                    f"Searching for example: {example} as {ex_name} in any example paths"
+                )
                 found_file = False
                 for root, subdirs, files in chain(
                     os.walk(args.examples_path), os.walk(args.extras_path)
@@ -512,18 +518,22 @@ def clean_input_defines(args):
     # If they are not separated by semicolons, we will treat them as a list with a single list.
     # inline flags must be defines and the will be inlined using `#define` in the
     # source code, so we will ensure that they do not have the -D prefix
+    inline_defines_groups = [
+        group for group in raw_inline_defines.split(";") if group.strip() != ""
+    ]
+    if raw_inline_defines.endswith(";"):
+        inline_defines_groups.append("")
     inline_defines = [
         list(
             set(
                 [
                     define.removeprefix("-D").strip()
-                    for define in group.split(",")
+                    for define in define_group.split(",")
                     if define.strip() != ""
                 ]
             )
         )
-        for group in raw_inline_defines.split(";")
-        if group.strip() != ""
+        for define_group in inline_defines_groups
     ]
     inline_defines = remove_nested_duplicates(deepcopy(inline_defines))
     # empty strings end up as a single empty list, so we will convert that to a list with a single empty list.
@@ -538,12 +548,22 @@ def clean_input_defines(args):
 
     # compiler flags can be any flags, but we will ensure that they are unique and non-empty
     raw_compiler_flags = args.raw_compiler_flags
+    compiler_flag_groups = [
+        group for group in raw_compiler_flags.split(";") if group.strip() != ""
+    ]
+    if raw_compiler_flags.endswith(";"):
+        compiler_flag_groups.append("")
     compiler_flags = [
         list(
-            set([define.strip() for define in group.split(",") if define.strip() != ""])
+            set(
+                [
+                    flag.removeprefix("-D").strip()
+                    for flag in flag_group.split(",")
+                    if flag.strip() != ""
+                ]
+            )
         )
-        for group in raw_compiler_flags.split(";")
-        if group.strip() != ""
+        for flag_group in compiler_flag_groups
     ]
     compiler_flags = remove_nested_duplicates(deepcopy(compiler_flags))
     # empty strings end up as a single empty list, so we will convert that to a list with a single empty list.
