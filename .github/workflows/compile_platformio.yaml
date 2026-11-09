@@ -244,25 +244,6 @@ jobs:
             ~/.platformio/variants
           key: pio-boards-${{ runner.os }}-${{ steps.get_boards_commit.outputs.boards_commit_hash }}
 
-      - &restore_testing_library
-        name: Restore the testing version of the library for PlatformIO
-        uses: actions/cache/restore@v6
-        id: restore_testing_library
-        with:
-          path: |
-            $GITHUB_WORKSPACE/lib
-          key: pio-testing-library-${{ runner.os }}-${{ inputs.platformio_version }}-${{ inputs.library_install_git }}
-          lookup-only: ${{ env.LOOKUP_ONLY }}
-
-      # Install the test library at the Global level for PlatformIO
-      - &install_test_library
-        name: Install the testing version of the library for PlatformIO
-        id: install_test_library
-        if: ${{ (steps.restore_testing_library.outputs.cache-matched-key == '') }}
-        run: |
-          pio pkg install --skip-dependencies -g --library ${{ inputs.library_install_git }}
-          pio pkg list -g --only-libraries
-
       - &cache_libraries
         name: Cache PlatformIO Libraries
         uses: actions/cache/save@v6
@@ -272,16 +253,6 @@ jobs:
           path: |
             ~/.platformio/lib
           key: pio-libraries-${{ runner.os }}-${{ inputs.platformio_version }}-${{ hashFiles('continuous_integration/install-library-libdeps-platformio.sh', 'continuous_integration/install-example-libdeps-platformio.sh') }}
-
-      - &cache_testing_library
-        name: Cache the testing version of the library for PlatformIO
-        uses: actions/cache/save@v6
-        id: cache_testing_library
-        if: ${{ (steps.restore_testing_library.outputs.cache-matched-key == '') && (steps.install_test_library.outcome == 'success') }}
-        with:
-          path: |
-            $GITHUB_WORKSPACE/lib
-          key: pio-testing-library-${{ runner.os }}-${{ inputs.platformio_version }}-${{ inputs.library_install_git }}
 
   build_pio:
     name: ${{ matrix.job_info.job_name }}
@@ -311,8 +282,13 @@ jobs:
       - *restore_pio_boards
       - *checkout_envirodiy_boards
       - *move_board_info
-      - *restore_testing_library
-      - *install_test_library
+
+      # Install the test library at the Global level for PlatformIO
+      - name: Install the testing version of the library for PlatformIO
+        id: install_test_library
+        run: |
+          pio pkg install --skip-dependencies -g --library ${{ inputs.library_install_git }}
+          pio pkg list -g --only-libraries
 
       - name: Include problem matcher
         uses: ammaraskar/gcc-problem-matcher@master
@@ -348,7 +324,11 @@ jobs:
             **/pio_*.log
             **/platformio_*.log
 
+      - name: Uninstall testing version of the library before caching
+        if: ${{ (steps.restore_libraries.outputs.cache-matched-key == '') }}
+        run: |
+          pio pkg uninstall -g --library ${{ inputs.library_install_git }}
+
       - *cache_platforms
       - *cache_libraries
       - *cache_pio_boards
-      - *cache_testing_library
