@@ -181,7 +181,10 @@ def get_pio_envs_to_build(
 ) -> tuple[list[str], list[str]]:
     """Parse boards from environment or use all available boards"""
 
-    if common_boards not in unset_positive:
+    if (
+        args.boards_to_build not in unset_positive
+        or args.boards_to_ignore not in unset_negative
+    ):
         print_verbose(f"Common boards to build: {len(common_boards)}")
         for board in common_boards:
             print_verbose(f"  - {board}")
@@ -206,19 +209,29 @@ def get_pio_envs_to_build(
             args.pio_envs_to_build, pio_env_to_board, board_to_pio_env, "keys"
         )
     # if the user hasn't specified either common boards or additional environments, add everything possible
-    elif len(common_boards) == 0:
+    elif (
+        args.boards_to_build in unset_positive
+        and args.boards_to_ignore in unset_negative
+        and len(common_boards) == 0
+    ) or args.pio_envs_to_build in unset_positive:
         build_envs = list(pio_env_to_board.keys())
         print("Building all known PlatformIO environments.")
 
     # add in any boards listed in the boards_to_build list that are not already in the build_envs list
     print("Adding common boards with matched PlatformIO environments.")
-    for board in common_boards:
-        matched_envs = match_board_to_pio_env(board, pio_env_to_board, board_to_pio_env)
-        if matched_envs is not None:
-            if isinstance(matched_envs, list):
-                build_envs.extend(matched_envs)
-            else:
-                build_envs.append(matched_envs)
+    if (
+        args.boards_to_build not in unset_positive
+        or args.boards_to_ignore not in unset_negative
+    ):
+        for board in common_boards:
+            matched_envs = match_board_to_pio_env(
+                board, pio_env_to_board, board_to_pio_env
+            )
+            if matched_envs is not None:
+                if isinstance(matched_envs, list):
+                    build_envs.extend(matched_envs)
+                else:
+                    build_envs.append(matched_envs)
 
     if args.pio_envs_to_ignore not in unset_negative:
         ignore_boards = match_inputs_with_known_dicts(
@@ -291,7 +304,10 @@ def get_arduino_fqbns_to_build(
 ) -> tuple[list[str], list[str]]:
     """Parse boards from environment or use all available boards"""
 
-    if common_boards not in unset_positive:
+    if (
+        args.boards_to_build not in unset_positive
+        or args.boards_to_ignore not in unset_negative
+    ):
         print_verbose(f"Common boards to build: {len(common_boards)}")
         for board in common_boards:
             print_verbose(f"  - {board}")
@@ -314,7 +330,11 @@ def get_arduino_fqbns_to_build(
             args.arduino_fqbns_to_build, pio_board_to_fqbn, board_to_fqbn, "values"
         )
     # if the user hasn't specified either common boards or additional FQBNs, add everything possible
-    elif len(common_boards) == 0:
+    elif (
+        args.boards_to_build in unset_positive
+        and args.boards_to_ignore in unset_negative
+        and args.arduino_fqbns_to_build in unset_positive
+    ):
         print("Building all known Arduino boards except those specified to ignore.")
         build_fqbns = list(pio_board_to_fqbn.values())
         if args.arduino_fqbns_to_ignore not in unset_negative:
@@ -326,14 +346,18 @@ def get_arduino_fqbns_to_build(
             )
 
     # add in any boards listed in the boards_to_build list that are not already in the build_envs list
-    print("Adding common boards with matched Arduino FQBNs.")
-    for board in common_boards:
-        matched_envs = match_board_to_fqbn(board, pio_board_to_fqbn, board_to_fqbn)
-        if matched_envs is not None:
-            if isinstance(matched_envs, list):
-                build_fqbns.extend(matched_envs)
-            else:
-                build_fqbns.append(matched_envs)
+    if (
+        args.boards_to_build not in unset_positive
+        or args.boards_to_ignore not in unset_negative
+    ):
+        print("Adding common boards with matched Arduino FQBNs.")
+        for board in common_boards:
+            matched_envs = match_board_to_fqbn(board, pio_board_to_fqbn, board_to_fqbn)
+            if matched_envs is not None:
+                if isinstance(matched_envs, list):
+                    build_fqbns.extend(matched_envs)
+                else:
+                    build_fqbns.append(matched_envs)
 
     if args.pio_envs_to_ignore not in unset_negative:
         ignore_boards = match_inputs_with_known_dicts(
