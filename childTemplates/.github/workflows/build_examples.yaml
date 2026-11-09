@@ -17,7 +17,7 @@ jobs:
     uses: EnviroDIY/workflows/.github/workflows/build_examples.yaml@main
     with:
       # # Workspace path as an absolute path (default: workspace root)
-      # workspace_path: ""
+      # working_path: ""
 
       # # Continuous integration path, relative to the workspace path (default: continuous_integration)
       # ci_path: "continuous_integration"
