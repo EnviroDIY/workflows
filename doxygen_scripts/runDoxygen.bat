@@ -143,6 +143,10 @@ echo Generating Doxygen code documentation...
 @REM "C:\Program Files\doxygen\bin\doxygen.exe" -d preprocessor Doxyfile > logs\output_doxygen_run.log 2>&1
 @REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d filteroutput -d commentcnv -d markdown Doxyfile > logs\output_doxygen_run.log 2>&1
 @REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d formula Doxyfile > logs\output_doxygen_run.log 2>&1
+IF %errorlevel% NEQ 0 (
+  echo Doxygen run failed with error code %errorlevel%.
+  goto :error
+)
 endlocal
 
 @REM Move the doxygen output log to the logs directory if it exists in the docs directory.

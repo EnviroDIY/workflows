@@ -1,4 +1,7 @@
-DOXYFILE = "mcss-doxyfile"
+DOXYFILE = "doxyfile"
+HTML_OUTPUT = "../{{REPO_NAME}}_Doxygen/m.css"
+PROJECT_REPOSITORY = "https://github.com/EnviroDIY/{{REPO_NAME}}"
+
 THEME_COLOR = "#cb4b16"
 FAVICON = "enviroDIY_Favicon.png"
 LINKS_NAVBAR1 = [
@@ -37,3 +40,5 @@ EXTRA_FILES = [
 DESKTOP_LOGO = "gp-desktop-logo.png"
 MOBILE_LOGO = "gp-mobile-logo.png"
 SCROLLING_LOGO = "gp-scrolling-logo.png"
+
+USE_FOLDERS = False

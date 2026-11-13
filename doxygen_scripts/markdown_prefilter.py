@@ -499,7 +499,7 @@ with fileinput.FileInput(
                 massaged_line,
             )
             version_action_re = re.match(
-                r"#{3}\s+(?P<section_name>(?:Changed)|(?:Added)|(?:Removed)|(?:Fixed)|(?:Known Issues))",
+                r"^#{3}\s+(?P<section_name>(?:Changed)|(?:Added)|(?:Removed)|(?:Fixed)|(?:Known Issues))$",
                 massaged_line,
             )
             if version_re is not None:

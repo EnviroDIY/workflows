@@ -11,3 +11,4 @@ build_scripts/generate_local_tests.py
 build_scripts/get_open_flag_fields.py
 doxygen_scripts/SaxonHE12-10J/*
 filters/*
+childTemplates/.gitattributes

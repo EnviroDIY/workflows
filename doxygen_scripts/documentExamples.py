@@ -126,6 +126,17 @@ if os.path.isdir(f"{examples_path}") and os.path.isfile(
         got_example_page_tag = False
         for line in lines:
             i = 0
+            if line.startswith("<!--! @page"):
+                page_tag = re.match(
+                    r"^<!--! @page (?P<page_name>\S*) (?P<page_title>.*) -->$", line
+                )
+                if page_tag is not None:
+                    main_example_page = page_tag.group("page_name")
+                    print(
+                        f"Got main example page name: {main_example_page} in line {i}"
+                    )
+                    got_example_page_tag = True
+                break
             if line.startswith("# "):
                 page_tag = re.match(r"^# .*?<!--! {#(?P<page_name>.*)} -->$", line)
                 if page_tag is not None:
