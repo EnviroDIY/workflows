@@ -143,6 +143,11 @@ def create_pio_ci_compile_command(
         ]
 
     cmd_str = list2cmdline(pio_command_args)
+    # pio ci project options cannot modify an environment selected from a config file.
+    if len(compiler_flags) > 0 and use_pio_config_file:
+        cmd_str = (
+            f"PLATFORMIO_BUILD_FLAGS={quote(' '.join(compiler_flags))} {cmd_str}"
+        )
     if use_run:
         cmd_str = f'export PLATFORMIO_SRC_DIR="{os.path.join(workspace_path, code_subfolder)}"\n{cmd_str}'
 
