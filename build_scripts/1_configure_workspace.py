@@ -571,6 +571,7 @@ def clean_input_defines(args):
         print_verbose(f"  - {define}")
 
     # compiler flags can be any flags, but we will ensure that they are unique and non-empty
+    # We **DON'T** remove any specific prefixes for compiler flags, unlike inline defines.
     raw_compiler_flags = args.raw_compiler_flags
     compiler_flag_groups = [
         group for group in raw_compiler_flags.split(";") if group.strip() != ""
@@ -579,13 +580,7 @@ def clean_input_defines(args):
         compiler_flag_groups.append("")
     compiler_flags = [
         list(
-            set(
-                [
-                    flag.removeprefix("-D").strip()
-                    for flag in flag_group.split(",")
-                    if flag.strip() != ""
-                ]
-            )
+            set([flag.strip() for flag in flag_group.split(",") if flag.strip() != ""])
         )
         for flag_group in compiler_flag_groups
     ]
