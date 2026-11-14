@@ -22,9 +22,8 @@ reviews:
   review_status: true
   commit_status: true
   collapse_walkthrough: true
+  poem: false
   profile: 'chill' # Options: quiet, chill, assertive
-  instructions: |
-    - Where available, review the repository's Agents.md or equivalent files for instructions and guidelines related to the repository.
   path_filters:
     - '!**/dependencies.json'
     - '!**/example_dependencies.json'
@@ -36,6 +35,9 @@ reviews:
     - '!**/platformio.ini'
     - '!**/*Certificate*.h'
   path_instructions:
+    - path: '**/*'
+      instructions: |
+        - Where available, review the repository's Agents.md or equivalent files for instructions and guidelines related to the repository.
     - path: '**/*.md'
       instructions: >-
         Review for grammar, spelling, and clarity.

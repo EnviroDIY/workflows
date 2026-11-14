@@ -55,7 +55,8 @@
     "docs/Doxyfile",
     ".github/**/*.yaml",
     ".github/**/*.yml",
-    ".gitignore"
+    ".gitignore",
+    "**/runDoxygen.bat"
   ],
   "import": []
 }

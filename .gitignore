@@ -1,14 +1,130 @@
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+~*
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# =========================
+# Operating System Files
+# =========================
+
+# OSX
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Compiled files, executables
+*.o
+*.a
+*.exe
+*.out
+*.app
+
+# Compressed and Backup Files
+*.orig
+*.log
+*.bak
+*.tar.gz
+*.zip
+sync.ffs_db
+
+# Certificates
+*.pem
+*.pem.crt
+*.pem.cert
+*.pem.key
+*.crt
+*.cert
+*.key
+
+# Python
+__pycache__/
+
+# PyCharm
+.idea/
+
+# Node.js Dependency directories
+**/node_modules/*
+**/jspm_packages/*
+**/web_modules/*
+
+# Atom
+.atomrc.cson
+.clang_complete
+.gcc-flags.json
+
+# VSCode
 .vscode
 .history
-__pycache__/
+.settings
+
+# PlatformIO
+
+# Arduino CLI
 home/
-archive/
 scripts/arduino_cli.log
-.github/workflows/sync.ffs_db
 **/arduino_cli.log
 build_scripts/arduino_cli_local.yaml
+
+# Local CI and Build Artifacts
+continuous_integration/arduino_cli_local.yaml
+continuous_integration/platformio_ci_local.ini
+continuous_integration/arduino_cli_cmd.bat
+output_*.log
+continuous_integration_artifacts/*
+
+# Filters
+filters/*
+
+# Planning and Archive Folders
+/archive
+/planning
+**/*.*_archive
+
+# Local Agent Instructions
+AGENTS.md
+.github/copilot-instructions.md
+.bumpversion.toml
+
+# Other stuff
 build_scripts/generate_local_tests.py
 build_scripts/get_open_flag_fields.py
 doxygen_scripts/SaxonHE12-10J/*
-filters/*
 childTemplates/.gitattributes
+childTemplates/.markdownlint-cli2.yaml
+childTemplates/package.json
+childTemplates/package-lock.json
