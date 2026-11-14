@@ -145,9 +145,7 @@ def create_pio_ci_compile_command(
     cmd_str = list2cmdline(pio_command_args)
     # pio ci project options cannot modify an environment selected from a config file.
     if len(compiler_flags) > 0 and use_pio_config_file:
-        cmd_str = (
-            f"PLATFORMIO_BUILD_FLAGS={quote(' '.join(compiler_flags))} {cmd_str}"
-        )
+        cmd_str = f"PLATFORMIO_BUILD_FLAGS={quote(' '.join(compiler_flags))} {cmd_str}"
     if use_run:
         cmd_str = f'export PLATFORMIO_SRC_DIR="{os.path.join(workspace_path, code_subfolder)}"\n{cmd_str}'
 
@@ -217,7 +215,7 @@ def group_and_log_commands(
     )
     for command in other_commands_ordered:
         # add sed commands with no logging to the file and no failure
-        if command.startswith("sed"):
+        if command.startswith("sed") or command.startswith("git"):
             command_list.append(command)
         # add other stuff teeing to a file
         else:
@@ -577,9 +575,7 @@ if __name__ == "__main__":
         else:
             grouped_job_matrix[job_tag]["job_command"] += group_dict["group_commands"]
             for fqbn in group_dict.get("arduino_fqbns", []):
-                job_fqbns = grouped_job_matrix[job_tag].setdefault(
-                    "arduino_fqbns", []
-                )
+                job_fqbns = grouped_job_matrix[job_tag].setdefault("arduino_fqbns", [])
                 if fqbn not in job_fqbns:
                     job_fqbns.append(fqbn)
 
@@ -640,12 +636,10 @@ fi
         )
         core_cache_tag = get_arduino_core_cache_tag(required_cores)
         if core_cache_tag not in arduino_core_cache_info:
-            arduino_core_cache_info[core_cache_tag] = (
-                create_arduino_core_cache_info(
-                    cores=required_cores,
-                    artifact_path=artifact_path,
-                    arduino_cli_config=os.path.abspath(args.arduino_cli_config),
-                )
+            arduino_core_cache_info[core_cache_tag] = create_arduino_core_cache_info(
+                cores=required_cores,
+                artifact_path=artifact_path,
+                arduino_cli_config=os.path.abspath(args.arduino_cli_config),
             )
         cache_info = arduino_core_cache_info[core_cache_tag]
 
@@ -660,13 +654,9 @@ fi
     arduino_core_matrix = sorted(
         arduino_core_cache_info.values(), key=lambda item: item["core_cache_tag"]
     )
-    arduino_core_matrix_file = os.path.join(
-        artifact_path, "arduino_core_matrix.json"
-    )
+    arduino_core_matrix_file = os.path.join(artifact_path, "arduino_core_matrix.json")
 
-    pio_platform_matrix_file = os.path.join(
-        artifact_path, "pio_platform_matrix.json"
-    )
+    pio_platform_matrix_file = os.path.join(artifact_path, "pio_platform_matrix.json")
     with open(pio_platform_matrix_file) as matrix_file:
         pio_platform_matrix = json.load(matrix_file)
     pio_cache_info_by_tag = {
