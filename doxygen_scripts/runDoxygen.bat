@@ -114,17 +114,21 @@ echo Generating library logos
 copy "%SCRIPT_DIR%\Ubuntu-Bold.ttf" "%WORKSPACE_DIR%\docs"
 copy "%SCRIPT_DIR%\enviroDIY_Favicon.png" "%WORKSPACE_DIR%\docs"
 @REM Generate the logos
+echo Using command python -u "%SCRIPT_DIR%\generateLogos.py"
 python -u "%SCRIPT_DIR%\generateLogos.py" > logs\output_generateLogo.log 2>&1
-IF %errorlevel% NEQ 0 (
-  echo logo generation failed with error code %errorlevel%.
+IF ERRORLEVEL 1 (
+  echo logo generation failed!
+  echo See "%WORKSPACE_DIR%\docs\logs\output_generateLogo.log" for details
   goto :error
 )
 
 @REM Document the examples from the header of each example
 echo Creating dox files from example file headers
+echo Using command python -u "%SCRIPT_DIR%\documentExamples.py"
 python -u "%SCRIPT_DIR%\documentExamples.py" > logs\output_documentExamples.log 2>&1
-IF %errorlevel% NEQ 0 (
-  echo example documentation generation failed with error code %errorlevel%.
+IF ERRORLEVEL 1 (
+  echo example documentation generation failed!
+  echo See "%WORKSPACE_DIR%\docs\logs\output_documentExamples.log" for details
   goto :error
 )
 
@@ -139,12 +143,14 @@ set PLATFORMIO_PACKAGES_DIR=C:/Users/sdamiano/.platformio/PLATFORMIO_PACKAGES_DI
 
 echo Generating Doxygen code documentation...
 @REM https://github.com/doxygen/doxygen/blob/master/doc_internal/doxygen.md
+echo Using command "C:\Program Files\doxygen\bin\doxygen.exe" Doxyfile
 "C:\Program Files\doxygen\bin\doxygen.exe" Doxyfile > logs\output_doxygen_run.log 2>&1
 @REM "C:\Program Files\doxygen\bin\doxygen.exe" -d preprocessor Doxyfile > logs\output_doxygen_run.log 2>&1
 @REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d filteroutput -d commentcnv -d markdown Doxyfile > logs\output_doxygen_run.log 2>&1
 @REM "C:\Program Files\doxygen\bin\doxygen.exe" -d extcmd -d formula Doxyfile > logs\output_doxygen_run.log 2>&1
-IF %errorlevel% NEQ 0 (
-  echo Doxygen run failed with error code %errorlevel%.
+IF ERRORLEVEL 1 (
+  echo Doxygen run failed!
+  echo See "%WORKSPACE_DIR%\docs\logs\output_doxygen.log" for details
   goto :error
 )
 endlocal
@@ -155,33 +161,41 @@ IF EXIST "%WORKSPACE_DIR%\docs\output_doxygen.log" IF NOT EXIST "%WORKSPACE_DIR%
 
 @REM Preprocess XML to fix bad section ids and anchor ids and remove private functions from the XML output.
 echo Preprocessing XML...
+echo Using command python -u "%SCRIPT_DIR%\preprocessXML.py"
 python -u "%SCRIPT_DIR%\preprocessXML.py" > logs\output_preprocessXML.log 2>&1
-IF %errorlevel% NEQ 0 (
-  echo xml post-processor failed with error code %errorlevel%.
+IF ERRORLEVEL 1 (
+  echo xml post-processor failed!
+  echo See "%WORKSPACE_DIR%\docs\logs\output_preprocessXML.log" for details
   goto :error
 )
 
-@REM echo Fixing copied function documentation in group documentation
-@REM python -u "%SCRIPT_DIR%\fixFunctionsInGroups.py" > logs\output_fixFunctionsInGroups.log 2>&1
-@REM IF %errorlevel% NEQ 0 (
-@REM   echo copied function post-processor failed with error code %errorlevel%.
+@REM  echo Fixing copied function documentation in group documentation
+@REM  echo Using script "%SCRIPT_DIR%\fixFunctionsInGroups.py"
+@REM  python -u "%SCRIPT_DIR%\fixFunctionsInGroups.py" > logs\output_fixFunctionsInGroups.log 2>&1
+@REM  IF ERRORLEVEL 1 (
+@REM   echo copied function post-processor failed!
 @REM   goto :error
-@REM )
+@REM  )
 
 @REM Run m.css for html output
 IF EXIST "%WORKSPACE_DIR%\docs\mcss-conf.py" (
   echo Running m.css Doxygen post-processor to generate html...
+  echo Using command python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output logs\output_mcss.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY"
   python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --output logs\output_mcss.log --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" > logs\output_mcss_run.log 2>&1
   @REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf.py" --no-doxygen --debug-template --output logs\output_mcss.log --template-type html --templates "%MCSS_DIR%\documentation\templates\EnviroDIY" --debug > logs\output_mcss_run.log 2>&1
-  IF %errorlevel% NEQ 0 (
-    echo m.css to html post-processor failed with error code %errorlevel%.
+  IF ERRORLEVEL 1 (
+    echo m.css to html post-processor failed!
+    echo See "%WORKSPACE_DIR%\docs\logs\output_mcss_run.log" for details
     goto :error
   )
+
   @REM copy functions so they look right
   echo Copying function documentation
+  echo Using command python -u "%SCRIPT_DIR%\copyFunctions.py"
   python -u "%SCRIPT_DIR%\copyFunctions.py" > logs\output_copyFunctions.log 2>&1
-  IF %errorlevel% NEQ 0 (
-    echo copy functions post-processor failed with error code %errorlevel%.
+  IF ERRORLEVEL 1 (
+    echo copy functions post-processor failed!
+    echo See "%WORKSPACE_DIR%\docs\logs\output_copyFunctions.log" for details
     goto :error
   )
 ) ELSE (
@@ -191,10 +205,12 @@ IF EXIST "%WORKSPACE_DIR%\docs\mcss-conf.py" (
 @REM Run m.css for markdown output
 IF EXIST "%WORKSPACE_DIR%\docs\mcss-conf-md.py" (
   echo Running m.css Doxygen post-processor to generate markdown...
+  echo Using command python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --output logs\output_mcssmd.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug
   python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --output logs\output_mcssmd.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd_run.log 2>&1
   @REM  python -u "%MCSS_DIR%\documentation\doxygen.py" "mcss-conf-md.py" --no-doxygen --debug-template --output logs\output_mcssmd.log --template-type md --templates "%MCSS_DIR%\documentation\templates\doxybook2" --debug > logs\output_mcssmd_run.log 2>&1
-  IF %errorlevel% NEQ 0 (
-    echo m.css to markdown post-processor failed with error code %errorlevel%.
+  IF ERRORLEVEL 1 (
+    echo m.css to markdown post-processor failed!
+    echo See "%WORKSPACE_DIR%\docs\logs\output_mcssmd_run.log" for details
     goto :error
   )
 ) ELSE (
@@ -205,35 +221,39 @@ IF EXIST "%WORKSPACE_DIR%\docs\mcss-conf-md.py" (
 @REM and dump links to them in the parent page.
 @REM This is to remove those stupid pages and links.
 echo Removing stupid links that are created by sub-paging structure
+echo Using command python -u "%SCRIPT_DIR%\removeStupidLinks.py"
 python -u "%SCRIPT_DIR%\removeStupidLinks.py" > logs\output_removeStupidLinks.log 2>&1
-IF %errorlevel% NEQ 0 (
-  echo stupid link post-processor failed with error code %errorlevel%.
+IF ERRORLEVEL 1 (
+  echo stupid link post-processor failed!
+  echo See "%WORKSPACE_DIR%\docs\logs\output_removeStupidLinks.log" for details
   goto :error
 )
 
 IF "%GITHUB_REPOSITORY%"=="ModularSensors" (
   echo Checking for inclusion of all ModularSensors components
   cd "%WORKSPACE_DIR%\continuous_integration"
+  echo Using command python -u check_component_inclusion.py
   python -u check_component_inclusion.py > logs\output_check_component_inclusion.log 2>&1
 )
-IF %errorlevel% NEQ 0 (
-  echo inclusion check failed with error code %errorlevel%.
+IF ERRORLEVEL 1 (
+  echo inclusion check failed!
+  echo See "%WORKSPACE_DIR%\docs\logs\output_check_component_inclusion.log" for details
   goto :error
 )
 
 @REM @REM Run moxygen to generate markdown files from the Doxygen xml output
 @REM echo Running moxygen to generate markdown files from the Doxygen xml output
 @REM call moxygen --groups --pages --anchors --language cpp --frontmatter --templates "%SCRIPT_DIR%moxygen_templates" --logfile "%WORKSPACE_DIR%\docs\logs\output_moxygen.log" --output "%WORKSPACE_DIR%\generated_docs\%%%%s.md" "%WORKSPACE_DIR%\..\TinyGSM_Doxygen\xml" > "%WORKSPACE_DIR%\docs\logs\output_moxygen_run.log" 2>&1
-@REM IF %errorlevel% NEQ 0 (
-@REM   echo moxygen post-processor failed with error code %errorlevel%.
+@REM IF ERRORLEVEL 1 (
+@REM   echo moxygen post-processor failed!
 @REM   goto :error
 @REM )
 
 @REM  @REM Run doxybook2 to generate markdown files from the Doxygen xml output
 @REM  echo Running doxybook2 to generate markdown files from the Doxygen xml output
 @REM  "C:\Program Files\doxybook2\bin\doxybook2.exe" --config "%SCRIPT_DIR%\.doxybook\config.json" --templates "%SCRIPT_DIR%\.doxybook\templates" --input "%WORKSPACE_DIR%_Doxygen\xml" --output "%WORKSPACE_DIR%_Doxygen\md" -d > "%WORKSPACE_DIR%\docs\logs\output_doxybook2_run.log" 2>&1
-@REM  IF %errorlevel% NEQ 0 (
-@REM    echo doxybook2 post-processor failed with error code %errorlevel%.
+@REM  IF ERRORLEVEL 1 (
+@REM    echo doxybook2 post-processor failed!
 @REM    goto :error
 @REM  )
 

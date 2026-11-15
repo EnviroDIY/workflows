@@ -54,11 +54,13 @@
     {
       "name": "doxygen-commands-custom",
       "pattern": [
+        "anchor-command",
+        "examplenavigation",
+        "footernavigation",
+        "group-command",
         "hash-reference",
         "menusnip-command",
         "ref-command",
-        "anchor-command",
-        "group-command",
         "section-command"
       ]
     },
@@ -67,27 +69,35 @@
       "pattern": "/BUILD_[A-Z0-9_]+/g"
     }
   ],
+  "ignorePaths": [
+    ".clang-format",
+    ".clang-tidy",
+    ".gitattributes",
+    ".github/**/*.yaml",
+    ".github/**/*.yml",
+    ".gitignore",
+    ".gitignore",
+    ".history",
+    ".vscode",
+    "*doxyfile*",
+    "archive/*",
+    "compile_commands.json",
+    "docs/Doxyfile",
+    "example_dependencies.json",
+    "keywords.txt",
+    "platformio.ini"
+  ],
   "words": [
     "Adafruit",
+    "CodeRabbit",
+    "Damiano",
     "doxyfile",
     "EnviroDIY",
     "espressif",
-    "Damiano",
     "Geleskie",
+    "microcontroller",
     "sdamiano",
     "SRGDamia1"
   ],
-  "ignoreWords": ["examplenavigation", "footernavigation", "microcontroller", "SRGD"],
-  "ignorePaths": [
-    ".vscode",
-    ".gitignore",
-    ".clang-format",
-    ".clang-tidy",
-    "platformio.ini",
-    "*doxyfile*",
-    "docs/Doxyfile",
-    ".github/**/*.yaml",
-    ".github/**/*.yml",
-    ".gitignore"
-  ]
+  "ignoreWords": ["SRGD"]
 }

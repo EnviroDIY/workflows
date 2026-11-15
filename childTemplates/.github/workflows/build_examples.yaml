@@ -14,6 +14,7 @@ jobs:
   build_examples:
     name: Build Examples
     if: ${{ ! contains(github.event.head_commit.message, 'ci skip') }}
+    secrets: inherit
     uses: EnviroDIY/workflows/.github/workflows/build_examples.yaml@main
     with:
       # # Workspace path as an absolute path (default: workspace root)
@@ -80,4 +81,3 @@ jobs:
 
       # # Comma-separated list of fields to group jobs by (default: compiler,board)
       # job_grouping_fields: "compiler,board"
-    secrets: inherit
