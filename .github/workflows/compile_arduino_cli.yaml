@@ -40,7 +40,7 @@ jobs:
       # configure the Arduino CLI on the system.
       - &setup_arduino_cli
         name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@v2.0.0
+        uses: arduino/setup-arduino-cli@v2.1.0
 
       - &download_scripts
         name: Download the prepared scripts
